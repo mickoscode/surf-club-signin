@@ -1,12 +1,11 @@
-terraform { 
-  cloud { 
-    
-    organization = "mickoscode" 
+terraform {
+  cloud {
+    organization = "mickoscode"
 
-    workspaces { 
-      name = "mc-dev-cli" 
-    } 
-  } 
+    workspaces {
+      name = "mc-dev-cli"
+    }
+  }
 
   required_providers {
     aws = {

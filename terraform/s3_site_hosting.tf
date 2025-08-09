@@ -1,7 +1,8 @@
 # http://mickos-surf-club-website.s3-website-ap-southeast-2.amazonaws.com/
 
 resource "aws_s3_bucket" "public_bucket" {
-  bucket = "mickos-surf-club-website"
+  bucket = "micko-training2025.info" #must exactly match domain name
+  #bucket = "mickos-surf-club-website"
 
   tags = {
     Name        = "Surf Club Public Bucket"

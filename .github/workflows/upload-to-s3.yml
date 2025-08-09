@@ -9,7 +9,8 @@ on:
       bucket-name:
         description: 'The S3 bucket name to deploy to (e.g., mickos-surf-club-website)'
         required: true
-        default: 'mickos-surf-club-website'
+        #default: 'mickos-surf-club-website'
+        default: 'micko-training2025.info'
       region:
         description: 'The AWS region of the S3 bucket (e.g., us-east-1)'
         required: true

@@ -7,11 +7,6 @@ resource "aws_s3_bucket" "public_bucket" {
   }
 }
 
-resource "aws_s3_bucket_acl" "public_bucket_acl" {
-  bucket = aws_s3_bucket.public_bucket.id
-  acl    = "public-read"
-}
-
 resource "aws_s3_bucket_website_configuration" "public_bucket_website" {
   bucket = aws_s3_bucket.public_bucket.id
 
@@ -28,6 +23,16 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "public_bucket_enc
       sse_algorithm = "AES256"
     }
   }
+}
+
+resource "aws_s3_bucket_public_access_block" "my_bucket_public_access_block" {
+  bucket = aws_s3_bucket.public_bucket.id
+
+  # Explicitly set this to false to allow public policies.
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
 resource "aws_s3_bucket_policy" "public_bucket_policy" {

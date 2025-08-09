@@ -1,0 +1,19 @@
+# Terraform state files and backups
+**/*.tfstate
+**/*.tfstate.*
+*.tfstate.backup
+
+# Terraform .cache directory
+.terraform/
+
+# Crash log files
+crash.log
+
+# Exclude all .tfvars files, which may contain sensitive data
+# except for an example file
+#
+# *.tfvars
+# !*.tfvars.example
+
+# Module and provider information (might be in .terraform)
+.terraform.lock.hcl

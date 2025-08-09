@@ -4,16 +4,17 @@ resource "aws_iam_user" "mickos_github" {
 
 resource "aws_iam_policy" "mickos_github_s3_write_policy" {
   name        = "mickos-github-s3-write-policy"
-  description = "Policy to allow write access to the S3 bucket mickos-surf-club-website"
+  description = "Policy to allow write and delete access to the S3 bucket mickos-surf-club-website"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "AllowWriteToBucket"
+        Sid    = "AllowWriteAndDeleteToBucket"
         Effect = "Allow"
         Action = [
           "s3:PutObject",
-          "s3:PutObjectAcl"
+          "s3:PutObjectAcl",
+          "s3:DeleteObject"
         ]
         Resource = "arn:aws:s3:::mickos-surf-club-website/*"
       }

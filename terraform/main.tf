@@ -3,7 +3,7 @@ terraform {
     organization = "mickoscode"
 
     workspaces {
-      name = "mc-dev-cli"
+      name = "surf-club-signin"
     }
   }
 

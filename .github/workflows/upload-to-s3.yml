@@ -45,5 +45,5 @@ jobs:
       - name: Sync index.html to S3
         run: |
           echo "Syncing 'app' folder to s3://${{ github.event.inputs.bucket-name }}"
-          aws s3 sync ./app s3://${{ github.event.inputs.bucket-name }} --delete
+          aws s3 sync ./app/ s3://${{ github.event.inputs.bucket-name }} --delete
 

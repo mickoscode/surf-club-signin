@@ -1,0 +1,49 @@
+# This workflow is named "Deploy to S3" and will be displayed in the Actions tab.
+name: Deploy to S3
+
+# This is the trigger that allows you to run the workflow manually from the GitHub UI.
+on:
+  workflow_dispatch:
+    inputs:
+      # You can add a description here that will show up in the GitHub UI
+      bucket-name:
+        description: 'The S3 bucket name to deploy to (e.g., mickos-surf-club-website)'
+        required: true
+        default: 'mickos-surf-club-website'
+      region:
+        description: 'The AWS region of the S3 bucket (e.g., us-east-1)'
+        required: true
+        default: 'ap-southeast-2'
+
+# The 'jobs' section defines the tasks the workflow will perform.
+jobs:
+  # The 'deploy' job will handle the upload to S3.
+  deploy:
+    # We use a recent version of the Ubuntu Linux runner.
+    runs-on: ubuntu-latest
+
+    # The 'steps' section contains a sequence of tasks to be executed.
+    steps:
+      # Step 1: Check out your repository code.
+      # This action makes your code available to the workflow.
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # Step 2: Configure AWS credentials.
+      # This action sets up the environment with your AWS credentials, which you should
+      # store securely as GitHub secrets.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.region }}
+
+      # Step 3: Upload the index.html file to the S3 bucket.
+      # We use the AWS CLI to perform the synchronization. The 'sync' command
+      # is great for this as it only uploads new or changed files.
+      - name: Sync index.html to S3
+        run: |
+          echo "Syncing 'app' folder to s3://${{ github.event.inputs.bucket-name }}"
+          aws s3 sync ./app s3://${{ github.event.inputs.bucket-name }} --delete
+

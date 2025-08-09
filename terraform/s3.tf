@@ -1,22 +1,32 @@
 resource "aws_s3_bucket" "public_bucket" {
   bucket = "mickos-surf-club-website"
-  acl    = "public-read"
-
-  website {
-    index_document = "index.html"
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
 
   tags = {
     Name        = "Surf Club Public Bucket"
     Environment = "Production"
+  }
+}
+
+resource "aws_s3_bucket_acl" "public_bucket_acl" {
+  bucket = aws_s3_bucket.public_bucket.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "public_bucket_website" {
+  bucket = aws_s3_bucket.public_bucket.id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "public_bucket_encryption" {
+  bucket = aws_s3_bucket.public_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
   }
 }
 
@@ -34,22 +44,14 @@ resource "aws_s3_bucket_policy" "public_bucket_policy" {
         Resource  = "${aws_s3_bucket.public_bucket.arn}/*"
       },
       {
-        Sid       = "AllowWriteForSpecificUser"
-        Effect    = "Allow"
+        Sid    = "AllowWriteForSpecificUsers"
+        Effect = "Allow"
         Principal = {
           AWS = "arn:aws:iam::722937635825:user/micko-cli"
         }
-        Action    = "s3:PutObject"
-        Resource  = "${aws_s3_bucket.public_bucket.arn}/*"
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.public_bucket.arn}/*"
       }
     ]
   })
-}
-
-resource "aws_s3_bucket_versioning" "public_bucket_versioning" {
-  bucket = aws_s3_bucket.public_bucket.id
-
-  versioning_configuration {
-    status = "Suspended"
-  }
 }

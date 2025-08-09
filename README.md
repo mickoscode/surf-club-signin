@@ -44,9 +44,9 @@ www.site.com/club/group/activity/
 - display sign in form  (if current day matches config.days and current time between config.in-start and config.in-end)
 - display sign out form (if current day matches config.days and current time between config.out-start and config.out-end)
 `.config` (needs encryption?)
-  - leader:    <aus_mobile>,  # authenication against one of these mobiles allows multi-sign in/out
-  - admin:     <aus_mobile>,  # authenication against one of these mobiles allows name & report management
-  - days:      <day>,         # list of days the activity runs (monday, tuesday, wednesday, etc.)
+  - leader:    \<aus_mobile\>,  # authenication against one of these mobiles allows multi-sign in/out
+  - admin:     \<aus_mobile\>,  # authenication against one of these mobiles allows name & report management
+  - days:      \<day\>,         # list of days the activity runs (monday, tuesday, wednesday, etc.)
   - in-start:  hh:mm          # users can sign in between this start & end time 
   - in-end:    hh:mm          # users can sign in between this start & end time 
   - out-start: hh:mm          # users can sign out between this start & end time 
@@ -73,7 +73,7 @@ www.site.com/new/
 - authenticate against mobile number (send sms code)
 - display form to add new club/group/activity/admins/leaders
 `.config` (needs encryption)
-  - site-admin: <aus_mobile>,  # authentication against one of these mobiles allows creation of new club/group/activity
+  - site-admin: \<aus_mobile\>,  # authentication against one of these mobiles allows creation of new club/group/activity
 
 **Form:**
 - club     (alpha-numeric + '-' only, no space, no special charaters, limit = 20chars)
@@ -91,12 +91,13 @@ www.site.com/new/
 ## S3 structure
 
 /club/group/activity/
+
 /club/group/activity/reports/
-yyyy-mm-dd.csv - <name>,<in>,<out>
+- yyyy-mm-dd.csv - \<name\>,\<in\>,\<out\>
 
 /club/group/activity/yyyy/mm/dd/
-in.log - <name>,hh:mm
-out.log - <name>,hh:mm
+- in.log - \<name\>,hh:mm
+- out.log - \<name\>,hh:mm
 
 ## Advanced Features
 

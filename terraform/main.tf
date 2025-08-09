@@ -21,3 +21,10 @@ terraform {
 provider "aws" {
   region = "ap-southeast-2"
 }
+
+# CloudFront requires the ACM certificate to be in the 'us-east-1' (N. Virginia) region.
+# We must explicitly define a second provider block for this.
+provider "aws" {
+  alias  = "us-east-1"
+  region = "us-east-1"
+}

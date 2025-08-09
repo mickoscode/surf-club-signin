@@ -17,7 +17,10 @@ resource "aws_iam_policy" "mickos_github_s3_write_policy" {
           "s3:ListBucket",
           "s3:DeleteObject"
         ]
-        Resource = "arn:aws:s3:::mickos-surf-club-website/*"
+        Resource = [
+          "arn:aws:s3:::mickos-surf-club-website",
+          "arn:aws:s3:::mickos-surf-club-website/*"
+        ]
       }
     ]
   })

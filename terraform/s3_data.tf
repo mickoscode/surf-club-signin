@@ -4,6 +4,8 @@ resource "aws_s3_bucket" "data_bucket" {
   #bucket = "mickos-surf-club-data"
   bucket = "micko-training2025.info-data"
 
+  depends_on = [aws_iam_user.surf_club_lambda]
+
   tags = {
     Name        = "Surf Club Private Bucket"
     Environment = "Production"
@@ -36,7 +38,10 @@ resource "aws_s3_bucket_policy" "data_bucket_policy" {
           "s3:GetObject",
           "s3:ListBucket"
         ]
-        Resource = "${aws_s3_bucket.data_bucket.arn}/*"
+        Resource = [
+          "${aws_s3_bucket.data_bucket.arn}",
+          "${aws_s3_bucket.data_bucket.arn}/*"
+        ]
       },
       {
         Sid    = "AllowWriteForSpecificUsers"
@@ -45,7 +50,10 @@ resource "aws_s3_bucket_policy" "data_bucket_policy" {
           AWS = "arn:aws:iam::722937635825:user/surf-club-lambda"
         }
         Action   = "s3:PutObject"
-        Resource = "${aws_s3_bucket.data_bucket.arn}/*"
+        Resource = [
+          "${aws_s3_bucket.data_bucket.arn}",
+          "${aws_s3_bucket.data_bucket.arn}/*"
+        ]
       }
     ]
   })

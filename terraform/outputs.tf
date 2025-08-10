@@ -1,7 +1,10 @@
-# -----------------------------------------------------------
-# S3 Bucket Configuration - Step 2 of 2
-# Create the S3 bucket to host your website content.
-# -----------------------------------------------------------
-resource "aws_s3_bucket" "website_bucket" {
-  bucket = "micko-training2025.info"
+# Output the DNS validation records. 
+output "acm_validation_record" {
+  value = {
+    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+      name  = dvo.resource_record_name
+      type  = dvo.resource_record_type
+      value = dvo.resource_record_value
+    }
+  }
 }

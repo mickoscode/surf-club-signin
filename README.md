@@ -25,8 +25,8 @@ So hopefully this simple trust model can provide a useful service.
   - micko-training2025.info/leader/index.html
 
 **s3 app bucket**
-- names.txt  # hardcoded list of all the names that can sign in & out
-- .config    # hardcoded for sorrento youth sunday sessions, AWST
+- .names.txt   # hardcoded list of all the names that can sign in & out
+- .config.yml  # hardcoded for sorrento youth sunday sessions, AWST
   - days:      sunday
   - in-start:  08:00
   - in-end:    09:30

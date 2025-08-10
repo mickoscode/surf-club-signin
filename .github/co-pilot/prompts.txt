@@ -1,0 +1,8 @@
+# python adLog.python
+Please create a python script using latest of python. 
+This script will be executed by AWS lambda. The lambda will be called by aws api gate way and it will pass 
+in a variable called 'name'. The script should append this sting to the log file 'in.log' in the aws s3 
+bucket s3://micko-training2025.info. Before appending to the log, the python script should read the 
+existing log file and ensure there is not already a matching log entry. 
+Please add other validation to prevent malicious injection into the name variable, and return a warning if 
+the entry already exists, other wise return a success code if the log entry is successfully created.

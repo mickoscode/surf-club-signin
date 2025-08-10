@@ -3,7 +3,7 @@
 # -----------------------------------------------------------
 resource "aws_acm_certificate" "cert" {
   provider          = aws.us-east-1
-  domain_name       = "micko-training2023.info"
+  domain_name       = "micko-training2025.info"
   validation_method = "DNS"
 
   lifecycle {
@@ -14,7 +14,7 @@ resource "aws_acm_certificate" "cert" {
 # We create an Origin Access Identity (OAI) for CloudFront.
 # This OAI acts as a "virtual user" to securely access your public bucket.
 resource "aws_cloudfront_origin_access_identity" "oai" {
-  comment = "OAI for micko-training2023.info"
+  comment = "OAI for micko-training2025.info"
 }
 
 # The bucket policy grants the OAI permission to read objects from the bucket

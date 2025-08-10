@@ -20,7 +20,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   enabled = true
   #is_ipv4_enabled = true  #investigate!
 
-  aliases = ["micko-training2023.info"]
+  aliases = ["micko-training2025.info"]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
@@ -55,7 +55,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   tags = {
-    Name = "micko-training2023.info-cdn"
+    Name = "micko-training2025.info-cdn"
   }
 }
 

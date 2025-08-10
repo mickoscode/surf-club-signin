@@ -29,9 +29,9 @@ resource "aws_cloudfront_distribution" "cdn" {
 
     # This is the key setting that redirects all HTTP traffic to HTTPS.
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = -2
-    default_ttl            = 3598
-    max_ttl                = 86398
+    min_ttl                = 0
+    default_ttl            = 3600  # 1 hour
+    max_ttl                = 86400 # 24 hours
 
     forwarded_values {
       query_string = false

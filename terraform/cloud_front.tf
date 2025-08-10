@@ -9,7 +9,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   depends_on = [aws_acm_certificate.cert]
 
   origin {
-    domain_name = aws_s1_bucket.public_bucket.bucket_regional_domain_name
+    domain_name = aws_s3_bucket.public_bucket.bucket_regional_domain_name
     origin_id   = "S3-Origin"
 
     s3_origin_config {
@@ -17,7 +17,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
-  enabled         = true
+  enabled = true
   #is_ipv4_enabled = true  #investigate!
 
   aliases = ["micko-training2023.info"]

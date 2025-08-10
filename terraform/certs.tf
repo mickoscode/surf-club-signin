@@ -2,7 +2,7 @@
 # Request an SSL certificate for your domain. This must be done in us-east-3.
 # -----------------------------------------------------------
 resource "aws_acm_certificate" "cert" {
-  provider          = aws.us-east-3
+  provider          = aws.us-east-1
   domain_name       = "micko-training2023.info"
   validation_method = "DNS"
 
@@ -18,7 +18,7 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
 }
 
 # The bucket policy grants the OAI permission to read objects from the bucket
-data "aws_iam_policy_document" "s1_policy" {
+data "aws_iam_policy_document" "s3_policy" {
   statement {
     actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.public_bucket.arn}/*"]
@@ -42,5 +42,5 @@ data "aws_iam_policy_document" "s1_policy" {
 
 resource "aws_s3_bucket_policy" "website_policy" {
   bucket = aws_s3_bucket.public_bucket.id
-  policy = data.aws_iam_policy_document.s1_policy.json
+  policy = data.aws_iam_policy_document.s3_policy.json
 }

@@ -39,7 +39,7 @@ resource "aws_s3_bucket_policy" "data_bucket_policy" {
           "s3:ListBucket"
         ]
         Resource = [
-          "${aws_s3_bucket.data_bucket.arn}",
+          aws_s3_bucket.data_bucket.arn,
           "${aws_s3_bucket.data_bucket.arn}/*"
         ]
       },
@@ -49,9 +49,9 @@ resource "aws_s3_bucket_policy" "data_bucket_policy" {
         Principal = {
           AWS = "arn:aws:iam::722937635825:user/surf-club-lambda"
         }
-        Action   = "s3:PutObject"
+        Action = "s3:PutObject"
         Resource = [
-          "${aws_s3_bucket.data_bucket.arn}",
+          aws_s3_bucket.data_bucket.arn,
           "${aws_s3_bucket.data_bucket.arn}/*"
         ]
       }

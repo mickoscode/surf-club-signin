@@ -7,7 +7,7 @@ on:
     inputs:
       # You can add a description here that will show up in the GitHub UI
       bucket-name:
-        description: 'The S3 bucket name to deploy to (e.g., mickos-surf-club-website)'
+        description: 'The S3 bucket name to deploy to (e.g., micko-training2025.info)'
         required: true
         #default: 'mickos-surf-club-website'
         default: 'micko-training2025.info'

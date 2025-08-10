@@ -11,6 +11,53 @@ The assumption is that there is little to be gained by "fraudulently" signing so
 The digital sign in/out process is purely to help with head counting (safety) and reducing paper waste.
 So hopefully this simple trust model can provide a useful service.
 
+## MVP
+
+- 1 use case (sorrento/youth/sunday), hard codes as necessary
+- users: ability to sign in & out via:
+  - www.micko-training2025.info/index.html
+- minimal/no admin (names.txt can be created & managed manually)
+- minimal/no authentication (allow anyone to view reports)
+- simple live report view (near real-time live head count to enable monitoring)
+- leaders: ability to view live head count via:
+  - micko-training2025.info/live/index.html
+- leaders: ability to bulk sign in & out via:
+  - micko-training2025.info/leader/index.html
+
+**s3 app bucket**
+- names.txt  # hardcoded list of all the names that can sign in & out
+- .config    # hardcoded for sorrento youth sunday sessions, AWST
+  - days:      sunday
+  - in-start:  08:00
+  - in-end:    09:30
+  - out-start: 09:31
+  - out-end:   10:40
+
+**s3 data bucket**
+/club/group/activity/ => /sorrento/youth/sunday/
+
+/club/group/activity/reports/  # static report, created after end of activity
+- yyyy-mm-dd.csv - \<name\>,\<in\>,\<out\>  
+
+/club/group/activity/yyyy/mm/dd/
+- in.log - \<name\>,hh:mm
+- out.log - \<name\>,hh:mm
+
+**lambdas**
+- addLog (club, group, activity, direction, name)
+  - calculate yyyy/mm/dd/hh/mm using AWST
+  - direction must be "in" or "out"
+  - prevent duplicate logs
+  - append name & time to /club/group/activity/yyyy/mm/dd/direction.log
+
+**javaScript**
+- index.html         # form to sign in / out  - display info relative to recent/next session if outside window
+- live/index.html    # live headcount, list of names & status
+- reports/index.html # list any csv reports, so user can click to view/download
+- leader/index.html  # form to do bulk sign in / out
+
+## Post MVP - extending features and use cases:
+
 ## Website Primary Functionality - User POV
 
 Nippers/Youth need to sign in and out each Sunday morning. 
@@ -88,16 +135,6 @@ www.site.com/new/
 - admins   (0-9, space, comma only) - comma seperated list of aus mobiles (04+ only)
 - submit_button
 
-## S3 structure
-
-/club/group/activity/
-
-/club/group/activity/reports/
-- yyyy-mm-dd.csv - \<name\>,\<in\>,\<out\>
-
-/club/group/activity/yyyy/mm/dd/
-- in.log - \<name\>,hh:mm
-- out.log - \<name\>,hh:mm
 
 ## Advanced Features
 

@@ -24,8 +24,8 @@ LOG_FILE_KEY = "in.log"
 s3 = boto3.client("s3")
 
 def validate_name(name: str) -> bool:
-    # Allow only letters, numbers, underscores, hyphens, and spaces
-    return bool(re.fullmatch(r"[A-Za-z0-9_\- ]{1,100}", name))
+    # Allow only letters, numbers, underscores, hyphens, apostrophes and spaces
+    return bool(re.fullmatch(r"[A-Za-z0-9_\-\' ]{1,100}", name))
 
 def lambda_handler(event, context):
     # Extract 'name' from query string or JSON body

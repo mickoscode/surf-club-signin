@@ -19,13 +19,14 @@ So hopefully this simple trust model can provide a useful service.
 - minimal/no admin (names.txt can be created & managed manually)
 - minimal/no authentication (allow anyone to view reports)
 - simple live report view (near real-time live head count to enable monitoring)
+  - will need a filter to make list manageable (e.g. u14/u15/u17/u19)
 - leaders: ability to view live head count via:
   - micko-training2025.info/live/index.html
 - leaders: ability to bulk sign in & out via:
   - micko-training2025.info/leader/index.html
 
 **s3 app bucket**
-- .names.txt   # hardcoded list of all the names that can sign in & out
+- .names.txt   # hardcoded list of all the names that can sign in & out, with a filter (e.g. u14/u15/u17/u19)
 - .config.yml  # hardcoded for sorrento youth sunday sessions, AWST
   - days:      sunday
   - in-start:  08:00

@@ -84,6 +84,9 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
+#TODO - need better s3 structure, so different log files can be used each weekend.
+# e.g. bucket/yyyy-mm-dd/in.log
+# better still... switch to DynamoDB, given python has to upload a new object for each entry (not simply appending to a file)
 resource "aws_iam_policy" "lambda_s3_policy" {
   name        = "LambdaS3Policy"
   description = "Allow Lambda to access S3 and CloudWatch Logs"

@@ -38,28 +38,58 @@ resource "aws_s3_bucket_public_access_block" "my_bucket_public_access_block" {
   restrict_public_buckets = false
 }
 
-resource "aws_s3_bucket_policy" "public_bucket_policy" {
-  bucket = aws_s3_bucket.public_bucket.id
+data "aws_iam_policy_document" "s3_policy" {
+  statement {
+    sid       = "PublicReadGetObject"
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.public_bucket.arn}/*"]
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid       = "PublicReadGetObject"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.public_bucket.arn}/*"
-      },
-      {
-        Sid    = "AllowWriteForSpecificUsers"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::722937635825:user/micko-cli"
-        }
-        Action   = "s3:PutObject"
-        Resource = "${aws_s3_bucket.public_bucket.arn}/*"
-      }
-    ]
-  })
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+  }
+
+  statement {
+    sid       = "AllowWriteforSpecificUsers"
+    effect    = "Allow"
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.public_bucket.arn}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::722937635825:user/micko-cli"]
+    }
+  }
+
+  #OAI permissions for CloudFront to access the bucket
+  statement {
+    sid       = "AllowCloudFrontGet"
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.public_bucket.arn}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
+    }
+  }
+
+  statement {
+    sid       = "AllowCloudFrontList"
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.public_bucket.arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "website_policy" {
+  bucket = aws_s3_bucket.public_bucket.id
+  policy = data.aws_iam_policy_document.s3_policy.json
 }

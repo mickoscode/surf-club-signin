@@ -8,3 +8,9 @@ output "acm_validation_record" {
     }
   }
 }
+
+# An output value to get the CloudFront domain name, which you will use
+# to create a CNAME record in your DNS.
+output "cloudfront_domain_name" {
+  value = aws_cloudfront_distribution.cdn.domain_name
+}

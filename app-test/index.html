@@ -35,7 +35,7 @@
     <input type="text" id="name_id" name="name_id" required>
 
     <label for="direction">Direction</label>
-    <select id="direction" name="direction_string" required>
+    <select id="direction" name="direction" required>
       <option value="in">In</option>
       <option value="out">Out</option>
     </select>
@@ -61,7 +61,7 @@
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${log.name_id}</td>
-          <td>${log.direction_string}</td>
+          <td>${log.direction}</td>
           <td>${log.date_time}</td>
         `;
         tableBody.appendChild(row);
@@ -72,13 +72,13 @@
       event.preventDefault();
       const form = document.getElementById("addLogForm");
       const name_id = form.name_id.value.trim();
-      const direction = form.direction_string.value;
+      const direction = form.direction.value;
       const date_time = form.date_time.value.trim();
 
       const payload = {
         activity_id: "sorrento_youth_sunday",
         name_id: name_id,
-        direction_string: direction,
+        direction: direction,
         date_time: date_time
       };
 

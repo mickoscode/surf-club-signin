@@ -25,7 +25,7 @@ resource "aws_dynamodb_table_item" "names_sample" {
   hash_key   = "name_id" #must be sanitised name - e.g. aidan_oconnor
 
   item = jsonencode({
-    id_name = { S = "sorrento_youth_sunday#aidan_oconnor" }
+    name_id = { S = "sorrento_youth_sunday#aidan_oconnor" }
     filter  = { S = "u17" }
   })
 }

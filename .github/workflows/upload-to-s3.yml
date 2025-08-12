@@ -47,4 +47,6 @@ jobs:
         run: |
           echo "Syncing 'app' folder to s3://${{ github.event.inputs.bucket-name }}"
           aws s3 sync ./app/ s3://${{ github.event.inputs.bucket-name }} --delete
+          echo "Syncing 'app-test' folder to s3://${{ github.event.inputs.bucket-name }}"
+          aws s3 sync ./app-test/ s3://${{ github.event.inputs.bucket-name }}/test --delete
 

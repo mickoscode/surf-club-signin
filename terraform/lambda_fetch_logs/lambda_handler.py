@@ -12,10 +12,7 @@ def lambda_handler(event, context):
         date_prefix = params.get("date")  # e.g., "2025-08-12"
 
         if not activity_id or not date_prefix:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"message": "Missing activity_id or date."})
-            }
+            return build_response(400, {"message": "Missing activity_id or date."})
 
         # Query DynamoDB
         response = table.query(
@@ -26,13 +23,18 @@ def lambda_handler(event, context):
             }
         )
 
-        return {
-            "statusCode": 200,
-            "body": json.dumps({"logs": response.get("Items", [])})
-        }
+        return build_response(200, {"logs": response.get("Items", [])})
 
     except Exception as e:
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"message": "Internal server error", "error": str(e)})
-        }
+        return build_response(500, {"message": "Internal server error", "error": str(e)})
+
+def build_response(status_code, body):
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type"
+        },
+        "body": json.dumps(body)
+    }

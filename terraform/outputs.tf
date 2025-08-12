@@ -14,3 +14,9 @@ output "acm_validation_record" {
 output "cloudfront_domain_name" {
   value = aws_cloudfront_distribution.cdn.domain_name
 }
+
+output "api_url" {
+  value       = aws_apigatewayv2_api.api.api_endpoint
+  description = "Base URL for the API Gateway"
+}
+

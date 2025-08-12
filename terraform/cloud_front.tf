@@ -9,11 +9,16 @@ resource "aws_cloudfront_distribution" "cdn" {
   depends_on = [aws_acm_certificate.cert]
 
   origin {
-    domain_name = aws_s3_bucket.public_bucket.bucket_regional_domain_name
+    domain_name = aws_s3_bucket_website_configuration.public_bucket_website.website_endpoint
     origin_id   = "S3-Origin"
 
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
+    custom_origin_config {
+      origin_protocol_policy = "http-only"
+      http_port              = 80
+      https_port             = 443
+      origin_keepalive_timeout = 5
+      origin_read_timeout = 30
+      origin_ssl_protocols = ["SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"]
     }
   }
 

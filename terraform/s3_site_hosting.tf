@@ -64,6 +64,7 @@ data "aws_iam_policy_document" "s3_policy" {
   }
 
   #OAI permissions for CloudFront to access the bucket
+  # possibly not needed now, following update to OAC... but leaving in place for now
   statement {
     sid       = "AllowCloudFrontGet"
     effect    = "Allow"
@@ -85,6 +86,26 @@ data "aws_iam_policy_document" "s3_policy" {
     principals {
       type        = "AWS"
       identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
+    }
+  }
+
+  # Newer OAC permissions for CloudFront to access the bucket
+  # generated via AWS console when cloud front was correctly updated to point to s3 website (instead of s3 api).
+  statement {
+    sid       = "AllowCloudFrontServicePrincipal1"
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.public_bucket.arn}/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = ["arn:aws:cloudfront::722937635825:distribution/E25MMIJS9KLCP2"]
     }
   }
 }

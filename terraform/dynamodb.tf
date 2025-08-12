@@ -72,20 +72,21 @@ resource "aws_dynamodb_table" "log" {
     type = "S"
   }
 
-  attribute {
-    name = "direction"
-    type = "S"
-  }
-
-  attribute {
-    name = "name_id"
-    type = "S"
-  }
-
-  attribute {
-    name = "date_time"
-    type = "S"
-  }
+# NOTE: don't need to declare these for now, as not using a GSI or LSI yet :)
+#  attribute {
+#    name = "direction"
+#    type = "S"
+#  }
+#
+#  attribute {
+#    name = "name_id"
+#    type = "S"
+#  }
+#
+#  attribute {
+#    name = "date_time"
+#    type = "S"
+#  }
 }
 
 resource "aws_dynamodb_table_item" "log_sample" {

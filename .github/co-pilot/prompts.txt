@@ -37,3 +37,6 @@ Log: id_name|direction_string("in"/"out")|date_time "sorrento_youth_sunday_Aidan
 Activity: id_name|url_code|days_string|in_h_start|in_m_start|in_h_end|in_m_end|out_h_start|out_m_start|out_h_end|out_m_end "sorrento_youth_sunday"|"YOUTH"|"sunday"|8|0|9|30|9|31|10|40
 
 The activity table will be tiny, less than 20 records. The names table will be very small, less than 1000 records. But over time, the log table should grow to be over 100,000 records. I expect i will need to fetch log entries where the id_name starts with a pre-fix like "sorrento_youth_sunday", and also filter on date_time. what do you recommend i do given these requirments?
+      
+      
+      const response = await fetch("https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com/log?activity_id=sorrento_youth_sunday&date=2025-08-12");

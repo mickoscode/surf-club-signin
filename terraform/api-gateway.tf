@@ -38,14 +38,6 @@ resource "aws_apigatewayv2_integration" "write_integration" {
   payload_format_version = "2.0"
 }
 
-# another CORS fix!
-resource "aws_apigatewayv2_integration" "write_options_integration" {
-  api_id                 = aws_apigatewayv2_api.api.id
-  integration_type       = "MOCK"
-  integration_method     = "OPTIONS"
-  payload_format_version = "2.0"
-}
-
 resource "aws_apigatewayv2_integration" "fetch_integration" {
   api_id                 = aws_apigatewayv2_api.api.id
   integration_type       = "AWS_PROXY"
@@ -59,13 +51,6 @@ resource "aws_apigatewayv2_route" "write_route" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "POST /log"
   target    = "integrations/${aws_apigatewayv2_integration.write_integration.id}"
-}
-
-# another CORS fix!
-resource "aws_apigatewayv2_route" "write_options_route" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "OPTIONS /log"
-  target    = "integrations/${aws_apigatewayv2_integration.write_options_integration.id}"
 }
 
 resource "aws_apigatewayv2_route" "fetch_route" {

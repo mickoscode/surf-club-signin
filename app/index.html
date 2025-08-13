@@ -1,48 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Under Construction</title>
-    <!-- We're using a Google Font for the artistic look -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-    <style>
-        /* This is the inline CSS for the page layout and styling */
-        body {
-            /* Set the background to a rich cream color */
-            background-color: #F5F5DC;
-            /* Use flexbox to easily center the content */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Dancing Script', cursive; /* Apply the artistic font */
-        }
-        .container {
-            /* Style the container box for the text */
-            background-color: #D3D3D3; /* Light silver color */
-            border: 2px solid #A9A9A9; /* A slightly darker silver border */
-            padding: 40px;
-            text-align: center;
-            border-radius: 15px; /* Add rounded corners */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
-        }
-        h1 {
-            /* Style the "still working on it..." text */
-            color: #000000; /* Black color for the text */
-            font-size: 4em; /* Large artistic font size */
-            margin: 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sorrento Youth Sign-In</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+    }
+    .flex {
+      display: flex;
+      gap: 1rem;
+    }
+    .vertical {
+      flex-direction: column;
+    }
+    .one {
+      max-width: 400px;
+      margin: auto;
+    }
+    .in-btn {
+      background: #4CAF50;
+      color: white;
+      padding: 0.5rem;
+      border: none;
+      cursor: pointer;
+    }
+    .out-btn {
+      background: #f44336;
+      color: white;
+      padding: 0.5rem;
+      border: none;
+      cursor: pointer;
+    }
+    .message {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .feedback {
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: bold;
+    }
+    .reset-link {
+      margin-top: 0.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .reset-link a {
+      color: #007BFF;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+  <div id="app"></div>
 
-    <div class="container">
-        <h1>still working on it...</h1>
-    </div>
+  <script>
+    const names = [
+      "Mick", "Ella", "Liam", "Zoe", "Noah", "Ava", "Jack", "Isla"
+    ];
 
+    function getNextSunday() {
+      const now = new Date();
+      const day = now.getDay();
+      const diff = (7 - day) % 7;
+      const nextSunday = new Date(now.getTime() + diff * 24 * 60 * 60 * 1000);
+      return nextSunday.toLocaleDateString();
+    }
+
+    function getStoredName() {
+      return localStorage.getItem("surfClubUserName");
+    }
+
+    function clearStoredName() {
+      localStorage.removeItem("surfClubUserName");
+      initApp();
+    }
+
+    function showSpinner() {
+      document.getElementById("feedback").innerHTML = "Submitting...";
+    }
+
+    function showSuccess(msg) {
+      document.getElementById("app").innerHTML = `<div class="feedback">${msg}</div>`;
+    }
+
+    function renderQuickAction(direction) {
+      const name = getStoredName();
+      const now = new Date().toISOString();
+      const colorClass = direction === "in" ? "in-btn" : "out-btn";
+
+      document.getElementById("app").innerHTML = `
+        <div class="message">Hi ${name} 👋</div>
+        <form id="quick-form" class="flex one vertical">
+          <input type="hidden" name="activity_id" value="sorrento_youth_sunday" />
+          <input type="hidden" name="direction" value="${direction}" />
+          <input type="hidden" name="date_time" value="${now}" />
+          <input type="hidden" name="name_id" value="${name}" />
+          <input type="submit" value="Sign ${direction}" class="${colorClass}">
+        </form>
+        <div class="reset-link"><a onclick="clearStoredName()">Not you?</a></div>
+        <div class="feedback" id="feedback"></div>
+      `;
+
+      document.getElementById("quick-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const payload = {
+          activity_id: form.activity_id.value,
+          direction: form.direction.value,
+          date_time: form.date_time.value,
+          name_id: form.name.value
+        };
+
+        showSpinner();
+        try {
+          const res = await fetch("https://your-api-gateway-url/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const result = await res.json();
+          showSuccess(result.message || "Submitted successfully!");
+        } catch (err) {
+          document.getElementById("app").innerHTML = `<div class="feedback">Submission failed. Try again.</div>`;
+        }
+      });
+    }
+
+    function renderForm(direction, names) {
+      const now = new Date().toISOString();
+      const colorClass = direction === "in" ? "in-btn" : "out-btn";
+      const storedName = getStoredName();
+
+      document.getElementById("app").innerHTML = `
+        <form id="main-form" class="flex one vertical">
+          <label for="name">Name:</label>
+          <input list="name-list" name="name_id" id="name" value="${storedName || ''}" required />
+          <datalist id="name-list">
+            ${names.map(n => `<option value="${n}">`).join("")}
+          </datalist>
+          <input type="hidden" name="activity_id" value="sorrento_youth_sunday" />
+          <input type="hidden" name="direction" value="${direction}" />
+          <input type="hidden" name="date_time" value="${now}" />
+          <input type="submit" value="Sign ${direction}" class="${colorClass}">
+        </form>
+        <div class="feedback" id="feedback"></div>
+      `;
+
+      document.getElementById("main-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const name_id = form.name_id.value.trim();
+        if (!name_id) return;
+
+        const payload = {
+          activity_id: form.activity_id.value,
+          direction: form.direction.value,
+          date_time: form.date_time.value,
+          name_id
+        };
+
+        if (form.direction.value === "in") {
+          localStorage.setItem("surfClubUserName", name_id);
+        }
+
+        showSpinner();
+        try {
+          const res = await fetch("", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const result = await res.json();
+          showSuccess(result.message || "Submitted successfully!");
+        } catch (err) {
+          document.getElementById("app").innerHTML = `<div class="feedback">Submission failed. Try again.</div>`;
+        }
+      });
+    }
+
+    function initApp() {
+      const now = new Date();
+      const hour = now.getHours();
+      const state = hour < 8 ? "waiting" : hour < 12 ? "signin" : "signout";
+      const storedName = getStoredName();
+
+      if (state === "waiting") {
+        document.getElementById("app").innerHTML = `
+          <div class="message">The next session will start at 8am on ${getNextSunday()}</div>
+        `;
+      } else {
+        if (storedName) {
+          renderQuickAction(state === "signin" ? "in" : "out");
+        } else {
+          renderForm(state === "signin" ? "in" : "out", names);
+        }
+      }
+    }
+
+    initApp();
+  </script>
 </body>
-</html>
+</html> 

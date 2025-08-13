@@ -6,6 +6,11 @@ dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("log")
 
 def lambda_handler(event, context):
+    method = event.get("requestContext", {}).get("http", {}).get("method", "")
+
+    if method == "OPTIONS":
+        return build_response(200, {"message": "CORS preflight OK"})
+
     try:
         # Parse input from API Gateway
         body = json.loads(event.get("body", "{}"))

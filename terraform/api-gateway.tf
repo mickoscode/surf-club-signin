@@ -53,11 +53,15 @@ resource "aws_apigatewayv2_route" "write_route" {
   target    = "integrations/${aws_apigatewayv2_integration.write_integration.id}"
 }
 
+# More CORS configuration
+resource "aws_apigatewayv2_route" "write_options_route" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "OPTIONS /log"
+  target    = "integrations/${aws_apigatewayv2_integration.write_integration.id}"
+}
+
 resource "aws_apigatewayv2_route" "fetch_route" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "GET /log"
   target    = "integrations/${aws_apigatewayv2_integration.fetch_integration.id}"
 }
-
-# More CORS configuration
-

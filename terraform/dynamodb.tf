@@ -1,6 +1,7 @@
 # Enable DynamoDB Free Tier: Use on-demand billing
 locals {
   billing_mode = "PAY_PER_REQUEST"
+  activity_id  = "sorrento_youth_sunday"
 }
 
 # ensure name_id is sanitised 
@@ -25,7 +26,7 @@ resource "aws_dynamodb_table_item" "names_sample" {
   hash_key   = "name_id" #must be sanitised name - e.g. aidan_oconnor
 
   item = jsonencode({
-    name_id = { S = "sorrento_youth_sunday#aidan_oconnor" }
+    name_id = { S = "${local.activity_id}#aidan_oconnor" }
     filter  = { S = "u17" }
   })
 }
@@ -95,7 +96,7 @@ resource "aws_dynamodb_table_item" "log_sample" {
   range_key  = "log_id"
 
   item = jsonencode({
-    activity_id = { S = "sorrento_youth_sunday" }
+    activity_id = { S = local.activity_id }
     log_id      = { S = "2025-08-12T11:15:00Z#aidan_oconnor" }
     direction   = { S = "in" }
     name_id     = { S = "aidan_oconnor" }
@@ -123,7 +124,7 @@ resource "aws_dynamodb_table_item" "activity_sample" {
   hash_key   = "name_id"
 
   item = jsonencode({
-    name_id     = { S = "sorrento_youth_sunday" }
+    name_id     = { S = local.activity_id }
     url_code    = { S = "YOUTH" }
     days_string = { S = "sunday" }
     in_h_start  = { N = "8" }

@@ -14,18 +14,15 @@ So hopefully this simple trust model can provide a useful service.
 ## MVP
 
 - 1 use case (sorrento/youth/sunday), hard codes as necessary
-- users: ability to sign in & out via:
-  - www.micko-training2025.info/index.html
+- users: ability to sign in & out via: index.html
 - minimal/no admin (names.txt can be created & managed manually)
 - minimal/no authentication (allow anyone to view reports)
 - simple live report view (near real-time live head count to enable monitoring)
   - will need a filter to make list manageable (e.g. u14/u15/u17/u19)
-- leaders: ability to view live head count via:
-  - micko-training2025.info/live/index.html
-- leaders: ability to bulk sign in & out via:
-  - micko-training2025.info/leader/index.html
+- leaders: ability to view live head count via: live.html
+- leaders: ability to bulk sign in & out via: leader.html
 
-**s3 app bucket**
+**Scrap S3-app, need DynamoDB equivalent**
 - .names.txt   # hardcoded list of all the names that can sign in & out, with a filter (e.g. u14/u15/u17/u19)
 - .config.yml  # hardcoded for sorrento youth sunday sessions, AWST
   - days:      sunday
@@ -34,7 +31,7 @@ So hopefully this simple trust model can provide a useful service.
   - out-start: 09:31
   - out-end:   10:40
 
-**s3 data bucket**
+**Scrap S3-data, need DynamoDB equivalent**
 /club/group/activity/ => /sorrento/youth/sunday/
 
 /club/group/activity/reports/  # static report, created after end of activity
@@ -44,7 +41,7 @@ So hopefully this simple trust model can provide a useful service.
 - in.log - \<name\>,hh:mm
 - out.log - \<name\>,hh:mm
 
-**lambdas**
+**lambdas - work with dynamo instead!**
 - addLog (club, group, activity, direction, name)
   - calculate yyyy/mm/dd/hh/mm using AWST
   - direction must be "in" or "out"
@@ -52,10 +49,10 @@ So hopefully this simple trust model can provide a useful service.
   - append name & time to /club/group/activity/yyyy/mm/dd/direction.log
 
 **javaScript**
-- index.html         # form to sign in / out  - display info relative to recent/next session if outside window
-- live/index.html    # live headcount, list of names & status
-- reports/index.html # list any csv reports, so user can click to view/download
-- leader/index.html  # form to do bulk sign in / out
+- index.html  # form to sign in / out  - display info relative to recent/next session if outside window
+- live.html   # live headcount, list of names & status
+- report.html # list any csv reports, so user can click to view/download
+- leader.html # form to do bulk sign in / out
 
 ## Post MVP - extending features and use cases:
 

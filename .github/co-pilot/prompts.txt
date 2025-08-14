@@ -1,3 +1,49 @@
+I want index.html to be SPA website, which will be hosted in an AWS S3 bucket.
+dynamodb.tf contains terraform to create a table called Log, as well as insert a sample record.
+
+Using the exact attribute names for the Log table and log_sample item in dynamodb.tf, please create an index.html file that meets all of the following requirements:
+
+- must be mobile-first (i.e. users will only ever use this page on a mobile web broswer).
+- must be very user friendly, one simple message or function display at any one time
+- must use a modern lightweight CSS framework such as "picnic"
+- use visuals, smooth transitions and a colour schem that appears to teenagers
+- use javascript to call backend functions, based on the example functions below.
+
+index.html usage:
+This web page will be used to sign in and out of an activity.
+
+Functionality needed:
+
+I want the index.html to be focused on the user experience of signing in and out of an activity. The activity runs from 8am to 10.40am each Sunday. If the current date and time is not Sunday, between these hours, the page should display a simple mobile friendly message to say "the next session will start at 8am on <date>". Where <date> is the next Sunday from current date. For the rest of the functionality, we assume the current day is a Sunday. If the time is between 8am and 9.30am, the sign-in form should be displayed. If the time is between 9.31am and 10.40am, the sign-out form should be displayed. The 2 forms are almost identical, but should have clearly different colours for the submit button, green for "in" and blue for "out". The form should use hidden inputs to hard code the event "sorrento_youth_sunday" and the direction, "in" or "out". It should also use a hidden input date-time, using current timestamp. The only form field for the user should be name. The page should fetch all possible names via a suitable lambda / dynamodb lookup. When the user starts typing a name, JavaScript should present auto-complete options so that only 1 of the available names can be submitted. No other names are allowed. After the user clicks the "in" or "out" submit button, a confirmation message or error message should be displayed. No other functionality is needed, other than for the page to be as simple and stylish as possible, so it is easy to use on a mobile phone browser. Can you provide lots of comments in the sample code so I can easily understand where and how to customise the application code? 
+
+Constants to use:
+API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com"
+ACTIVITY_ID = "sorrento_youth_sunday"
+
+Example function calls:
+# Get logs for date
+fetchLogs() {
+      const response = await fetch(`${API_BASE}/log?activity_id=sorrento_youth_sunday&date=2025-08-12`)
+}
+
+# Add log
+const payload = {
+  activity_id: ${ACTIVITY_ID}
+  name_id: name_id,
+  direction: direction,
+  date_time: date_time
+};
+
+const response = await fetch(`${API_BASE}/log`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload)
+});
+
+
+
+
+
 # python adLog.python
 Please create a python script using latest of python. 
 This script will be executed by AWS lambda. The lambda will be called by aws api gate way and it will pass 

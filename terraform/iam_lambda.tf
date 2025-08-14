@@ -31,7 +31,8 @@ resource "aws_iam_policy" "lambda_policy" {
         Resource = [
           aws_dynamodb_table.log.arn,
           aws_dynamodb_table.activity.arn,
-          aws_dynamodb_table.names.arn
+          aws_dynamodb_table.names.arn,
+          "${aws_dynamodb_table.names.arn}/index/activity_id"  # For GSI access
         ]
       },
       {

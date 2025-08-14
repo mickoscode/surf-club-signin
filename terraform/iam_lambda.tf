@@ -28,7 +28,11 @@ resource "aws_iam_policy" "lambda_policy" {
           "dynamodb:PutItem",
           "dynamodb:Query"
         ],
-        Resource = aws_dynamodb_table.log.arn
+        Resource = [
+          aws_dynamodb_table.log.arn,
+          aws_dynamodb_table.activity.arn,
+          aws_dynamodb_table.names.arn
+        ]
       },
       {
         Effect = "Allow",

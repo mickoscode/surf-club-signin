@@ -76,11 +76,13 @@ resource "aws_dynamodb_table" "log" {
   hash_key     = "activity_id"
   range_key    = "log_id"
 
+  # partition key
   attribute {
     name = "activity_id"
     type = "S"
   }
 
+  # sort key
   attribute {
     name = "log_id"
     type = "S"

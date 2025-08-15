@@ -61,9 +61,9 @@
   <script>
     const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
     const ACTIVITY_ID = "sorrento_youth_sunday";
-    const IN_START_TIME = "08:00";
-    const OUT_START_TIME = "09:30";
-    const END_TIME = "10:40";
+    let IN_START_TIME = convertTimeStringToDateObj("08:00");
+    let OUT_START_TIME = convertTimeStringToDateObj("09:30");
+    let END_TIME = convertTimeStringToDateObj("10:40");
 
     const messageEl = document.getElementById("message");
     const formEl = document.getElementById("signForm");
@@ -74,10 +74,12 @@
     const nameIdInput = document.getElementById("nameId");
     const submitButton = document.getElementById("submitButton");
 
-    // Utility to get current time in HH:MM format
-    function getCurrentTime() {
+     // Utility to convert human readable time strings to date object.
+    function convertTimeStringToDateObj(timeString) {
+      const [hours, minutes] = timeString.split(":").map(Number);
       const now = new Date();
-      return now.toTimeString().slice(0, 5);
+      now.setHours(hours, minutes, 0, 0);
+      return now;
     }
 
     // Utility to check if today is Sunday
@@ -120,7 +122,7 @@
 
     // Initialize the page
     function init() {
-      const currentTime = getCurrentTime();
+      const currentTime = new Date();
 
       if (!isSunday() || currentTime > END_TIME) {
         messageEl.textContent = `The next session is ${getNextSunday()}`;

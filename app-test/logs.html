@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Log Viewer</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    form { margin-top: 40px; }
+    label { display: block; margin-top: 10px; }
+    input, select { padding: 6px; width: 300px; }
+    button { margin-top: 10px; padding: 8px 16px; }
+    #message { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Log Entries for Sorrento Youth Sunday</h1>
+  <button onclick="fetchLogs()">Fetch Logs</button>
+  <table id="logTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Direction</th>
+        <th>Date/Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <hr>
+
+  <h2>Add Log Entry</h2>
+  <form id="addLogForm" onsubmit="submitLog(event)">
+    <label for="name_id">Name ID (sanitized)</label>
+    <input type="text" id="name_id" name="name_id" required>
+
+    <label for="direction">Direction</label>
+    <select id="direction" name="direction" required>
+      <option value="in">In</option>
+      <option value="out">Out</option>
+    </select>
+
+    <label for="date_time">Date/Time (ISO format)</label>
+    <input type="text" id="date_time" name="date_time" placeholder="2025-08-12T11:15:00Z" required>
+
+    <button type="submit">Add Log</button>
+  </form>
+
+  <div id="message"></div>
+
+  <script>
+    const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
+
+    async function fetchLogs() {
+      const response = await fetch(`${API_BASE}/log?activity_id=sorrento_youth_sunday&date=2025-08-12`);
+      const data = await response.json();
+      const tableBody = document.querySelector("#logTable tbody");
+      tableBody.innerHTML = "";
+
+      data.logs.forEach(log => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${log.name_id}</td>
+          <td>${log.direction}</td>
+          <td>${log.date_time}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    async function submitLog(event) {
+      event.preventDefault();
+      const form = document.getElementById("addLogForm");
+      const name_id = form.name_id.value.trim();
+      const direction = form.direction.value;
+      const date_time = form.date_time.value.trim();
+
+      const payload = {
+        activity_id: "sorrento_youth_sunday",
+        name_id: name_id,
+        direction: direction,
+        date_time: date_time
+      };
+
+      try {
+        const response = await fetch(`${API_BASE}/log`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        document.getElementById("message").textContent = result.message || "Log added.";
+        if (response.status === 201) {
+          fetchLogs(); // Refresh table
+        }
+      } catch (err) {
+        document.getElementById("message").textContent = "Error submitting log.";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>

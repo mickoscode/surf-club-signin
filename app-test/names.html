@@ -39,7 +39,7 @@
       data.names.forEach(name => {
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td>${name.name_id}</td>
+          <td>${name.display}</td>
           <td>${name.filter}</td>
         `;
         tableBody.appendChild(row);

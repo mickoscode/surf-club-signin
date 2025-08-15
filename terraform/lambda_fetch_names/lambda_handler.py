@@ -18,9 +18,11 @@ def lambda_handler(event, context):
 
         # Query DynamoDB
         response = table.query(
-            IndexName="activity_id", #use the GSI
-            KeyConditionExpression="activity_id = :activity_id",
-            ExpressionAttributeValues={":activity_id": activity_id}
+            #IndexName="activity_id", #use the GSI
+            KeyConditionExpression="activity_id = :aid",
+            ExpressionAttributeValues={":aid": activity_id}
+            #KeyConditionExpression="activity_id = :aid AND begins_with(unique_id, :uid)",
+            #ExpressionAttributeValues={ ":aid": activity_id, ":uid": activity_id }
         )
 
         return build_response(200, {"names": response.get("Items", [])})

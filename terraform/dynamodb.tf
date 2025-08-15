@@ -12,34 +12,40 @@ locals {
 resource "aws_dynamodb_table" "names" {
   name         = "names"
   billing_mode = local.billing_mode
-  hash_key     = "name_id"
+  hash_key     = "activity_id"
+  range_key    = "name_id"
 
-  attribute {
-    name = "name_id"
-    type = "S"
-  }
-
+  # partition key - because it is listed 1st
   attribute {
     name = "activity_id"
     type = "S"
   }
 
-  # GSI
-  global_secondary_index {
-    name            = "activity_id"
-    hash_key        = "activity_id"
-    projection_type = "ALL"
+  # sort/range key - beacuse it is listed 2nd
+  attribute {
+    name = "name_id"
+    type = "S"
   }
+
+  # GSI
+  #  global_secondary_index {
+  #    name            = "activity_id"
+  #    hash_key        = "activity_id"
+  #    projection_type = "ALL"
+  #  }
 }
 
 # unique key will be "activity_id#name_id"
 resource "aws_dynamodb_table_item" "names_sample" {
   table_name = aws_dynamodb_table.names.name
-  hash_key   = "name_id" #must be sanitised name - e.g. aidan_oconnor
+  hash_key   = "activity_id" #must include sanitised name - e.g. aidan_oconnor
+  range_key  = "name_id"
 
   item = jsonencode({
-    name_id     = { S = "${local.activity_id}#aidan_oconnor" }
+    #unique_id   = { S = "${local.activity_id}#aidan_oconnor" }
     activity_id = { S = local.activity_id }
+    name_id     = { S = "aidan_oconnor" }
+    display     = { S = "Aidan O'Connor" }
     filter      = { S = "u17" }
   })
 }
@@ -76,13 +82,13 @@ resource "aws_dynamodb_table" "log" {
   hash_key     = "activity_id"
   range_key    = "log_id"
 
-  # partition key
+  # partition key - because it is listed 1st
   attribute {
     name = "activity_id"
     type = "S"
   }
 
-  # sort key
+  # sort/range key - beacuse it is listed 2nd
   attribute {
     name = "log_id"
     type = "S"

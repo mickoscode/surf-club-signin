@@ -161,7 +161,9 @@
         nameInput.addEventListener("input", () => {
           const match = names.find(name => name.display.toLowerCase().startsWith(nameInput.value.toLowerCase()));
           if (match) {
-            nameIdInput.value = match.name_id;
+            nameIdInput.value = match.name_id; // update the hidden input field
+            nameInput.value = match.display; //update the visible input field
+            nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length); // Move cursor to the end
           }
         });
       });

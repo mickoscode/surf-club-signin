@@ -176,12 +176,56 @@
         nameInput.value = savedName;
       }
 
+      const dropdown = document.createElement("ul");
+      dropdown.style.position = "absolute";
+      dropdown.style.background = "white";
+      dropdown.style.color = "black";
+      dropdown.style.listStyle = "none";
+      dropdown.style.padding = "0";
+      dropdown.style.margin = "0";
+      dropdown.style.border = "1px solid #ccc";
+      dropdown.style.width = `${nameInput.offsetWidth}px`;
+      dropdown.style.maxHeight = "150px";
+      dropdown.style.overflowY = "auto";
+      dropdown.style.zIndex = "1000";
+      dropdown.classList.add("hidden");
+      formEl.appendChild(dropdown);
+
       fetchNames().then(data => {
         const names = data.names || [];
         nameInput.addEventListener("input", () => {
-          const match = names.find(name => name.display.toLowerCase().startsWith(nameInput.value.toLowerCase()));
-          if (match) {
-            nameIdInput.value = match.name_id;
+          const inputValue = nameInput.value.toLowerCase();
+          const matches = names.filter(name => name.display.toLowerCase().startsWith(inputValue));
+
+          dropdown.innerHTML = ""; // Clear previous suggestions
+          if (matches.length > 0 && inputValue) {
+            matches.forEach(match => {
+              const item = document.createElement("li");
+              item.textContent = match.display;
+              item.style.padding = "5px";
+              item.style.cursor = "pointer";
+
+              item.addEventListener("click", () => {
+                nameInput.value = match.display;
+                nameIdInput.value = match.name_id;
+                dropdown.classList.add("hidden");
+              });
+
+              dropdown.appendChild(item);
+            });
+            dropdown.classList.remove("hidden");
+          } else {
+            dropdown.classList.add("hidden");
+          }
+        });
+
+        nameInput.addEventListener("blur", () => {
+          setTimeout(() => dropdown.classList.add("hidden"), 200); // Hide dropdown after a short delay
+        });
+
+        nameInput.addEventListener("focus", () => {
+          if (dropdown.children.length > 0) {
+            dropdown.classList.remove("hidden");
           }
         });
       });

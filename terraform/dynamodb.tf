@@ -26,23 +26,14 @@ resource "aws_dynamodb_table" "names" {
     name = "name_id"
     type = "S"
   }
-
-  # GSI
-  #  global_secondary_index {
-  #    name            = "activity_id"
-  #    hash_key        = "activity_id"
-  #    projection_type = "ALL"
-  #  }
 }
 
-# unique key will be "activity_id#name_id"
 resource "aws_dynamodb_table_item" "names_sample" {
   table_name = aws_dynamodb_table.names.name
   hash_key   = "activity_id" #must include sanitised name - e.g. aidan_oconnor
   range_key  = "name_id"
 
   item = jsonencode({
-    #unique_id   = { S = "${local.activity_id}#aidan_oconnor" }
     activity_id = { S = local.activity_id }
     name_id     = { S = "aidan_oconnor" }
     display     = { S = "Aidan O'Connor" }

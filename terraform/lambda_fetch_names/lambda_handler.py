@@ -4,8 +4,6 @@ import boto3
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("names")
 
-# unique key will be "activity_id#name_id"
-# name_id = { S = "${local.activity_id}#joe_bloggs" }
 # filter  = { S = "u17" }
 def lambda_handler(event, context):
     try:
@@ -18,11 +16,8 @@ def lambda_handler(event, context):
 
         # Query DynamoDB
         response = table.query(
-            #IndexName="activity_id", #use the GSI
             KeyConditionExpression="activity_id = :aid",
             ExpressionAttributeValues={":aid": activity_id}
-            #KeyConditionExpression="activity_id = :aid AND begins_with(unique_id, :uid)",
-            #ExpressionAttributeValues={ ":aid": activity_id, ":uid": activity_id }
         )
 
         return build_response(200, {"names": response.get("Items", [])})

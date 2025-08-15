@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surf Club Sign-In</title>
+  <link rel="stylesheet" href="https://unpkg.com/picnic">
+  <link rel="icon" type="image/png" sizes="32x32" href="faviconV2.png">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .container {
+      max-width: 400px;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      color: black;
+    }
+    .hidden {
+      display: none;
+    }
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: #6a11cb;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="message"></h1>
+    <form id="signForm" class="hidden">
+      <input type="text" id="nameInput" placeholder="Enter your name" autocomplete="off">
+      <button type="button" id="clearName">Clear Name</button>
+      <input type="hidden" id="activityId" value="sorrento_youth_sunday">
+      <input type="hidden" id="direction">
+      <input type="hidden" id="nameId">
+      <button type="submit" id="submitButton">Sign In</button>
+    </form>
+    <div id="spinner" class="spinner hidden"></div>
+  </div>
+
+  <script>
+    const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
+    const ACTIVITY_ID = "sorrento_youth_sunday";
+    const IN_START_TIME = "08:00";
+    const OUT_START_TIME = "09:30";
+    const END_TIME = "10:40";
+
+    const messageEl = document.getElementById("message");
+    const formEl = document.getElementById("signForm");
+    const spinnerEl = document.getElementById("spinner");
+    const nameInput = document.getElementById("nameInput");
+    const clearNameButton = document.getElementById("clearName");
+    const directionInput = document.getElementById("direction");
+    const nameIdInput = document.getElementById("nameId");
+    const submitButton = document.getElementById("submitButton");
+
+    // Utility to get current time in HH:MM format
+    function getCurrentTime() {
+      const now = new Date();
+      return now.toTimeString().slice(0, 5);
+    }
+
+    // Utility to check if today is Sunday
+    function isSunday() {
+      return new Date().getDay() === 0;
+    }
+
+    // Utility to calculate the next Sunday
+    function getNextSunday() {
+      const now = new Date();
+      const daysUntilSunday = (7 - now.getDay()) % 7;
+      const nextSunday = new Date(now);
+      nextSunday.setDate(now.getDate() + daysUntilSunday);
+      return nextSunday.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    // Fetch valid names from the backend
+    async function fetchNames() {
+      const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
+      return response.json();
+    }
+
+    // Add log entry to the backend
+    async function addLog(nameId, direction) {
+      const payload = {
+        activity_id: ACTIVITY_ID,
+        name_id: nameId,
+        direction: direction,
+        date_time: new Date().toISOString()
+      };
+
+      const response = await fetch(`${API_BASE}/log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      return response.json();
+    }
+
+    // Initialize the page
+    function init() {
+      const currentTime = getCurrentTime();
+
+      if (!isSunday() || currentTime > END_TIME) {
+        messageEl.textContent = `The next session is ${getNextSunday()}`;
+        return;
+      }
+
+      if (currentTime < IN_START_TIME) {
+        messageEl.textContent = `Sign in starts at ${IN_START_TIME}`;
+        return;
+      }
+
+      if (currentTime >= IN_START_TIME && currentTime < OUT_START_TIME) {
+        setupForm("in");
+        return;
+      }
+
+      if (currentTime >= OUT_START_TIME && currentTime < END_TIME) {
+        setupForm("out");
+        return;
+      }
+    }
+
+    // Setup the form for sign-in or sign-out
+    function setupForm(direction) {
+      messageEl.textContent = direction === "in" ? "Sign In" : "Sign Out";
+      formEl.classList.remove("hidden");
+      directionInput.value = direction;
+
+      const savedName = localStorage.getItem("name");
+      if (savedName) {
+        nameInput.value = savedName;
+      }
+
+      fetchNames().then(data => {
+        const names = data.names || [];
+        nameInput.addEventListener("input", () => {
+          const match = names.find(name => name.display.toLowerCase().startsWith(nameInput.value.toLowerCase()));
+          if (match) {
+            nameIdInput.value = match.name_id;
+          }
+        });
+      });
+    }
+
+    // Handle form submission
+    formEl.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      spinnerEl.classList.remove("hidden");
+
+      const nameId = nameIdInput.value;
+      const direction = directionInput.value;
+
+      try {
+        const result = await addLog(nameId, direction);
+        alert(result.message || "Success!");
+        localStorage.setItem("name", nameInput.value);
+      } catch (error) {
+        alert("Error: " + error.message);
+      } finally {
+        spinnerEl.classList.add("hidden");
+      }
+    });
+
+    // Clear saved name
+    clearNameButton.addEventListener("click", () => {
+      localStorage.removeItem("name");
+      nameInput.value = "";
+    });
+
+    // Initialize the page on load
+    init();
+  </script>

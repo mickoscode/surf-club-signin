@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TEST in/out</title>
+  <title>TEST-in-out</title>
   <link rel="stylesheet" href="https://unpkg.com/picnic">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-test.png">
   <style>
@@ -123,8 +123,12 @@
 
     // Utility to check if today is Sunday
     function isSunday() {
-      return true;  // For testing purposes, always return true
-      //return new Date().getDay() === 0;
+      const enableTestMode = true;
+      if (enableTestMode) {
+        return true;  // For testing purposes, always return true
+      } else {
+         return new Date().getDay() === 0;
+      }
     }
 
     // Utility to calculate the next Sunday
@@ -163,36 +167,38 @@
     // Initialize the page
     function init() {
       const now = new Date();
-      const testParam = getUrlParameter("test");
+      const enableTestMode = true;
+      if (enableTestMode) {
+        const testParam = getUrlParameter("test");
 
-      if (testParam === "in") {
-        IN_START_TIME = new Date(now.getTime() - 10 * 60 * 1000); // Override IN_START_TIME with current time - 10minutes
-        OUT_START_TIME = new Date(now.getTime() + 10 * 60 * 1000); // Override OUT_START_TIME with current time + 10 minutes
-        END_TIME = new Date(now.getTime() + 20 * 60 * 1000); // Override END_TIME with current time + 20minutes
-      }
-      if (testParam === "out") {
-        IN_START_TIME = new Date(now.getTime() - 20 * 60 * 1000); // Override IN_START_TIME with current time - 10minutes
-        OUT_START_TIME = new Date(now.getTime() - 10 * 60 * 1000); // Override OUT_START_TIME with current time + 10 minutes
-        END_TIME = new Date(now.getTime() + 20 * 60 * 1000); // Override END_TIME with current time + 20minutes
+        if (testParam === "in") {
+          IN_START_TIME = new Date(now.getTime() - 10 * 60 * 1000); // Override IN_START_TIME with current time - 10minutes
+          OUT_START_TIME = new Date(now.getTime() + 10 * 60 * 1000); // Override OUT_START_TIME with current time + 10 minutes
+          END_TIME = new Date(now.getTime() + 20 * 60 * 1000); // Override END_TIME with current time + 20minutes
+        }
+        if (testParam === "out") {
+          IN_START_TIME = new Date(now.getTime() - 20 * 60 * 1000); // Override IN_START_TIME with current time - 10minutes
+          OUT_START_TIME = new Date(now.getTime() - 10 * 60 * 1000); // Override OUT_START_TIME with current time + 10 minutes
+          END_TIME = new Date(now.getTime() + 20 * 60 * 1000); // Override END_TIME with current time + 20minutes
+        }
       }
 
-      const currentTime = new Date();
-      if (!isSunday() || currentTime > END_TIME) {
+      if (!isSunday() || now > END_TIME) {
         messageEl.textContent = `The next session is ${getNextSunday()}`;
         return;
       }
 
-      if (currentTime < IN_START_TIME) {
+      if (now < IN_START_TIME) {
         messageEl.textContent = `Sign in starts at ${IN_START_TIME}`;
         return;
       }
 
-      if (currentTime >= IN_START_TIME && currentTime < OUT_START_TIME) {
+      if (now >= IN_START_TIME && now < OUT_START_TIME) {
         setupForm("in");
         return;
       }
 
-      if (currentTime >= OUT_START_TIME && currentTime < END_TIME) {
+      if (now >= OUT_START_TIME && now < END_TIME) {
         setupForm("out");
         return;
       }

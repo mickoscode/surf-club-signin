@@ -55,9 +55,12 @@ jobs:
       # Step 5 - inject config into index.html
       - name: Inject config into index.html
         run: |
-          echo "Injecting config into index.html"
-          node ./app/inject-config.js
-          node ./app-test/inject-config.js
+          echo "Injecting config into app/index.html"
+          cd ./app
+          node ./inject-config.js
+          echo "Injecting config into app-test/index.html"
+          cd ../app-test
+          node ./inject-config.js
 
       # Step 6: Upload the index.html file to the S3 bucket.
       # We use the AWS CLI to perform the synchronization. The 'sync' command

@@ -4,9 +4,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const CONFIG_PATH = path.join(__dirname, 'config.json');
-const TEMPLATE_PATH = path.join(__dirname, 'index.template.html');
-const OUTPUT_PATH = path.join(__dirname, 'index.html');
+// using cwd instead of __dirname so that I can use symbolic links for the script and template file
+//const CONFIG_PATH = path.join(__dirname, 'config.json');
+//const TEMPLATE_PATH = path.join(__dirname, 'index.template.html');
+//const OUTPUT_PATH = path.join(__dirname, 'index.html');
+const CONFIG_PATH = path.join(process.cwd(), 'config.json');
+const TEMPLATE_PATH = path.join(process.cwd(), 'index.template.html');
+const OUTPUT_PATH = path.join(process.cwd(), 'index.html');
 
 // Define required keys and fallback values
 // Not using these - values need to be in config.json to prevent error!!

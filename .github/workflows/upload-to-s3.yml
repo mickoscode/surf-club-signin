@@ -14,6 +14,10 @@ on:
         description: 'The AWS region of the S3 bucket (e.g., us-east-1)'
         required: true
         default: 'ap-southeast-2'
+      cf-distribution-id:
+        description: 'The ID of the CloudFront distribution to invalidate'
+        required: true
+        default: 'E25MMIJS9KLCP2'
 
 # The 'jobs' section defines the tasks the workflow will perform.
 jobs:
@@ -71,3 +75,11 @@ jobs:
           aws s3 sync ./app/ s3://${{ github.event.inputs.bucket-name }} --delete
           echo "Syncing 'app-test' folder to s3://${{ github.event.inputs.bucket-name }}"
           aws s3 sync ./app-test/ s3://${{ github.event.inputs.bucket-name }}/test --delete
+
+      # Step 7: Invalidate CloudFront cache (optional)
+      - name: Invalidate CloudFront cache
+        run: |
+          echo "Invalidating CloudFront cache"
+          aws cloudfront create-invalidation --distribution-id ${{ github.events.inputs.cf-distribution-id }} --paths "/*"
+          aws cloudfront create-invalidation --distribution-id ${{ github.events.inputs.cf-distribution-id }} --paths "/test/*"
+          echo "CloudFront cache invalidated"

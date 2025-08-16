@@ -1,5 +1,5 @@
 # This workflow is named "Deploy to S3" and will be displayed in the Actions tab.
-name: Deploy to S3
+name: SURF to S3
 
 # This is the trigger that allows you to run the workflow manually from the GitHub UI.
 on:
@@ -80,6 +80,6 @@ jobs:
       - name: Invalidate CloudFront cache
         run: |
           echo "Invalidating CloudFront cache"
-          aws cloudfront create-invalidation --distribution-id ${{ github.events.inputs.cf-distribution-id }} --paths "/*"
-          aws cloudfront create-invalidation --distribution-id ${{ github.events.inputs.cf-distribution-id }} --paths "/test/*"
+          aws cloudfront create-invalidation --distribution-id ${{ github.event.inputs.cf-distribution-id }} --paths "/*"
+          aws cloudfront create-invalidation --distribution-id ${{ github.event.inputs.cf-distribution-id }} --paths "/test/*"
           echo "CloudFront cache invalidated"

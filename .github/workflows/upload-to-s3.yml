@@ -77,9 +77,11 @@ jobs:
           aws s3 sync ./app-test/ s3://${{ github.event.inputs.bucket-name }}/test --delete
 
       # Step 7: Invalidate CloudFront cache (optional)
-      - name: Invalidate CloudFront cache
-        run: |
-          echo "Invalidating CloudFront cache"
-          aws cloudfront create-invalidation --distribution-id ${{ github.event.inputs.cf-distribution-id }} --paths "/*"
-          aws cloudfront create-invalidation --distribution-id ${{ github.event.inputs.cf-distribution-id }} --paths "/test/*"
-          echo "CloudFront cache invalidated"
+      # TODO
+      # need to update IAM policy for github user before this can work!
+#      - name: Invalidate CloudFront cache
+#        run: |
+#          echo "Invalidating CloudFront cache"
+#          aws cloudfront create-invalidation --distribution-id ${{ github.event.inputs.cf-distribution-id }} --paths "/*"
+#          aws cloudfront create-invalidation --distribution-id ${{ github.event.inputs.cf-distribution-id }} --paths "/test/*"
+#          echo "CloudFront cache invalidated"

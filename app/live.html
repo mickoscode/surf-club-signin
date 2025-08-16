@@ -81,8 +81,8 @@
   </style>
 </head>
 <body>
-  <h1 class="live-total" id="liveTotal">0</h1>
   <p class="message" id="liveMessage">people present, as of --:--:--</p>
+  <h1 class="live-total" id="liveTotal">0</h1>
   <hr>
   <div class="buttons" id="filterButtons"></div>
   <table>
@@ -158,10 +158,17 @@
       setTimeout(fetchLogs, 15000);
     }
 
+    // Utility to filter logs with valid name_id
+    function filterValidLogs(logs) {
+      const validNameIds = new Set(names.map(name => name.name_id));
+      return logs.filter(log => validNameIds.has(log.name_id));
+    }
+
     // Calculate live total
     function calculateLiveTotal() {
-      const inEntries = new Set(logs.filter(log => log.direction === "in").map(log => log.name_id));
-      const outEntries = new Set(logs.filter(log => log.direction === "out").map(log => log.name_id));
+      const validLogs = filterValidLogs(logs); // Filter invalid logs
+      const inEntries = new Set(validLogs.filter(log => log.direction === "in").map(log => log.name_id));
+      const outEntries = new Set(validLogs.filter(log => log.direction === "out").map(log => log.name_id));
       liveTotal = Math.max(0, inEntries.size - outEntries.size);
       updateLiveTotalDisplay();
     }
@@ -197,6 +204,7 @@
 
     // Render table
     function renderTable() {
+      const validLogs = filterValidLogs(logs); // Filter invalid logs
       const inNestedTable = document.getElementById("inNestedTable");
       const outNestedTable = document.getElementById("outNestedTable");
 
@@ -212,8 +220,8 @@
         });
       }
 
-      const inLogs = removeDuplicates(logs.filter(log => log.direction === "in"));
-      const outLogs = removeDuplicates(logs.filter(log => log.direction === "out"));
+      const inLogs = removeDuplicates(validLogs.filter(log => log.direction === "in"));
+      const outLogs = removeDuplicates(validLogs.filter(log => log.direction === "out"));
 
       const inNames = inLogs
         .map(log => names.find(name => name.name_id === log.name_id))

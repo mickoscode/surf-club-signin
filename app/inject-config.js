@@ -9,9 +9,9 @@ const TEMPLATE_PATH = path.join(__dirname, 'index.template.html');
 const OUTPUT_PATH = path.join(__dirname, 'index.html');
 
 // Define required keys and fallback values
+// Not using these - values need to be in config.json to prevent error!!
 const requiredKeys = {
-  day: 'Unknown',
-  apiGatewayUrl: 'https://example.com/api'
+  NOT_IN_USE_API_URL: 'https://example.com/api'
 };
 
 // Load config

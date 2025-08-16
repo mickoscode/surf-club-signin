@@ -79,6 +79,7 @@
 </head>
 <body>
   <div class="container">
+    <div id="header-container"></div>
     <h1 id="message"></h1>
     <form id="signForm" class="hidden">
       <input type="text" id="nameInput" placeholder="Enter your name" autocomplete="off">
@@ -86,7 +87,7 @@
       <input type="hidden" id="activityId" value="sorrento_youth_sunday">
       <input type="hidden" id="direction">
       <input type="hidden" id="nameId">
-      <button type="submit" id="submitButton">Sign In</button>
+      <button type="submit" id="submitButton"></button>
     </form>
     <div id="spinner" class="spinner hidden"></div>
   </div>
@@ -106,6 +107,14 @@
     const directionInput = document.getElementById("direction");
     const nameIdInput = document.getElementById("nameId");
     const submitButton = document.getElementById("submitButton");
+
+    // inject ./header.snippet
+    fetch('./header.snippet')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('header-container').innerHTML = data;
+      })
+      .catch(error => console.error('Header load error:', error));
 
     // Utility to convert human readable time strings to date object.
     function convertTimeStringToDateObj(timeString) {
@@ -206,7 +215,9 @@
 
     // Setup the form for sign-in or sign-out
     async function setupForm(direction) {
-      messageEl.textContent = direction === "in" ? "Sign In" : "Sign Out";
+      //messageEl.textContent = direction === "in" ? "Sign In" : "Sign Out";
+      messageEl.textContent = "";  // don't display a message, button text is enough
+      submitButton.textContent = direction === "in" ? "Sign In" : "Sign Out";
       formEl.classList.remove("hidden");
       directionInput.value = direction;
 

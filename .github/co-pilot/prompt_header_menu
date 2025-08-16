@@ -1,0 +1,40 @@
+I have an existing web app in https://github.com/mickoscode/surf-club-signin/blob/main/app/index.template.html
+
+I will have multiple html template files in my project, 
+in both the app and app-test folders. See https://github.com/mickoscode/surf-club-signin/tree/main/app
+
+I want each html template page to include a slim menu header 
+at the top of the page. 
+The menu header should have a black background, with white 
+underlined text for links. 
+
+The menu header should be a bar or row, split into 3 sections. 
+The left section should:
+- align text to the left
+- underline text
+- include the word "sign", which links to ./index.html
+
+The middle section should:
+- align text to center
+- no underline
+- include the word "youth", with no link
+
+The right section should:
+- align text to the right
+- underline text
+- include the word "live", which links to ./live.html
+
+Ideally the header would be defined in a separate file called header.snippet
+And this html snippet would be inserted into the relevant section of the 
+existing html template files, or simply included.
+
+Please generate an example header.snippet so that it is valid html, but does not contain head or body sections.
+
+And please suggest modern best method practice to then include this 
+snippet into the template files, without having to use a heavy weight framework.
+
+Please ensure the same style sheet, sizes and naming conventions are used as the existing web page https://github.com/mickoscode/surf-club-signin/blob/main/app/index.template.html
+
+The menu-header needs to span the full width of the page, as it will be
+displayed on mobile devices, it also needs to be responsive to different 
+form factors and sizes.

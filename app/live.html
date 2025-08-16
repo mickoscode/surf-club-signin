@@ -81,8 +81,9 @@
   </style>
 </head>
 <body>
+  <div id="header-container"></div>
+  <h2 class="live-total" id="liveTotal">0</h2>
   <p class="message" id="liveMessage">people present, as of --:--:--</p>
-  <h1 class="live-total" id="liveTotal">0</h1>
   <hr>
   <div class="buttons" id="filterButtons"></div>
   <table>
@@ -116,6 +117,14 @@
     let liveTotal = 0;
     let names = [];
     let logs = [];
+
+    // inject ./header.snippet
+    fetch('./header.snippet')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('header-container').innerHTML = data;
+      })
+      .catch(error => console.error('Header load error:', error));
 
     // Utility to parse URL parameters
     function getUrlParameter(name) {

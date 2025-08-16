@@ -129,6 +129,9 @@
       logs = data.logs || [];
       calculateLiveTotal();
       renderTable();
+
+      // Schedule the next fetch after the current one completes
+      setTimeout(fetchLogs, 15000);
     }
 
     // Calculate live total
@@ -219,8 +222,7 @@
       }
 
       await fetchNames();
-      await fetchLogs();
-      setInterval(fetchLogs, 15000); // Refresh logs every 15
+      fetchLogs(); // Start the first fetch
     }
 
     // Initialize the page on load

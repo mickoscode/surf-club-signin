@@ -42,6 +42,39 @@
         transform: rotate(360deg);
       }
     }
+
+    /* Updated styles for the dropdown */
+    .dropdown {
+      position: absolute;
+      background: white;
+      color: black;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #ccc;
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1000;
+      border-radius: 5px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .dropdown-item {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item.active {
+      background: #6a11cb;
+      color: white;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: #6a11cb;
+    }
   </style>
 </head>
 <body>
@@ -166,7 +199,7 @@
     }
 
     // Setup the form for sign-in or sign-out
-    function setupForm(direction) {
+    async function setupForm(direction) {
       messageEl.textContent = direction === "in" ? "Sign In" : "Sign Out";
       formEl.classList.remove("hidden");
       directionInput.value = direction;
@@ -177,57 +210,81 @@
       }
 
       const dropdown = document.createElement("ul");
-      dropdown.style.position = "absolute";
-      dropdown.style.background = "white";
-      dropdown.style.color = "black";
-      dropdown.style.listStyle = "none";
-      dropdown.style.padding = "0";
-      dropdown.style.margin = "0";
-      dropdown.style.border = "1px solid #ccc";
-      dropdown.style.width = `${nameInput.offsetWidth}px`;
-      dropdown.style.maxHeight = "150px";
-      dropdown.style.overflowY = "auto";
-      dropdown.style.zIndex = "1000";
-      dropdown.classList.add("hidden");
+      dropdown.classList.add("dropdown", "hidden");
       formEl.appendChild(dropdown);
 
-      fetchNames().then(data => {
-        const names = data.names || [];
-        nameInput.addEventListener("input", () => {
-          const inputValue = nameInput.value.toLowerCase();
-          const matches = names.filter(name => name.display.toLowerCase().startsWith(inputValue));
+      const names = (await fetchNames()).names || [];
 
-          dropdown.innerHTML = ""; // Clear previous suggestions
-          if (matches.length > 0 && inputValue) {
-            matches.forEach(match => {
-              const item = document.createElement("li");
-              item.textContent = match.display;
-              item.style.padding = "5px";
-              item.style.cursor = "pointer";
+      // Debounce function to limit filtering frequency
+      function debounce(func, delay) {
+        let timeout;
+        return (...args) => {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func(...args), delay);
+        };
+      }
 
-              item.addEventListener("click", () => {
-                nameInput.value = match.display;
-                nameIdInput.value = match.name_id;
-                dropdown.classList.add("hidden");
-              });
+      // Filter and display matching names
+      function filterNames() {
+        const inputValue = nameInput.value.toLowerCase();
+        const matches = names.filter(name => name.display.toLowerCase().includes(inputValue));
 
-              dropdown.appendChild(item);
+        dropdown.innerHTML = ""; // Clear previous suggestions
+        if (matches.length > 0 && inputValue) {
+          matches.forEach((match, index) => {
+            const item = document.createElement("li");
+            item.classList.add("dropdown-item");
+            item.innerHTML = match.display.replace(
+              new RegExp(inputValue, "gi"),
+              match => `<span class="highlight">${match}</span>`
+            );
+
+            item.addEventListener("click", () => {
+              nameInput.value = match.display;
+              nameIdInput.value = match.name_id;
+              dropdown.classList.add("hidden");
             });
-            dropdown.classList.remove("hidden");
-          } else {
-            dropdown.classList.add("hidden");
-          }
-        });
 
-        nameInput.addEventListener("blur", () => {
-          setTimeout(() => dropdown.classList.add("hidden"), 200); // Hide dropdown after a short delay
-        });
+            dropdown.appendChild(item);
+          });
+          dropdown.classList.remove("hidden");
+        } else {
+          dropdown.classList.add("hidden");
+        }
+      }
 
-        nameInput.addEventListener("focus", () => {
-          if (dropdown.children.length > 0) {
-            dropdown.classList.remove("hidden");
+      // Add event listeners
+      nameInput.addEventListener("input", debounce(filterNames, 300));
+      nameInput.addEventListener("blur", () => {
+        setTimeout(() => dropdown.classList.add("hidden"), 200);
+      });
+      nameInput.addEventListener("focus", () => {
+        if (dropdown.children.length > 0) {
+          dropdown.classList.remove("hidden");
+        }
+      });
+
+      // Keyboard navigation
+      nameInput.addEventListener("keydown", (e) => {
+        const items = dropdown.querySelectorAll(".dropdown-item");
+        let activeIndex = Array.from(items).findIndex(item => item.classList.contains("active"));
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (activeIndex < items.length - 1) {
+            if (activeIndex >= 0) items[activeIndex].classList.remove("active");
+            items[++activeIndex].classList.add("active");
           }
-        });
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (activeIndex > 0) {
+            items[activeIndex].classList.remove("active");
+            items[--activeIndex].classList.add("active");
+          }
+        } else if (e.key === "Enter" && activeIndex >= 0) {
+          e.preventDefault();
+          items[activeIndex].click();
+        }
       });
     }
 

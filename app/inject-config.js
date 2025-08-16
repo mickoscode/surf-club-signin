@@ -1,16 +1,23 @@
+// Script to inject values from config.json into a template HTML file
+// Usage: node inject-config.js [filenameStub]
 //
-// This is a rough example, needs re-work.
-//
+// This script must be eecuted from within same directory as templates and config.json IF using symbolic links!
+
 const fs = require('fs');
 const path = require('path');
+
+let filenameStub = 'index';
+if (process.argv.length === 3) {
+  filenameStub = process.argv[2];
+}
 
 // using cwd instead of __dirname so that I can use symbolic links for the script and template file
 //const CONFIG_PATH = path.join(__dirname, 'config.json');
 //const TEMPLATE_PATH = path.join(__dirname, 'index.template.html');
 //const OUTPUT_PATH = path.join(__dirname, 'index.html');
 const CONFIG_PATH = path.join(process.cwd(), 'config.json');
-const TEMPLATE_PATH = path.join(process.cwd(), 'index.template.html');
-const OUTPUT_PATH = path.join(process.cwd(), 'index.html');
+const TEMPLATE_PATH = path.join(process.cwd(), `${filenameStub}.template.html`);
+const OUTPUT_PATH = path.join(process.cwd(), `${filenameStub}.html`);
 
 // Define required keys and fallback values
 // Not using these - values need to be in config.json to prevent error!!
@@ -29,7 +36,8 @@ try {
 // Validate and apply fallbacks
 for (const key of Object.keys(requiredKeys)) {
   if (!config[key]) {
-    console.warn(`⚠️ Missing config key "${key}". Using fallback: "${requiredKeys[key]}"`);
+    // not using this for now
+    //console.warn(`⚠️ Missing config key "${key}". Using fallback: "${requiredKeys[key]}"`);
     config[key] = requiredKeys[key];
   }
 }
@@ -45,4 +53,4 @@ Object.entries(config).forEach(([key, value]) => {
 
 // Write output
 fs.writeFileSync(OUTPUT_PATH, html);
-console.log('✅ index.html generated with injected config.');
+console.log(`✅ ${filenameStub}.html generated with injected config.`);

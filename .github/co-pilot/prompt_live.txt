@@ -1,7 +1,7 @@
-I want index.html to be SPA website, which will be hosted in an AWS S3 bucket.
+I want live.html to be SPA website, which will be hosted in an AWS S3 bucket.
 dynamodb.tf contains terraform to create a table called Log, as well as insert a sample record.
 
-Using the exact attribute names for the Log table and log_sample item in dynamodb.tf, please create an index.html file that meets all of the following requirements:
+Using the exact attribute names for the Log table and log_sample item in dynamodb.tf, please create a live.html file that meets all of the following requirements:
 
 - must be mobile-first (i.e. users will only ever use this page on a mobile web broswer).
 - must be very user friendly, one simple message or function display at any one time
@@ -19,6 +19,9 @@ The activity runs from 8am to 10.40am each Sunday. Users will need to select the
 The user will then need to click a sign "out" button at the end of the activity. The web page should remember the user, so that they do not need to select their name if they have already visited the page.
 
 Functionality needed:
+on page load, call fetchNames() for the current date
+
+
 If the current day is not sunday OR current time > END_TIME:
 - calculate the date for the next sunday.
 - display a large, centered message: The next session is <dd/mmm/yyyy>

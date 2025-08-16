@@ -1,0 +1,89 @@
+I want index.html to be SPA website, which will be hosted in an AWS S3 bucket.
+dynamodb.tf contains terraform to create a table called Log, as well as insert a sample record.
+
+Using the exact attribute names for the Log table and log_sample item in dynamodb.tf, please create an index.html file that meets all of the following requirements:
+
+- must be mobile-first (i.e. users will only ever use this page on a mobile web broswer).
+- must be very user friendly, one simple message or function display at any one time
+- must use a modern lightweight CSS framework such as "picnic"
+- use visuals, smooth transitions and a colour schem that appears to teenagers
+- use javascript to call backend functions, based on the example functions further below.
+- use javascript functions to manage page display and layout, using constants further below.
+- add lots of comments so the code is easy to understand and maintain
+- uses localStorage to remember users so they do not need to re-enter name details
+- provide a button to clear a pre-filled name, and revert to manual input method
+
+index.html usage:
+This web page will be used to sign in and out of an activity.
+The activity runs from 8am to 10.40am each Sunday. Users will need to select their name from an auto-completing list of valid names and then click a sign "in" button at the start of the activity.
+The user will then need to click a sign "out" button at the end of the activity. The web page should remember the user, so that they do not need to select their name if they have already visited the page.
+
+Functionality needed:
+If the current day is not sunday OR current time > END_TIME:
+- calculate the date for the next sunday.
+- display a large, centered message: The next session is <dd/mmm/yyyy>
+- stop processing 
+
+If the current day is sunday AND current time is < IN_START_TIME:
+- display a large, centered message: Sign in starts at START_TIME
+- stop processing 
+
+If the current day is sunday AND current time is > IN_START_TIME AND < OUT_START_IME:
+- show sign in form which uses addLog()
+- form contains 1 input field (display). This input field must be very simple to use. Users can only enter a name from the list of allowed names. The best match should be selected as the user starts to type their name.
+- try to retrieve user details from previous page use, and display name instead of input field if found
+- form will submit hidden input activity_id=ACTIVITY_ID
+- form will submit hidden input direction=in
+- form will submit hidden input name_id  // get value from fetchNames()
+- form contains 1 submit button called "sign in"
+- use addLog() to record data in backend
+- page should display a spinner after clicking "sign in", followed by a message to indicate success or error/failure.
+
+If the current day is sunday AND current time is > OUT_START_TIME AND < END_TIME:
+- show sign out form which uses addLog()
+- form contains 1 input field (display). This input field must be very simple to use. Users can only enter a name from the list of allowed names. The best match should be selected as the user starts to type their name.
+- try to retrieve user details from previous page use, and display name instead of input field if found
+- form will submit hidden input activity_id=ACTIVITY_ID
+- form will submit hidden input direction=out
+- form will submit hidden input name_id  // get value from saved details or fetchNames()
+- form contains 1 submit button called "sign out"
+- use addLog() to record data in backend
+- page should display a spinner after clicking "sign out", followed by a message to indicate success or error/failure.
+
+Constants to use:
+API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com"
+ACTIVITY_ID = "sorrento_youth_sunday"
+IN_START_TIME: 08:00
+OUT_START_TIME: 09:30
+END_TIME: 10:40
+
+Example function calls:
+# Get logs for a given date.
+fetchLogs() {
+      const response = await fetch(`${API_BASE}/log?activity_id=sorrento_youth_sunday&date=2025-08-12`)
+}
+
+# addLog()
+const payload = {
+  activity_id: ${ACTIVITY_ID}
+  name_id: name_id,
+  direction: direction,
+  date_time: date_time
+};
+
+const response = await fetch(`${API_BASE}/log`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload)
+});
+
+# get list of valid names that are allowed to sign in, along with a filter value (e.g. u14, u15, u17, u19)
+async function fetchNames() {
+      const response = await fetch(`${API_BASE}/name?activity_id=sorrento_youth_sunday`);
+      const data = await response.json();
+}
+
+provides:
+${name.name_id}  //use this value for Add log!
+${name.display}  //use this value for limiting and validating naame selection
+${name.filter}   //use this value for confirmation message

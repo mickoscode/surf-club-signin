@@ -1,0 +1,42 @@
+# python adLog.python
+Please create a python script using latest of python. 
+This script will be executed by AWS lambda. The lambda will be called by aws api gate way and it will pass 
+in a variable called 'name'. The script should append this sting to the log file 'in.log' in the aws s3 
+bucket s3://micko-training2025.info. Before appending to the log, the python script should read the 
+existing log file and ensure there is not already a matching log entry. 
+Please add other validation to prevent malicious injection into the name variable, and return a warning if 
+the entry already exists, other wise return a success code if the log entry is successfully created.
+
+# Dynamodb terraform
+I am using terraform version 1.12.2 to provision an s3 hosted website on aws. 
+I plan to use aws dynamodb for the backend of this site. 
+The volume of data will be tiny, less than 50Meg. And the volume of queries will also be tiny, less than 4000 queries per month. 
+So I want dynamodb to be configured in a way that will use AWS free tier billing.
+I will add a lambda function, API gateway and relevant IAM roles at a later time. 
+Right now, I would like you to provide me with a complete terraform file to provision a dynamodb database called 'signin_website'.
+The database should have 5 tables for the schema below, using the most logical column types for each of the names. 
+please prompt me for clarification if an of the names do not have an obvious column type.  
+
+# Table schemas for database 'signin_website'
+Names:
+id_name|filter_string
+"sorrento_youth_sunday_Aidan O'Connor"|"u17"
+
+Log:
+id_name|direction_string("in"/"out")|date_time
+"sorrento_youth_sunday_Aidan O'Connor"|"in"|2025-08-12 11:15:00
+
+Activity:
+id_name|url_code|days_string|in_h_start|in_m_start|in_h_end|in_m_end|out_h_start|out_m_start|out_h_end|out_m_end
+"sorrento_youth_sunday"|"YOUTH"|"sunday"|8|0|9|30|9|31|10|40
+
+
+i think i have a better understanding now, so I will modify my schema. Below i have outlined 3 dynamodb tables, along with the columns i plan to add and an example of 1 record for each table. can you use this schema and examples to re-write the terraform code. please organise the terraform code so that 1 table_item is inserted immediately after the table resource definition.
+Names: id_name|filter_string "sorrento_youth_sunday_Aidan O'Connor"|"u17"
+Log: id_name|direction_string("in"/"out")|date_time "sorrento_youth_sunday_Aidan O'Connor"|"in"|2025-08-12 11:15:00
+Activity: id_name|url_code|days_string|in_h_start|in_m_start|in_h_end|in_m_end|out_h_start|out_m_start|out_h_end|out_m_end "sorrento_youth_sunday"|"YOUTH"|"sunday"|8|0|9|30|9|31|10|40
+
+The activity table will be tiny, less than 20 records. The names table will be very small, less than 1000 records. But over time, the log table should grow to be over 100,000 records. I expect i will need to fetch log entries where the id_name starts with a pre-fix like "sorrento_youth_sunday", and also filter on date_time. what do you recommend i do given these requirments?
+      
+      
+      const response = await fetch("https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com/log?activity_id=sorrento_youth_sunday&date=2025-08-12");

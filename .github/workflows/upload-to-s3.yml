@@ -46,8 +46,11 @@ jobs:
           node-version: '18'
 
       # Step 4: Install dependencies
-      - name: Install dependencies
-        run: npm install
+      # not currently needed, as inject-config.js uses nly standard packages.
+      # if more advanced features are needed, a package.json file will be needed to 
+      # list out dependencies. Otherwise, npm install will fail!
+      #- name: Install dependencies
+      #  run: npm install
 
       # Step 5 - inject config into index.html
       - name: Inject config into index.html

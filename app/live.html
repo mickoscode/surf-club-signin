@@ -1,1 +1,223 @@
-/* This will be a page that grabs all of the logs (if an activity is in progress) and displays a live head count & list of names, with filtering */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Counter</title>
+  <link rel="stylesheet" href="https://unpkg.com/picnic">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ff7eb3, #ff758c);
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+    }
+    .live-total {
+      font-size: 20vh;
+      font-weight: bold;
+      margin: 0;
+    }
+    .message {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 10px 0;
+    }
+    .buttons button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      background: #ff758c;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .buttons button:hover {
+      background: #ff4a6e;
+    }
+    table {
+      width: 90%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid white;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #ff4a6e;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="live-total" id="liveTotal">0</h1>
+  <p class="message" id="liveMessage">people present, as of --:--:--</p>
+  <hr>
+  <div class="buttons" id="filterButtons"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>IN</th>
+        <th>OUT</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="inColumn"></td>
+        <td id="outColumn"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
+    const ACTIVITY_ID = "sorrento_youth_sunday";
+    const enableTestMode = false;
+    let LOG_DATE_STRING = new Date().toISOString().split('T')[0]; // Default to today
+    let liveTotal = 0;
+    let names = [];
+    let logs = [];
+
+    // Utility to parse URL parameters
+    function getUrlParameter(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    // Utility to check if today is Sunday
+    function isSunday() {
+      if (enableTestMode) return true; // For testing purposes
+      return new Date().getDay() === 0;
+    }
+
+    // Utility to calculate the next Sunday
+    function getNextSunday() {
+      const now = new Date();
+      const daysUntilSunday = (7 - now.getDay()) % 7;
+      const nextSunday = new Date(now);
+      nextSunday.setDate(now.getDate() + daysUntilSunday);
+      return nextSunday.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    }
+
+    // Fetch names from the backend
+    async function fetchNames() {
+      const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
+      const data = await response.json();
+      names = data.names || [];
+      renderFilterButtons();
+    }
+
+    // Fetch logs from the backend
+    async function fetchLogs() {
+      const response = await fetch(`${API_BASE}/log?activity_id=${ACTIVITY_ID}&date=${LOG_DATE_STRING}`);
+      const data = await response.json();
+      logs = data.logs || [];
+      calculateLiveTotal();
+      renderTable();
+    }
+
+    // Calculate live total
+    function calculateLiveTotal() {
+      const inEntries = new Set(logs.filter(log => log.direction === "in").map(log => log.name_id));
+      const outEntries = new Set(logs.filter(log => log.direction === "out").map(log => log.name_id));
+      liveTotal = Math.max(0, inEntries.size - outEntries.size);
+      updateLiveTotalDisplay();
+    }
+
+    // Update live total display
+    function updateLiveTotalDisplay() {
+      const now = new Date();
+      const timeString = now.toTimeString().split(" ")[0];
+      document.getElementById("liveTotal").textContent = liveTotal;
+      document.getElementById("liveMessage").textContent = `people present, as of ${timeString}`;
+    }
+
+    // Render filter buttons
+    function renderFilterButtons() {
+      const filters = Array.from(new Set(names.map(name => name.filter))).sort();
+      const buttonsContainer = document.getElementById("filterButtons");
+      buttonsContainer.innerHTML = "";
+
+      // Add "all" button
+      const allButton = document.createElement("button");
+      allButton.textContent = "All";
+      allButton.onclick = () => filterTable("all");
+      buttonsContainer.appendChild(allButton);
+
+      // Add filter-specific buttons
+      filters.forEach(filter => {
+        const button = document.createElement("button");
+        button.textContent = filter;
+        button.onclick = () => filterTable(filter);
+        buttonsContainer.appendChild(button);
+      });
+    }
+
+    // Render table
+    function renderTable() {
+      const inColumn = document.getElementById("inColumn");
+      const outColumn = document.getElementById("outColumn");
+
+      const inNames = logs
+        .filter(log => log.direction === "in")
+        .map(log => names.find(name => name.name_id === log.name_id))
+        .filter(Boolean)
+        .sort((a, b) => a.display.localeCompare(b.display));
+
+      const outNames = logs
+        .filter(log => log.direction === "out")
+        .map(log => names.find(name => name.name_id === log.name_id))
+        .filter(Boolean)
+        .sort((a, b) => a.display.localeCompare(b.display));
+
+      inColumn.innerHTML = inNames.map(name => `<span class="filter-${name.filter}">${name.display}</span><br />`).join("");
+      outColumn.innerHTML = outNames.map(name => `<span class="filter-${name.filter}">${name.display}</span><br />`).join("");
+    }
+
+    // Filter table based on filter value
+    function filterTable(filter) {
+      const allElements = document.querySelectorAll("[class^='filter-']");
+      allElements.forEach(el => el.classList.remove("hidden"));
+
+      if (filter !== "all") {
+        allElements.forEach(el => {
+          if (!el.classList.contains(`filter-${filter}`)) {
+            el.classList.add("hidden");
+          }
+        });
+      }
+    }
+
+    // Initialize the page
+    async function init() {
+      if (enableTestMode) {
+        const testDate = getUrlParameter("date");
+        if (testDate && /^\d{4}-\d{2}-\d{2}$/.test(testDate)) {
+          LOG_DATE_STRING = testDate;
+        }
+      }
+
+      if (!isSunday()) {
+        const nextSunday = getNextSunday();
+        document.body.innerHTML = `<h1 style="font-size: 24px; text-align: center;">The next session is ${nextSunday}</h1>`;
+        return;
+      }
+
+      await fetchNames();
+      await fetchLogs();
+      setInterval(fetchLogs, 15000); // Refresh logs every 15

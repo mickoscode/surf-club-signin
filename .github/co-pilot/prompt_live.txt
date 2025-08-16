@@ -1,7 +1,11 @@
-I want live.html to be SPA website, which will be hosted in an AWS S3 bucket.
-dynamodb.tf contains terraform to create a table called Log, as well as insert a sample record.
+I want live.template.html to be SPA website, which will be hosted in an AWS S3 bucket.
+dynamodb.tf contains terraform showing insertion of a record into 2 tables, Log and Names.
+index.template.html contains eamples of using these 2 tables, as well as many variables and template 
+codes that need to be repeated in the new file.
+logs.html and names.html also show examples of fetching data from these dynamo tables.
 
-Using the exact attribute names for the Log table and log_sample item in dynamodb.tf, please create a live.html file that meets all of the following requirements:
+Using the exact attribute names for Log & Names tables in dynamodb.tf, please create a
+live.template.html file that meets all of the following requirements:
 
 - must be mobile-first (i.e. users will only ever use this page on a mobile web broswer).
 - must be very user friendly, one simple message or function display at any one time
@@ -10,75 +14,61 @@ Using the exact attribute names for the Log table and log_sample item in dynamod
 - use javascript to call backend functions, based on the example functions further below.
 - use javascript functions to manage page display and layout, using constants further below.
 - add lots of comments so the code is easy to understand and maintain
-- uses localStorage to remember users so they do not need to re-enter name details
-- provide a button to clear a pre-filled name, and revert to manual input method
 
-index.html usage:
-This web page will be used to sign in and out of an activity.
-The activity runs from 8am to 10.40am each Sunday. Users will need to select their name from an auto-completing list of valid names and then click a sign "in" button at the start of the activity.
-The user will then need to click a sign "out" button at the end of the activity. The web page should remember the user, so that they do not need to select their name if they have already visited the page.
+live.template.html usage:
+This page will display a live counter and a list of names to the user/viewer.
+The page should fetch all records from Names table for given activity_id. 
+Names only have to be fetched once.
+Every 15 seconds, the page should fetch all records from Log for LOG_DATE_STRING.
+
+Create a variable called live_total and set it using the following calculation:
+- live_total = total unique name_id entries where direction=in - total uniue name_id entries where direction=out.
+- if live_total should be set to 0 if calculation returns a negative number
+
+The top, center of the page should display value of variable live_total in very large text (about 20% of page height)
+Immediately below live_total, display the message "people present, as of <current time as HH:MM:SS>", in regular size text (about 18px)
+
+Below the message, insert a horizontal line.
+
+Below the line, display a series of buttons, to control filtering of the data in the 2x2 table below.
+The series of buttons should be diplayed on the same line if possible, or wrapped if needed. use small 
+or medium size tet for these buttons.
+Using the filter values from list of names, create 1 button for each unique filter value. 
+There should be no duplicate filter buttons. Also create 1 button called "all", and place this as the first button in the list.
+
+Whenever one of these buttons is clicked, the visibility of the names in the 2x2 table should be toggled accordingly.
+for example, if "all" is clicked, then all names should be visible.
+if a button called "u15" is clicked, then only names with a filter value = "u15" should be visible
+
+Below the message, display a 2 x 2 table as follows:
+row 1, column headers: IN | OUT
+row 2, IN column - list of all unique name_id from Log where direction="in". 
+  - Log.name_id should be matched to the Names.display value for the same name_id
+  - names should be sorted alphabetically, 1 per line, using <br /> within the  
+  - Names.filter should be used for each name to support button/visibility functionality
+row 2, OUT column - list of all unique name_id from Log where direction="out". 
+  - Log.name_id should be matched to the Names.display value for the same name_id
+  - names should be sorted alphabetically, 1 per line, using <br /> within the  
+  - Names.filter should be used for each name to support button/visibility functionality
+
+Just like the example in logs.html, this html file should accept a parameter called 'date', 
+to support testing functionality.
+But, I only want to enable this test functionality using INJECT_ENABLE_TEST_MODE, as demonstrated in index.template.html
 
 Functionality needed:
 on page load, call fetchNames() for the current date
 
-
-If the current day is not sunday OR current time > END_TIME:
+If the current day is not sunday 
 - calculate the date for the next sunday.
 - display a large, centered message: The next session is <dd/mmm/yyyy>
 - stop processing 
 
-If the current day is sunday AND current time is < IN_START_TIME:
-- display a large, centered message: Sign in starts at START_TIME
-- stop processing 
-
-If the current day is sunday AND current time is > IN_START_TIME AND < OUT_START_IME:
-- show sign in form which uses addLog()
-- form contains 1 input field (display). This input field must be very simple to use. Users can only enter a name from the list of allowed names. The best match should be selected as the user starts to type their name.
-- try to retrieve user details from previous page use, and display name instead of input field if found
-- form will submit hidden input activity_id=ACTIVITY_ID
-- form will submit hidden input direction=in
-- form will submit hidden input name_id  // get value from fetchNames()
-- form contains 1 submit button called "sign in"
-- use addLog() to record data in backend
-- page should display a spinner after clicking "sign in", followed by a message to indicate success or error/failure.
-
-If the current day is sunday AND current time is > OUT_START_TIME AND < END_TIME:
-- show sign out form which uses addLog()
-- form contains 1 input field (display). This input field must be very simple to use. Users can only enter a name from the list of allowed names. The best match should be selected as the user starts to type their name.
-- try to retrieve user details from previous page use, and display name instead of input field if found
-- form will submit hidden input activity_id=ACTIVITY_ID
-- form will submit hidden input direction=out
-- form will submit hidden input name_id  // get value from saved details or fetchNames()
-- form contains 1 submit button called "sign out"
-- use addLog() to record data in backend
-- page should display a spinner after clicking "sign out", followed by a message to indicate success or error/failure.
-
-Constants to use:
-API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com"
-ACTIVITY_ID = "sorrento_youth_sunday"
-IN_START_TIME: 08:00
-OUT_START_TIME: 09:30
-END_TIME: 10:40
 
 Example function calls:
 # Get logs for a given date.
 fetchLogs() {
       const response = await fetch(`${API_BASE}/log?activity_id=sorrento_youth_sunday&date=2025-08-12`)
 }
-
-# addLog()
-const payload = {
-  activity_id: ${ACTIVITY_ID}
-  name_id: name_id,
-  direction: direction,
-  date_time: date_time
-};
-
-const response = await fetch(`${API_BASE}/log`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload)
-});
 
 # get list of valid names that are allowed to sign in, along with a filter value (e.g. u14, u15, u17, u19)
 async function fetchNames() {
@@ -87,72 +77,6 @@ async function fetchNames() {
 }
 
 provides:
-${name.name_id}  //use this value for Add log!
-${name.display}  //use this value for limiting and validating naame selection
-${name.filter}   //use this value for confirmation message
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# python adLog.python
-Please create a python script using latest of python. 
-This script will be executed by AWS lambda. The lambda will be called by aws api gate way and it will pass 
-in a variable called 'name'. The script should append this sting to the log file 'in.log' in the aws s3 
-bucket s3://micko-training2025.info. Before appending to the log, the python script should read the 
-existing log file and ensure there is not already a matching log entry. 
-Please add other validation to prevent malicious injection into the name variable, and return a warning if 
-the entry already exists, other wise return a success code if the log entry is successfully created.
-
-# Dynamodb terraform
-I am using terraform version 1.12.2 to provision an s3 hosted website on aws. 
-I plan to use aws dynamodb for the backend of this site. 
-The volume of data will be tiny, less than 50Meg. And the volume of queries will also be tiny, less than 4000 queries per month. 
-So I want dynamodb to be configured in a way that will use AWS free tier billing.
-I will add a lambda function, API gateway and relevant IAM roles at a later time. 
-Right now, I would like you to provide me with a complete terraform file to provision a dynamodb database called 'signin_website'.
-The database should have 5 tables for the schema below, using the most logical column types for each of the names. 
-please prompt me for clarification if an of the names do not have an obvious column type.  
-
-# Table schemas for database 'signin_website'
-Names:
-id_name|filter_string
-"sorrento_youth_sunday_Aidan O'Connor"|"u17"
-
-Log:
-id_name|direction_string("in"/"out")|date_time
-"sorrento_youth_sunday_Aidan O'Connor"|"in"|2025-08-12 11:15:00
-
-Activity:
-id_name|url_code|days_string|in_h_start|in_m_start|in_h_end|in_m_end|out_h_start|out_m_start|out_h_end|out_m_end
-"sorrento_youth_sunday"|"YOUTH"|"sunday"|8|0|9|30|9|31|10|40
-
-
-i think i have a better understanding now, so I will modify my schema. Below i have outlined 3 dynamodb tables, along with the columns i plan to add and an example of 1 record for each table. can you use this schema and examples to re-write the terraform code. please organise the terraform code so that 1 table_item is inserted immediately after the table resource definition.
-Names: id_name|filter_string "sorrento_youth_sunday_Aidan O'Connor"|"u17"
-Log: id_name|direction_string("in"/"out")|date_time "sorrento_youth_sunday_Aidan O'Connor"|"in"|2025-08-12 11:15:00
-Activity: id_name|url_code|days_string|in_h_start|in_m_start|in_h_end|in_m_end|out_h_start|out_m_start|out_h_end|out_m_end "sorrento_youth_sunday"|"YOUTH"|"sunday"|8|0|9|30|9|31|10|40
-
-The activity table will be tiny, less than 20 records. The names table will be very small, less than 1000 records. But over time, the log table should grow to be over 100,000 records. I expect i will need to fetch log entries where the id_name starts with a pre-fix like "sorrento_youth_sunday", and also filter on date_time. what do you recommend i do given these requirments?
-      
-      
-      const response = await fetch("https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com/log?activity_id=sorrento_youth_sunday&date=2025-08-12");
+${name.name_id}  //use this value to match Log.name_id to Names.display
+${name.display}  //use this value for display each name
+${name.filter}   //use this value for filter buttons

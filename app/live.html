@@ -21,11 +21,11 @@
     .live-total {
       font-size: 20vh;
       font-weight: bold;
-      margin: 0;
+      margin: 0; /* Remove margin */
     }
     .message {
       font-size: 18px;
-      margin: 10px 0;
+      margin: 5px 0; /* Reduce top and bottom margin */
     }
     .buttons {
       display: flex;
@@ -200,14 +200,27 @@
       const inNestedTable = document.getElementById("inNestedTable");
       const outNestedTable = document.getElementById("outNestedTable");
 
-      const inNames = logs
-        .filter(log => log.direction === "in")
+      // Helper function to remove duplicates based on name_id
+      function removeDuplicates(logs) {
+        const seen = new Set();
+        return logs.filter(log => {
+          if (seen.has(log.name_id)) {
+            return false;
+          }
+          seen.add(log.name_id);
+          return true;
+        });
+      }
+
+      const inLogs = removeDuplicates(logs.filter(log => log.direction === "in"));
+      const outLogs = removeDuplicates(logs.filter(log => log.direction === "out"));
+
+      const inNames = inLogs
         .map(log => names.find(name => name.name_id === log.name_id))
         .filter(Boolean)
         .sort((a, b) => a.display.localeCompare(b.display));
 
-      const outNames = logs
-        .filter(log => log.direction === "out")
+      const outNames = outLogs
         .map(log => names.find(name => name.name_id === log.name_id))
         .filter(Boolean)
         .sort((a, b) => a.display.localeCompare(b.display));

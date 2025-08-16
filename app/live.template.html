@@ -62,6 +62,22 @@
     .hidden {
       display: none;
     }
+
+    /* Remove borders from nested tables */
+    .nested-table {
+      border: none;
+      width: 100%;
+    }
+
+    .nested-table td {
+      border: none;
+      padding: 0;
+    }
+
+    /* Align nested tables to the top of their parent cells */
+    td {
+      vertical-align: top;
+    }
   </style>
 </head>
 <body>
@@ -78,8 +94,16 @@
     </thead>
     <tbody>
       <tr>
-        <td id="inColumn"></td>
-        <td id="outColumn"></td>
+        <td id="inColumn">
+          <table class="nested-table">
+            <tbody id="inNestedTable"></tbody>
+          </table>
+        </td>
+        <td id="outColumn">
+          <table class="nested-table">
+            <tbody id="outNestedTable"></tbody>
+          </table>
+        </td>
       </tr>
     </tbody>
   </table>
@@ -173,8 +197,8 @@
 
     // Render table
     function renderTable() {
-      const inColumn = document.getElementById("inColumn");
-      const outColumn = document.getElementById("outColumn");
+      const inNestedTable = document.getElementById("inNestedTable");
+      const outNestedTable = document.getElementById("outNestedTable");
 
       const inNames = logs
         .filter(log => log.direction === "in")
@@ -188,19 +212,39 @@
         .filter(Boolean)
         .sort((a, b) => a.display.localeCompare(b.display));
 
-      inColumn.innerHTML = inNames.map(name => `<span class="filter-${name.filter}">${name.display}</span><br />`).join("");
-      outColumn.innerHTML = outNames.map(name => `<span class="filter-${name.filter}">${name.display}</span><br />`).join("");
+      // Clear existing rows
+      inNestedTable.innerHTML = "";
+      outNestedTable.innerHTML = "";
+
+      // Populate nested tables
+      inNames.forEach(name => {
+        const row = document.createElement("tr");
+        row.classList.add(`filter-${name.filter}`);
+        const cell = document.createElement("td");
+        cell.textContent = name.display;
+        row.appendChild(cell);
+        inNestedTable.appendChild(row);
+      });
+
+      outNames.forEach(name => {
+        const row = document.createElement("tr");
+        row.classList.add(`filter-${name.filter}`);
+        const cell = document.createElement("td");
+        cell.textContent = name.display;
+        row.appendChild(cell);
+        outNestedTable.appendChild(row);
+      });
     }
 
     // Filter table based on filter value
     function filterTable(filter) {
-      const allElements = document.querySelectorAll("[class^='filter-']");
-      allElements.forEach(el => el.classList.remove("hidden"));
+      const allRows = document.querySelectorAll("[class^='filter-']");
+      allRows.forEach(row => row.classList.remove("hidden"));
 
       if (filter !== "all") {
-        allElements.forEach(el => {
-          if (!el.classList.contains(`filter-${filter}`)) {
-            el.classList.add("hidden");
+        allRows.forEach(row => {
+          if (!row.classList.contains(`filter-${filter}`)) {
+            row.classList.add("hidden");
           }
         });
       }

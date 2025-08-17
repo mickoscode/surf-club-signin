@@ -20,3 +20,15 @@ crash.log
 
 # config for vscode plugins
 .vscode/
+
+# some html files are generated from templates
+app/index.html
+app/live.html
+app-test/index.html
+app-test/live.html
+
+# any csv or json files in scripts folder are temporary
+scripts/*.csv
+scripts/*.json
+
+

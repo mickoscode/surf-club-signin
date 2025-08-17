@@ -36,7 +36,7 @@
         .container {
             width: 90%;
             max-width: 450px;
-            margin: 10vh auto 20px;
+            margin: 1vh auto 20px;
             padding: 2rem;
             background: var(--form-bg-color);
             border-radius: var(--border-radius);
@@ -53,6 +53,7 @@
 
         /* Form Styling */
         form#signForm {
+            position: relative;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -135,7 +136,7 @@
             color: var(--text-color);
             list-style: none;
             padding: 0;
-            margin-top: -1rem;
+            margin-top: 3rem;
             border: 1px solid #ccc;
             width: 100%;
             max-height: 150px;
@@ -278,7 +279,9 @@
         // Utility to calculate the next Sunday
         function getNextSunday() {
             const now = new Date();
-            const daysUntilSunday = (7 - now.getDay()) % 7;
+            let daysUntilSunday = (7 - now.getDay()) % 7;
+            // if today is sunday, then it will be 7 days to next sunday.
+            daysUntilSunday = daysUntilSunday === 0 ? 7 : daysUntilSunday;
             const nextSunday = new Date(now);
             nextSunday.setDate(now.getDate() + daysUntilSunday);
             return nextSunday.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });

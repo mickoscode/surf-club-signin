@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Counter</title>
   <link rel="stylesheet" href="https://unpkg.com/picnic">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{INJECT_FAVICON}}">
   <style>
     body {
       display: flex;
@@ -164,7 +165,7 @@
       renderTable();
 
       // Schedule the next fetch after the current one completes
-      setTimeout(fetchLogs, 15000);
+      setTimeout(fetchLogs, 30000); // every 30 seconds
     }
 
     // Utility to filter logs with valid name_id

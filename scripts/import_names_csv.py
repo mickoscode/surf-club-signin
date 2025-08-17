@@ -2,6 +2,7 @@ import csv
 import json
 import re
 import subprocess
+import unicodedata
 from typing import List
 
 # Constants
@@ -10,16 +11,18 @@ TABLE_NAME = "names"
 CSV_FILE = "names.csv"
 BATCH_SIZE = 25  # DynamoDB batch-write limit
 
+# Converts display name to a lowercase, underscore-separated ID
 def sanitize_name_id(display: str) -> str:
-    """
-    Converts display name to a lowercase, underscore-separated ID
-    """
-    return re.sub(r"[^a-z0-9]+", "_", display.lower()).strip("_")
+    # Normalize accented characters to ASCII equivalents
+    normalized = unicodedata.normalize("NFKD", display)
+    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
+    # Lowercase and remove unwanted characters (keep a-z, 0-9, and space)
+    cleaned = re.sub(r"[^a-z0-9 ]+", "", ascii_only.lower()).strip(" ")
+    # Replace spaces with underscores
+    return re.sub(r"[ ]+", "_", cleaned)
 
+# Constructs a single PutRequest item for DynamoDB batch-write-item
 def build_put_request(display: str, filter_value: str) -> dict:
-    """
-    Constructs a single PutRequest item for DynamoDB batch-write-item
-    """
     name_id = sanitize_name_id(display)
     return {
         "PutRequest": {
@@ -32,10 +35,8 @@ def build_put_request(display: str, filter_value: str) -> dict:
         }
     }
 
+# Reads CSV and returns list of PutRequest items
 def read_csv(file_path: str) -> List[dict]:
-    """
-    Reads CSV and returns list of PutRequest items
-    """
     items = []
     #with open(file_path, newline="", encoding="utf-8") as csvfile:
     with open(file_path, encoding="utf-8") as csvfile:
@@ -49,17 +50,13 @@ def read_csv(file_path: str) -> List[dict]:
                 print(f"⚠️  Skipping row with missing display or filter: {row}")
     return items
 
+# Splits items into batches of specified size
 def split_into_batches(items: List[dict], batch_size: int) -> List[List[dict]]:
-    """
-    Splits items into batches of specified size
-    """
     return [items[i:i + batch_size] for i in range(0, len(items), batch_size)]
 
+# Uploads a single batch to DynamoDB using AWS CLI
+# Returns result dict with success/failure info
 def upload_batch(batch: List[dict], batch_index: int) -> dict:
-    """
-    Uploads a single batch to DynamoDB using AWS CLI
-    Returns result dict with success/failure info
-    """
     payload = { TABLE_NAME: batch }
     try:
         result = subprocess.run(

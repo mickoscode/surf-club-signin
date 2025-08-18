@@ -457,7 +457,8 @@
 
             try {
                 const result = await addLog(nameId, direction);
-                alert(result.message || "Success!");
+                //alert(result.message || "Success!");
+                messageEl.textContent = "You have signed " + direction;
                 localStorage.setItem("name", nameInput.value);
             } catch (error) {
                 alert("Error: " + error.message);

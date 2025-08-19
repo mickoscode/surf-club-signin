@@ -24,8 +24,10 @@ crash.log
 # some html files are generated from templates
 app/index.html
 app/live.html
+app/history.html
 app-test/index.html
 app-test/live.html
+app-test/history.html
 
 # any csv or json files in scripts folder are temporary
 scripts/*.csv

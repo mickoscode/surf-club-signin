@@ -51,89 +51,13 @@
             font-weight: 600;
         }
 
-        /* Form Styling */
-        form#signForm {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-        form#signForm.hidden {
-          display: none;
-        }
-
-
-        input#nameInput,
-        button#submitButton {
-            padding: 15px;
-            border-radius: var(--border-radius);
-            border: 1px solid #ccc;
-            font-size: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-            transition: all 0.3s ease-in-out;
-        }
-
-        input#nameInput:focus {
-            outline: none;
-            border-color: var(--focus-color);
-            box-shadow: 0 0 0 3px rgba(85, 170, 255, 0.3);
-        }
-
-        button#submitButton {
-            cursor: pointer;
-            background: var(--primary-color);
-            color: var(--menu-text-color);
-            border: none;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        button#submitButton:hover,
-        button#submitButton:focus {
-            background: var(--secondary-color);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        button#clearName {
-            margin-top: -1rem;
-            background: none;
-            border: none;
-            color: #888;
-            font-size: 0.8rem;
-            text-decoration: underline;
-            cursor: pointer;
-            text-align: right;
-            transition: color 0.2s;
-        }
-
-        button#clearName:hover {
-            color: var(--text-color);
-        }
-
         .hidden {
             display: none;
         }
         
-        /* Spinner */
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
         .highlight {
             font-weight: bold;
             color: var(--primary-color);
-        }
-
-        .dropdown-item:hover .highlight {
-            color: #fff;
         }
 
         /* Header Styles */
@@ -185,32 +109,20 @@
 <body>
     <div class="container">
         <div id="header-container"></div>
-        <h1 id="message"></h1>
-        <form id="signForm" class="hidden">
-            <input type="text" id="nameInput" placeholder="Enter your name" autocomplete="off">
-            <button type="button" id="clearName">Clear Name</button>
-            <input type="hidden" id="activityId" value="sorrento_youth_sunday">
-            <input type="hidden" id="direction">
-            <input type="hidden" id="nameId">
-            <button type="submit" id="submitButton"></button>
-        </form>
-        <div id="spinner" class="spinner hidden"></div>
+        <div id="dateList"></div>
+        <div class="content-container">
+          <div class="buttons" id="filterButtons"></div>
+          <table class="records-table">
+            <tbody id="recordsTable"></tbody>
+          </table>
+        </div>
     </div>
     <script>
         const API_BASE = "{{INJECT_API_URL}}";
         const ACTIVITY_ID = "{{INJECT_ACTIVITY_ID}}";
-        let IN_START_TIME = convertTimeStringToDateObj("08:00");
-        let OUT_START_TIME = convertTimeStringToDateObj("09:30");
-        let END_TIME = convertTimeStringToDateObj("10:40");
-
-        const messageEl = document.getElementById("message");
-        const formEl = document.getElementById("signForm");
-        const spinnerEl = document.getElementById("spinner");
-        const nameInput = document.getElementById("nameInput");
-        const clearNameButton = document.getElementById("clearName");
-        const directionInput = document.getElementById("direction");
-        const nameIdInput = document.getElementById("nameId");
-        const submitButton = document.getElementById("submitButton");
+        let names = [];  // get valid names to filter out any junk logs!
+        let dates = [];
+        let logs = [];
 
         // inject ./header.snippet
         fetch('./header.snippet')
@@ -220,226 +132,200 @@
             })
             .catch(error => console.error('Header load error:', error));
 
-        // Utility to convert human readable time strings to date object.
-        function convertTimeStringToDateObj(timeString) {
-            const [hours, minutes] = timeString.split(":").map(Number);
-            const now = new Date();
-            now.setHours(hours, minutes, 0, 0);
-            return now;
-        }
-
         // Utility to parse URL parameters
         function getUrlParameter(name) {
             const params = new URLSearchParams(window.location.search);
             return params.get(name);
         }
 
-        // Utility to check if today is Sunday
-        function isSunday() {
-            const enableTestMode = {{INJECT_ENABLE_TEST_MODE}};
-            if (enableTestMode) {
-                return true;  // For testing purposes, always return true
-            } else {
-                return new Date().getDay() === 0;
-            }
-        }
-
-        // Utility to calculate the next Sunday
-        function getNextSunday() {
-            const now = new Date();
-            let daysUntilSunday = (7 - now.getDay()) % 7;
-            // if today is sunday, then it will be 7 days to next sunday.
-            daysUntilSunday = daysUntilSunday === 0 ? 7 : daysUntilSunday;
-            const nextSunday = new Date(now);
-            nextSunday.setDate(now.getDate() + daysUntilSunday);
-            return nextSunday.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-        }
-
-        // Fetch valid names from the backend
+        // Fetch names from the backend
         async function fetchNames() {
             const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
-            return response.json();
+            const data = await response.json();
+            names = data.names || [];
+            renderFilterButtons();
         }
 
-        // Add log entry to the backend
-        async function addLog(nameId, direction) {
-            const payload = {
-                activity_id: ACTIVITY_ID,
-                name_id: nameId,
-                direction: direction,
-                date_time: new Date().toISOString()
-            };
+        // Fetch list of dates from the backend
+        async function fetchDates() {
+            const response = await fetch(`${API_BASE}/date?activity_id=${ACTIVITY_ID}`);
+            const data = await response.json();
+            dates = data.dates || [];
+            return;
+        }
 
-            const response = await fetch(`${API_BASE}/log`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+        // Fetch logs from the backend
+        async function fetchLogs(dateString) {
+            const response = await fetch(`${API_BASE}/log?activity_id=${ACTIVITY_ID}&date=${dateString}`);
+            const data = await response.json();
+            logs = data.logs || [];
+            renderTable();
+        }
+
+        // Utility to filter logs with valid name_id
+        function filterValidLogs(logs) {
+            const validNameIds = new Set(names.map(name => name.name_id));
+            return logs.filter(log => validNameIds.has(log.name_id));
+        }
+
+        // Render filter buttons
+        function renderFilterButtons() {
+            const filters = Array.from(new Set(names.map(name => name.filter))).sort();
+            const buttonsContainer = document.getElementById("filterButtons");
+            buttonsContainer.innerHTML = "";
+
+            // Add "all" button
+            const allButton = document.createElement("button");
+            allButton.textContent = "All";
+            allButton.onclick = () => filterTable("all");
+            buttonsContainer.appendChild(allButton);
+
+            // Add filter-specific buttons
+            filters.forEach(filter => {
+                const button = document.createElement("button");
+                button.textContent = filter;
+                button.onclick = () => filterTable(filter);
+                buttonsContainer.appendChild(button);
+            });
+        }
+
+        // TEMP
+        function buildNameLogTable(inLogs, outLogs, names) {
+            const inNames = inLogs
+                .map(log => names.find(name => name.name_id === log.name_id))
+                .filter(Boolean)
+                .sort((a, b) => a.display.localeCompare(b.display));
+
+            const outNames = outLogs
+                .map(log => names.find(name => name.name_id === log.name_id))
+                .filter(Boolean)
+                .sort((a, b) => a.display.localeCompare(b.display));
+
+            // Create a lookup for timestamps
+            const inTimestamps = Object.fromEntries(
+                inLogs.map(log => [log.name_id, log.timestamp])
+            );
+
+            const outTimestamps = Object.fromEntries(
+                outLogs.map(log => [log.name_id, log.timestamp])
+            );
+
+            // Merge and deduplicate names
+            const allNamesMap = new Map();
+            [...inNames, ...outNames].forEach(name => {
+                allNamesMap.set(name.name_id, name);
             });
 
-            return response.json();
+            // Build the final table
+            const table = Array.from(allNamesMap.values()).map(name => ({
+                name_id: name.name_id,
+                display: name.display,
+                inTimestamp: inTimestamps[name.name_id] || "-",
+                outTimestamp: outTimestamps[name.name_id] || "-"
+            }));
+
+            return table;
+        }
+
+        // Render table
+        function renderTable() {
+            const validLogs = filterValidLogs(logs); // Filter invalid logs
+            const recordsTable = document.getElementById("recordsTable");
+
+            // Helper function to remove duplicates based on name_id
+            function removeDuplicates(logs) {
+                const seen = new Set();
+                return logs.filter(log => {
+                    if (seen.has(log.name_id)) {
+                        return false;
+                    }
+                    seen.add(log.name_id);
+                    return true;
+                });
+            }
+
+            const inLogs = removeDuplicates(validLogs.filter(log => log.direction === "in"));
+            const outLogs = removeDuplicates(validLogs.filter(log => log.direction === "out"));
+
+            const inNames = inLogs
+                .map(log => names.find(name => name.name_id === log.name_id))
+                .filter(Boolean)
+                .sort((a, b) => a.display.localeCompare(b.display));
+
+            const outNames = outLogs
+                .map(log => names.find(name => name.name_id === log.name_id))
+                .filter(Boolean)
+                .sort((a, b) => a.display.localeCompare(b.display));
+
+            // Clear existing rows
+            recordsTable.innerHTML = "";
+
+            // Populate records tables
+            inNames.forEach(name => {
+                const row = document.createElement("tr");
+                row.classList.add(`filter-${name.filter}`);
+                const cell = document.createElement("td");
+                cell.textContent = name.display;
+                row.appendChild(cell);
+                recordsTable.appendChild(row);
+            });
+
+            outNames.forEach(name => {
+                const row = document.createElement("tr");
+                row.classList.add(`filter-${name.filter}`);
+                const cell = document.createElement("td");
+                cell.textContent = name.display;
+                row.appendChild(cell);
+            });
+        }
+
+        // Filter table based on filter value
+        function filterTable(filter) {
+            const allRows = document.querySelectorAll("[class^='filter-']");
+            allRows.forEach(row => row.classList.remove("hidden"));
+
+            if (filter !== "all") {
+                allRows.forEach(row => {
+                    if (!row.classList.contains(`filter-${filter}`)) {
+                        row.classList.add("hidden");
+                    }
+                });
+            }
         }
 
         // Initialize the page
-        function init() {
-            const now = new Date();
-            const enableTestMode = {{INJECT_ENABLE_TEST_MODE}};
-            if (enableTestMode) {
-                const testParam = getUrlParameter("test");
+        async function init() {
+            const testDate = getUrlParameter("date");
+            if (testDate && /^\d{4}-\d{2}-\d{2}$/.test(testDate)) {
+                fetchNames();
+                fetchLogs(testDate);
 
-                if (testParam === "in") {
-                    IN_START_TIME = new Date(now.getTime() - 10 * 60 * 1000); // Override IN_START_TIME with current time - 10minutes
-                    OUT_START_TIME = new Date(now.getTime() + 10 * 60 * 1000); // Override OUT_START_TIME with current time + 10 minutes
-                    END_TIME = new Date(now.getTime() + 20 * 60 * 1000); // Override END_TIME with current time + 20minutes
-                }
-                if (testParam === "out") {
-                    IN_START_TIME = new Date(now.getTime() - 20 * 60 * 1000); // Override IN_START_TIME with current time - 10minutes
-                    OUT_START_TIME = new Date(now.getTime() - 10 * 60 * 1000); // Override OUT_START_TIME with current time + 10 minutes
-                    END_TIME = new Date(now.getTime() + 20 * 60 * 1000); // Override END_TIME with current time + 20minutes
-                }
-            }
+                // Render table
+                const tableData = buildNameLogTable(inLogs, outLogs, names);
+                const tbody = document.querySelector("#nameLogTable tbody");
 
-            if (!isSunday() || now > END_TIME) {
-                messageEl.textContent = `The next session is ${getNextSunday()}`;
-                return;
-            }
-
-            if (now < IN_START_TIME) {
-                messageEl.textContent = `Sign in starts at ${IN_START_TIME}`;
-                return;
-            }
-
-            if (now >= IN_START_TIME && now < OUT_START_TIME) {
-                setupForm("in");
-                return;
-            }
-
-            if (now >= OUT_START_TIME && now < END_TIME) {
-                setupForm("out");
-                return;
+                tableData.forEach(row => {
+                  const tr = document.createElement("tr");
+                  ["name_id", "display", "inTimestamp", "outTimestamp"].forEach(key => {
+                    const td = document.createElement("td");
+                    td.textContent = row[key];
+                    tr.appendChild(td);
+                  });
+                  tbody.appendChild(tr);
+                });
+            } else {
+                await fetchDates(); // populates global 'dates'
+                const htmlString = dates
+                    .sort((a, b) => b.localeCompare(a)) // descending order
+                    .map(date => `<a href="./history.html?date=${date}">${date}</a><br />`)
+                    .join("");
+                document.getElementById('dateList').innerHTML = htmlString;
             }
         }
-
-        // Setup the form for sign-in or sign-out
-        async function setupForm(direction) {
-            //messageEl.textContent = direction === "in" ? "Sign In" : "Sign Out";
-            messageEl.textContent = "";  // don't display a message, button text is enough
-            submitButton.textContent = direction === "in" ? "Sign In" : "Sign Out";
-            formEl.classList.remove("hidden");
-            directionInput.value = direction;
-
-            const savedName = localStorage.getItem("name");
-            if (savedName) {
-                nameInput.value = savedName;
-            }
-
-            const dropdown = document.createElement("ul");
-            dropdown.classList.add("dropdown", "hidden");
-            formEl.appendChild(dropdown);
-
-            const names = (await fetchNames()).names || [];
-
-            // Debounce function to limit filtering frequency
-            function debounce(func, delay) {
-                let timeout;
-                return (...args) => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func(...args), delay);
-                };
-            }
-
-            // Filter and display matching names
-            function filterNames() {
-                const inputValue = nameInput.value.toLowerCase();
-                const matches = names.filter(name => name.display.toLowerCase().includes(inputValue));
-
-                dropdown.innerHTML = ""; // Clear previous suggestions
-                if (matches.length > 0 && inputValue) {
-                    matches.forEach((match, index) => {
-                        const item = document.createElement("li");
-                        item.classList.add("dropdown-item");
-                        item.innerHTML = match.display.replace(
-                            new RegExp(inputValue, "gi"),
-                            match => `<span class="highlight">${match}</span>`
-                        );
-
-                        item.addEventListener("click", () => {
-                            nameInput.value = match.display;
-                            nameIdInput.value = match.name_id;
-                            dropdown.classList.add("hidden");
-                        });
-
-                        dropdown.appendChild(item);
-                    });
-                    dropdown.classList.remove("hidden");
-                } else {
-                    dropdown.classList.add("hidden");
-                }
-            }
-
-            // Add event listeners
-            nameInput.addEventListener("input", debounce(filterNames, 300));
-            nameInput.addEventListener("blur", () => {
-                setTimeout(() => dropdown.classList.add("hidden"), 200);
-            });
-            nameInput.addEventListener("focus", () => {
-                if (dropdown.children.length > 0) {
-                    dropdown.classList.remove("hidden");
-                }
-            });
-
-            // Keyboard navigation
-            nameInput.addEventListener("keydown", (e) => {
-                const items = dropdown.querySelectorAll(".dropdown-item");
-                let activeIndex = Array.from(items).findIndex(item => item.classList.contains("active"));
-
-                if (e.key === "ArrowDown") {
-                    e.preventDefault();
-                    if (activeIndex < items.length - 1) {
-                        if (activeIndex >= 0) items[activeIndex].classList.remove("active");
-                        items[++activeIndex].classList.add("active");
-                    }
-                } else if (e.key === "ArrowUp") {
-                    e.preventDefault();
-                    if (activeIndex > 0) {
-                        items[activeIndex].classList.remove("active");
-                        items[--activeIndex].classList.add("active");
-                    }
-                } else if (e.key === "Enter" && activeIndex >= 0) {
-                    e.preventDefault();
-                    items[activeIndex].click();
-                }
-            });
-        }
-
-        // Handle form submission
-        formEl.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            spinnerEl.classList.remove("hidden");
-
-            const nameId = nameIdInput.value;
-            const direction = directionInput.value;
-
-            try {
-                const result = await addLog(nameId, direction);
-                //alert(result.message || "Success!");
-                messageEl.textContent = "You have signed " + direction;
-                localStorage.setItem("name", nameInput.value);
-            } catch (error) {
-                alert("Error: " + error.message);
-            } finally {
-                spinnerEl.classList.add("hidden");
-            }
-        });
-
-        // Clear saved name
-        clearNameButton.addEventListener("click", () => {
-            localStorage.removeItem("name");
-            messageEl.textContent = "";
-            nameInput.value = "";
-        });
 
         // Initialize the page on load
-        init();
+        //init();
+        (async () => { await init(); })();
     </script>
 </body>
 </html>

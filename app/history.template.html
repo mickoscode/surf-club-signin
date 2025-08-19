@@ -123,6 +123,8 @@
         let names = [];  // get valid names to filter out any junk logs!
         let dates = [];
         let logs = [];
+        let inLogs = [];
+        let outLogs = [];
 
         // inject ./header.snippet
         fetch('./header.snippet')
@@ -143,7 +145,6 @@
             const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
             const data = await response.json();
             names = data.names || [];
-            renderFilterButtons();
         }
 
         // Fetch list of dates from the backend
@@ -151,7 +152,6 @@
             const response = await fetch(`${API_BASE}/date?activity_id=${ACTIVITY_ID}`);
             const data = await response.json();
             dates = data.dates || [];
-            return;
         }
 
         // Fetch logs from the backend
@@ -159,11 +159,10 @@
             const response = await fetch(`${API_BASE}/log?activity_id=${ACTIVITY_ID}&date=${dateString}`);
             const data = await response.json();
             logs = data.logs || [];
-            renderTable();
         }
 
         // Utility to filter logs with valid name_id
-        function filterValidLogs(logs) {
+        function filterValidLogs() {
             const validNameIds = new Set(names.map(name => name.name_id));
             return logs.filter(log => validNameIds.has(log.name_id));
         }
@@ -190,7 +189,7 @@
         }
 
         // TEMP
-        function buildNameLogTable(inLogs, outLogs, names) {
+        function buildTableData() {
             const inNames = inLogs
                 .map(log => names.find(name => name.name_id === log.name_id))
                 .filter(Boolean)
@@ -227,9 +226,11 @@
             return table;
         }
 
-        // Render table
-        function renderTable() {
-            const validLogs = filterValidLogs(logs); // Filter invalid logs
+        // TODO - Clean Data - re-write this efficiently!
+        function cleanLogData() {
+            // Filter invalid logs.
+            const validNameIds = new Set(names.map(name => name.name_id));
+            const validLogs = logs.filter(log => validNameIds.has(log.name_id));
             const recordsTable = document.getElementById("recordsTable");
 
             // Helper function to remove duplicates based on name_id
@@ -244,39 +245,39 @@
                 });
             }
 
-            const inLogs = removeDuplicates(validLogs.filter(log => log.direction === "in"));
-            const outLogs = removeDuplicates(validLogs.filter(log => log.direction === "out"));
+            inLogs = removeDuplicates(validLogs.filter(log => log.direction === "in"));
+            outLogs = removeDuplicates(validLogs.filter(log => log.direction === "out"));
 
-            const inNames = inLogs
-                .map(log => names.find(name => name.name_id === log.name_id))
-                .filter(Boolean)
-                .sort((a, b) => a.display.localeCompare(b.display));
+//            const inNames = inLogs
+//                .map(log => names.find(name => name.name_id === log.name_id))
+//                .filter(Boolean)
+//                .sort((a, b) => a.display.localeCompare(b.display));
 
-            const outNames = outLogs
-                .map(log => names.find(name => name.name_id === log.name_id))
-                .filter(Boolean)
-                .sort((a, b) => a.display.localeCompare(b.display));
+//            const outNames = outLogs
+//                .map(log => names.find(name => name.name_id === log.name_id))
+//                .filter(Boolean)
+//                .sort((a, b) => a.display.localeCompare(b.display));
 
             // Clear existing rows
-            recordsTable.innerHTML = "";
+//            recordsTable.innerHTML = "";
 
             // Populate records tables
-            inNames.forEach(name => {
-                const row = document.createElement("tr");
-                row.classList.add(`filter-${name.filter}`);
-                const cell = document.createElement("td");
-                cell.textContent = name.display;
-                row.appendChild(cell);
-                recordsTable.appendChild(row);
-            });
+//            inNames.forEach(name => {
+//                const row = document.createElement("tr");
+//                row.classList.add(`filter-${name.filter}`);
+//                const cell = document.createElement("td");
+//                cell.textContent = name.display;
+//                row.appendChild(cell);
+//                recordsTable.appendChild(row);
+//            });
 
-            outNames.forEach(name => {
-                const row = document.createElement("tr");
-                row.classList.add(`filter-${name.filter}`);
-                const cell = document.createElement("td");
-                cell.textContent = name.display;
-                row.appendChild(cell);
-            });
+//            outNames.forEach(name => {
+//                const row = document.createElement("tr");
+//                row.classList.add(`filter-${name.filter}`);
+//                const cell = document.createElement("td");
+//                cell.textContent = name.display;
+//                row.appendChild(cell);
+//            });
         }
 
         // Filter table based on filter value
@@ -297,12 +298,16 @@
         async function init() {
             const testDate = getUrlParameter("date");
             if (testDate && /^\d{4}-\d{2}-\d{2}$/.test(testDate)) {
-                fetchNames();
-                fetchLogs(testDate);
+                await fetchNames(); // populates global 'names'
+                await fetchLogs(testDate);
+                cleanLogData();
 
-                // Render table
-                const tableData = buildNameLogTable(inLogs, outLogs, names);
-                const tbody = document.querySelector("#nameLogTable tbody");
+                // Render filters and table
+                renderFilterButtons();
+                const tableData = buildTableData();
+                //const tbody = document.querySelector("#nameLogTable tbody");
+                //const recordsTable = document.getElementById("recordsTable");
+                const tbody = document.getElementById("recordsTable");
 
                 tableData.forEach(row => {
                   const tr = document.createElement("tr");

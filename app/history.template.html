@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{INJECT_PAGE_TITLE}}</title>
+    <title>History</title>
     <link rel="stylesheet" href="https://unpkg.com/picnic">
     <link rel="icon" type="image/png" sizes="32x32" href="{{INJECT_FAVICON}}">
     <style>
@@ -125,42 +125,6 @@
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Dropdown */
-        .dropdown {
-            position: absolute;
-            background: #fff;
-            color: var(--text-color);
-            list-style: none;
-            padding: 0;
-            margin-top: 3rem;
-            border: 1px solid #ccc;
-            width: 100%;
-            max-height: 150px;
-            overflow-y: auto;
-            z-index: 1000;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            box-sizing: border-box;
-        }
-
-        .dropdown-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            text-align: left;
-        }
-
-        .dropdown-item:hover,
-        .dropdown-item.active {
-            background: var(--primary-color);
-            color: #fff;
         }
 
         .highlight {

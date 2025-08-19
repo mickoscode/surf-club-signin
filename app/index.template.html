@@ -470,6 +470,7 @@
         // Clear saved name
         clearNameButton.addEventListener("click", () => {
             localStorage.removeItem("name");
+            messageEl.textContent = "";
             nameInput.value = "";
         });
 

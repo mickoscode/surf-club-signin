@@ -1,5 +1,5 @@
 # -------------------------------
-# Lambda Functions
+# Lambda - Write Log
 # -------------------------------
 data "archive_file" "write_log_zip" {
   type        = "zip"
@@ -16,6 +16,9 @@ resource "aws_lambda_function" "write_log" {
   source_code_hash = data.archive_file.write_log_zip.output_base64sha256
 }
 
+# -------------------------------
+# Lambda - Fetch Logs
+# -------------------------------
 data "archive_file" "fetch_logs_zip" {
   type        = "zip"
   source_dir  = "${path.module}/lambda_fetch_logs"
@@ -31,6 +34,9 @@ resource "aws_lambda_function" "fetch_logs" {
   source_code_hash = data.archive_file.fetch_logs_zip.output_base64sha256
 }
 
+# -------------------------------
+# Lambda - Fetch Names
+# -------------------------------
 data "archive_file" "fetch_names_zip" {
   type        = "zip"
   source_dir  = "${path.module}/lambda_fetch_names"
@@ -44,5 +50,23 @@ resource "aws_lambda_function" "fetch_names" {
   runtime          = "python3.12"
   filename         = data.archive_file.fetch_names_zip.output_path
   source_code_hash = data.archive_file.fetch_names_zip.output_base64sha256
+}
+ 
+# -------------------------------
+# Lambda - Fetch Dates
+# -------------------------------
+data "archive_file" "fetch_dates_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_fetch_dates"
+  output_path = "${path.module}/fetch_dates.zip"
+}
+
+resource "aws_lambda_function" "fetch_dates" {
+  function_name    = "FetchDatesFunction"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.fetch_dates_zip.output_path
+  source_code_hash = data.archive_file.fetch_dates_zip.output_base64sha256
 }
  

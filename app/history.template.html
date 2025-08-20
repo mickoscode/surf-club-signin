@@ -123,8 +123,6 @@
         let names = [];  // get valid names to filter out any junk logs!
         let dates = [];
         let logs = [];
-        let inLogs = [];
-        let outLogs = [];
 
         // inject ./header.snippet
         fetch('./header.snippet')
@@ -188,98 +186,6 @@
             });
         }
 
-        // TEMP
-        function buildTableData() {
-            const inNames = inLogs
-                .map(log => names.find(name => name.name_id === log.name_id))
-                .filter(Boolean)
-                .sort((a, b) => a.display.localeCompare(b.display));
-
-            const outNames = outLogs
-                .map(log => names.find(name => name.name_id === log.name_id))
-                .filter(Boolean)
-                .sort((a, b) => a.display.localeCompare(b.display));
-
-            // Create a lookup for timestamps
-            const inTimestamps = Object.fromEntries(
-                inLogs.map(log => [log.name_id, log.timestamp])
-            );
-
-            const outTimestamps = Object.fromEntries(
-                outLogs.map(log => [log.name_id, log.timestamp])
-            );
-
-            // Merge and deduplicate names
-            const allNamesMap = new Map();
-            [...inNames, ...outNames].forEach(name => {
-                allNamesMap.set(name.name_id, name);
-            });
-
-            // Build the final table
-            const table = Array.from(allNamesMap.values()).map(name => ({
-                name_id: name.name_id,
-                display: name.display,
-                inTimestamp: inTimestamps[name.name_id] || "-",
-                outTimestamp: outTimestamps[name.name_id] || "-"
-            }));
-
-            return table;
-        }
-
-        // TODO - Clean Data - re-write this efficiently!
-        function cleanLogData() {
-            // Filter invalid logs.
-            const validNameIds = new Set(names.map(name => name.name_id));
-            const validLogs = logs.filter(log => validNameIds.has(log.name_id));
-            const recordsTable = document.getElementById("recordsTable");
-
-            // Helper function to remove duplicates based on name_id
-            function removeDuplicates(logs) {
-                const seen = new Set();
-                return logs.filter(log => {
-                    if (seen.has(log.name_id)) {
-                        return false;
-                    }
-                    seen.add(log.name_id);
-                    return true;
-                });
-            }
-
-            inLogs = removeDuplicates(validLogs.filter(log => log.direction === "in"));
-            outLogs = removeDuplicates(validLogs.filter(log => log.direction === "out"));
-
-//            const inNames = inLogs
-//                .map(log => names.find(name => name.name_id === log.name_id))
-//                .filter(Boolean)
-//                .sort((a, b) => a.display.localeCompare(b.display));
-
-//            const outNames = outLogs
-//                .map(log => names.find(name => name.name_id === log.name_id))
-//                .filter(Boolean)
-//                .sort((a, b) => a.display.localeCompare(b.display));
-
-            // Clear existing rows
-//            recordsTable.innerHTML = "";
-
-            // Populate records tables
-//            inNames.forEach(name => {
-//                const row = document.createElement("tr");
-//                row.classList.add(`filter-${name.filter}`);
-//                const cell = document.createElement("td");
-//                cell.textContent = name.display;
-//                row.appendChild(cell);
-//                recordsTable.appendChild(row);
-//            });
-
-//            outNames.forEach(name => {
-//                const row = document.createElement("tr");
-//                row.classList.add(`filter-${name.filter}`);
-//                const cell = document.createElement("td");
-//                cell.textContent = name.display;
-//                row.appendChild(cell);
-//            });
-        }
-
         // Filter table based on filter value
         function filterTable(filter) {
             const allRows = document.querySelectorAll("[class^='filter-']");
@@ -294,31 +200,80 @@
             }
         }
 
+        // My log cleaning function to build table records
+        function micksLogRowObject() {
+            const tr = {};
+            logs.forEach(log => {
+                const name = names.find(n => n.name_id === log.name_id);
+                if (!name) return; // skip if name not found
+
+                // initialise table row if not already done :)
+                if (!tr[log.name_id]) {
+                    tr[log.name_id] = {
+                        name_id: log.name_id,
+                        d: name.display,
+                        in: "-",
+                        out: "-"
+                    };
+                }
+
+                if (log.direction === "in") {
+                    tr[log.name_id].in = log.date_time;
+                } else if (log.direction === "out") {
+                    tr[log.name_id].out = log.date_time;
+                }
+            });
+
+            return tr;
+        }
+
+        // convert timestamp string to HH:MM format
+        function convertTs2Time(timestamp) {
+            if (!timestamp || timestamp === "-") return "-";
+            const date = new Date(timestamp);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
         // Initialize the page
         async function init() {
             const testDate = getUrlParameter("date");
+
             if (testDate && /^\d{4}-\d{2}-\d{2}$/.test(testDate)) {
                 await fetchNames(); // populates global 'names'
-                await fetchLogs(testDate);
-                cleanLogData();
+                await fetchLogs(testDate); // populates global 'logs'
 
-                // Render filters and table
                 renderFilterButtons();
-                const tableData = buildTableData();
-                //const tbody = document.querySelector("#nameLogTable tbody");
-                //const recordsTable = document.getElementById("recordsTable");
-                const tbody = document.getElementById("recordsTable");
+                const tableData = micksLogRowObject();
 
-                tableData.forEach(row => {
-                  const tr = document.createElement("tr");
-                  ["name_id", "display", "inTimestamp", "outTimestamp"].forEach(key => {
-                    const td = document.createElement("td");
-                    td.textContent = row[key];
-                    tr.appendChild(td);
-                  });
-                  tbody.appendChild(tr);
+                const tbody = document.getElementById("recordsTable");
+                tbody.innerHTML = `
+                    <thead>
+                      <tr><th>name</th><th>in</th><th>out</th></tr>
+                    </thead>
+                    <tbody></tbody>`;
+
+                Object.values(tableData).forEach(row => {
+                    const tr = document.createElement("tr");
+
+                    const tdDisplay = document.createElement("td");
+                    tdDisplay.textContent = row.d;
+                    tr.appendChild(tdDisplay);
+
+                    const tdIn = document.createElement("td");
+                    tdIn.textContent = convertTs2Time(row.in);
+                    tr.appendChild(tdIn);
+
+                    const tdOut = document.createElement("td");
+                    tdOut.textContent = convertTs2Time(row.out);
+                    tr.appendChild(tdOut);
+
+                    tbody.appendChild(tr);
                 });
+
             } else {
+
                 await fetchDates(); // populates global 'dates'
                 const htmlString = dates
                     .sort((a, b) => b.localeCompare(a)) // descending order
@@ -329,7 +284,6 @@
         }
 
         // Initialize the page on load
-        //init();
         (async () => { await init(); })();
     </script>
 </body>

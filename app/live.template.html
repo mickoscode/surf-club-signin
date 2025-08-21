@@ -14,30 +14,10 @@
         <h2 class="live-total" id="liveTotal">0</h2>
         <p class="message" id="liveMessage">live count as of --:--:--</p>
         <div class="buttons" id="filterButtons"></div>
-        <table>
-            <thead>
-                <tr>
-                    <th>IN</th>
-                    <th>OUT</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td id="inColumn">
-                        <table class="nested-table">
-                            <tbody id="inNestedTable"></tbody>
-                        </table>
-                    </td>
-                    <td id="outColumn">
-                        <table class="nested-table">
-                            <tbody id="outNestedTable"></tbody>
-                        </table>
-                    </td>
-                </tr>
-            </tbody>
+        <table class="records-table">
+            <tbody id="recordsTable"></tbody>
         </table>
     </div>
-
     <script>
         const API_BASE = "{{INJECT_API_URL}}";
         const ACTIVITY_ID = "{{INJECT_ACTIVITY_ID}}";
@@ -81,7 +61,6 @@
             const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
             const data = await response.json();
             names = data.names || [];
-            renderFilterButtons();
         }
 
         // Fetch logs from the backend
@@ -89,30 +68,25 @@
             const response = await fetch(`${API_BASE}/log?activity_id=${ACTIVITY_ID}&date=${LOG_DATE_STRING}`);
             const data = await response.json();
             logs = data.logs || [];
-            calculateLiveTotal();
-            renderTable();
-
-            // Schedule the next fetch after the current one completes
-            setTimeout(fetchLogs, 30000); // every 30 seconds
+            //setTimeout(fetchLogs, 30000); // every 30 seconds
         }
 
         // Utility to filter logs with valid name_id
-        function filterValidLogs(logs) {
+        function filterValidLogs() {
             const validNameIds = new Set(names.map(name => name.name_id));
             return logs.filter(log => validNameIds.has(log.name_id));
         }
 
         // Calculate live total
         function calculateLiveTotal() {
-            const validLogs = filterValidLogs(logs); // Filter invalid logs
+            const validLogs = filterValidLogs(); // Filter invalid logs
             const inEntries = new Set(validLogs.filter(log => log.direction === "in").map(log => log.name_id));
             const outEntries = new Set(validLogs.filter(log => log.direction === "out").map(log => log.name_id));
-            liveTotal = Math.max(0, inEntries.size - outEntries.size);
-            updateLiveTotalDisplay();
+            return Math.max(0, inEntries.size - outEntries.size);
         }
 
         // Update live total display
-        function updateLiveTotalDisplay() {
+        function updateLiveTotalDisplay(liveTotal) {
             const now = new Date();
             const timeString = now.toTimeString().split(" ")[0];
             document.getElementById("liveTotal").textContent = liveTotal;
@@ -140,61 +114,6 @@
             });
         }
 
-        // Render table
-        function renderTable() {
-            const validLogs = filterValidLogs(logs); // Filter invalid logs
-            const inNestedTable = document.getElementById("inNestedTable");
-            const outNestedTable = document.getElementById("outNestedTable");
-
-            // Helper function to remove duplicates based on name_id
-            function removeDuplicates(logs) {
-                const seen = new Set();
-                return logs.filter(log => {
-                    if (seen.has(log.name_id)) {
-                        return false;
-                    }
-                    seen.add(log.name_id);
-                    return true;
-                });
-            }
-
-            const inLogs = removeDuplicates(validLogs.filter(log => log.direction === "in"));
-            const outLogs = removeDuplicates(validLogs.filter(log => log.direction === "out"));
-
-            const inNames = inLogs
-                .map(log => names.find(name => name.name_id === log.name_id))
-                .filter(Boolean)
-                .sort((a, b) => a.display.localeCompare(b.display));
-
-            const outNames = outLogs
-                .map(log => names.find(name => name.name_id === log.name_id))
-                .filter(Boolean)
-                .sort((a, b) => a.display.localeCompare(b.display));
-
-            // Clear existing rows
-            inNestedTable.innerHTML = "";
-            outNestedTable.innerHTML = "";
-
-            // Populate nested tables
-            inNames.forEach(name => {
-                const row = document.createElement("tr");
-                row.classList.add(`filter-${name.filter}`);
-                const cell = document.createElement("td");
-                cell.textContent = name.display;
-                row.appendChild(cell);
-                inNestedTable.appendChild(row);
-            });
-
-            outNames.forEach(name => {
-                const row = document.createElement("tr");
-                row.classList.add(`filter-${name.filter}`);
-                const cell = document.createElement("td");
-                cell.textContent = name.display;
-                row.appendChild(cell);
-                outNestedTable.appendChild(row);
-            });
-        }
-
         // Filter table based on filter value
         function filterTable(filter) {
             const allRows = document.querySelectorAll("[class^='filter-']");
@@ -207,6 +126,43 @@
                     }
                 });
             }
+        }
+
+        // My log cleaning function to build table records
+        function micksLogRowObject() {
+            const tr = {};
+            logs.forEach(log => {
+                const name = names.find(n => n.name_id === log.name_id);
+                if (!name) return; // skip if name not found
+
+                // initialise table row if not already done :)
+                if (!tr[log.name_id]) {
+                    tr[log.name_id] = {
+                        name_id: log.name_id,
+                        d: name.display,
+                        f: name.filter || "default",
+                        in: "-",
+                        out: "-"
+                    };
+                }
+
+                if (log.direction === "in") {
+                    tr[log.name_id].in = log.date_time;
+                } else if (log.direction === "out") {
+                    tr[log.name_id].out = log.date_time;
+                }
+            });
+
+            return tr;
+        }
+
+        // convert timestamp string to HH:MM format
+        function convertTs2Time(timestamp) {
+            if (!timestamp || timestamp === "-") return "-";
+            const date = new Date(timestamp);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
         }
 
         // Initialize the page
@@ -225,11 +181,41 @@
             }
 
             await fetchNames();
-            fetchLogs(); // Start the first fetch
+            await fetchLogs();
+            const liveTotal = calculateLiveTotal();
+            updateLiveTotalDisplay(liveTotal);
+            renderFilterButtons();
+
+            const tableData = micksLogRowObject();
+
+            const tbody = document.getElementById("recordsTable");
+            tbody.innerHTML = `
+                <thead>
+                  <tr><th>name</th><th>in</th><th>out</th></tr>
+                </thead>
+                <tbody></tbody>`;
+
+            Object.values(tableData).forEach(row => {
+                const tr = document.createElement("tr");
+                tr.classList.add(`filter-${row.f}`);
+
+                const tdDisplay = document.createElement("td");
+                tdDisplay.textContent = row.d;
+                tr.appendChild(tdDisplay);
+
+                const tdIn = document.createElement("td");
+                tdIn.textContent = convertTs2Time(row.in);
+                tr.appendChild(tdIn);
+
+                const tdOut = document.createElement("td");
+                tdOut.textContent = convertTs2Time(row.out);
+                tr.appendChild(tdOut);
+
+                tbody.appendChild(tr);
+            });
         }
 
-        // Initialize the page on load
-        init();
+        (async () => { await init(); })();
     </script>
 </body>
 </html>

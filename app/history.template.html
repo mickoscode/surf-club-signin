@@ -13,12 +13,10 @@
     <div class="container">
         <h1 id="message"></h1>
         <div id="dateList"></div>
-        <div class="content-container">
-          <div class="buttons" id="filterButtons"></div>
-          <table class="records-table">
+        <div class="buttons" id="filterButtons"></div>
+        <table class="records-table">
             <tbody id="recordsTable"></tbody>
-          </table>
-        </div>
+        </table>
     </div>
     <script>
         const API_BASE = "{{INJECT_API_URL}}";
@@ -60,12 +58,6 @@
             const response = await fetch(`${API_BASE}/log?activity_id=${ACTIVITY_ID}&date=${dateString}`);
             const data = await response.json();
             logs = data.logs || [];
-        }
-
-        // Utility to filter logs with valid name_id
-        function filterValidLogs() {
-            const validNameIds = new Set(names.map(name => name.name_id));
-            return logs.filter(log => validNameIds.has(log.name_id));
         }
 
         // Render filter buttons

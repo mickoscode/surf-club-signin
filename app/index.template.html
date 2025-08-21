@@ -240,14 +240,17 @@
         // Handle form submission
         formEl.addEventListener("submit", async (e) => {
             e.preventDefault();
-            spinnerEl.classList.remove("hidden");
-
             const nameId = nameIdInput.value;
+            if (!nameId) {
+                messageEl.textContent = "type and select an allowed name!";
+                return;
+            }
+
+            spinnerEl.classList.remove("hidden");
             const direction = directionInput.value;
 
             try {
                 const result = await addLog(nameId, direction);
-                //alert(result.message || "Success!");
                 messageEl.textContent = "You have signed " + direction;
                 localStorage.setItem("name", nameInput.value);
             } catch (error) {

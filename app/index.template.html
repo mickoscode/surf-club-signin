@@ -147,7 +147,6 @@
 
         // Setup the form for sign-in or sign-out
         async function setupForm(direction) {
-            //messageEl.textContent = direction === "in" ? "Sign In" : "Sign Out";
             messageEl.textContent = "";  // don't display a message, button text is enough
             submitButton.textContent = direction === "in" ? "Sign In" : "Sign Out";
             formEl.classList.remove("hidden");

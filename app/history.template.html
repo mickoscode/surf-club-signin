@@ -11,6 +11,7 @@
 <body>
     <div id="header-container"></div>
     <div class="container">
+        <h1 id="message"></h1>
         <div id="dateList"></div>
         <div class="content-container">
           <div class="buttons" id="filterButtons"></div>
@@ -114,6 +115,7 @@
                     tr[log.name_id] = {
                         name_id: log.name_id,
                         d: name.display,
+                        f: name.filter || "default",
                         in: "-",
                         out: "-"
                     };
@@ -143,6 +145,9 @@
             const testDate = getUrlParameter("date");
 
             if (testDate && /^\d{4}-\d{2}-\d{2}$/.test(testDate)) {
+                const messageEl = document.getElementById("message");
+                messageEl.textContent = `History for ${testDate}`;
+
                 await fetchNames(); // populates global 'names'
                 await fetchLogs(testDate); // populates global 'logs'
 
@@ -158,6 +163,7 @@
 
                 Object.values(tableData).forEach(row => {
                     const tr = document.createElement("tr");
+                    tr.classList.add(`filter-${row.f}`);
 
                     const tdDisplay = document.createElement("td");
                     tdDisplay.textContent = row.d;

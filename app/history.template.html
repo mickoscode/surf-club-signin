@@ -143,10 +143,10 @@
         // Initialize the page
         async function init() {
             const testDate = getUrlParameter("date");
+            const messageEl = document.getElementById("message");
 
             if (testDate && /^\d{4}-\d{2}-\d{2}$/.test(testDate)) {
-                const messageEl = document.getElementById("message");
-                messageEl.textContent = `History for ${testDate}`;
+                messageEl.textContent = testDate;
 
                 await fetchNames(); // populates global 'names'
                 await fetchLogs(testDate); // populates global 'logs'
@@ -182,6 +182,7 @@
 
             } else {
 
+                messageEl.textContent = "History Available";
                 await fetchDates(); // populates global 'dates'
                 const htmlString = dates
                     .sort((a, b) => b.localeCompare(a)) // descending order

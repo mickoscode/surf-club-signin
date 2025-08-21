@@ -5,195 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Counter</title>
     <link rel="stylesheet" href="https://unpkg.com/picnic">
+    <link rel="stylesheet" href="./sign-in-out.css">
     <link rel="icon" type="image/png" sizes="32x32" href="{{INJECT_FAVICON}}">
-    <style>
-        :root {
-            --primary-color: #6a11cb;
-            --secondary-color: #2575fc;
-            --background-gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            --form-bg-color: #f7f7f7;
-            --text-color: #333;
-            --menu-bg-color: #0d1a26;
-            --menu-text-color: #fff;
-            --menu-link-color: #fff;
-            --focus-color: #55aaff;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            background: var(--background-gradient);
-            color: var(--menu-text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Header Styles */
-        .menu-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--menu-bg-color);
-            color: var(--menu-text-color);
-            padding: 12px 1rem;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 0.9em;
-            width: 100%;
-            box-sizing: border-box;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-        }
-
-        .menu-header a {
-            color: var(--menu-link-color);
-            text-decoration: none;
-            transition: color 0.2s ease-in-out;
-        }
-        
-        .menu-header a:hover {
-            color: var(--secondary-color);
-            text-decoration: underline;
-        }
-
-        .menu-left,
-        .menu-center,
-        .menu-right {
-            flex: 1;
-            padding: 0 0.5rem;
-            white-space: nowrap;
-        }
-        
-        .menu-left {
-            text-align: left;
-        }
-        
-        .menu-center {
-            text-align: center;
-        }
-        
-        .menu-right {
-            text-align: right;
-        }
-
-        /* Content container to add padding below fixed header */
-        .content-container {
-            width: 100%;
-            text-align: center;
-            margin-top: 60px; /* Adjust to be slightly larger than header height */
-            padding: 1rem;
-            box-sizing: border-box;
-        }
-
-        /* Live Counter Section */
-        .live-total {
-            font-size: 6rem;
-            font-weight: 700;
-            color: #fff;
-            margin-top: 0;
-            margin-bottom: 0;
-            line-height: 0.9;
-        }
-
-        .message {
-            font-size: 1rem;
-            margin-top: 0.5rem;
-            margin-bottom: 1rem;
-            color: #fff;
-            font-weight: 300;
-        }
-        
-        hr {
-            border: 0;
-            height: 1px;
-            background-color: rgba(255, 255, 255, 0.3);
-            width: 50%;
-            margin-bottom: 1.5rem;
-        }
-
-        /* Filter Buttons */
-        .buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .buttons button {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease-in-out;
-            font-size: 0.9rem;
-        }
-
-        .buttons button:hover {
-            background: rgba(255, 255, 255, 0.4);
-        }
-
-        /* Main Table and Names List */
-        table {
-            width: 95%;
-            max-width: 600px;
-            margin-bottom: 2rem;
-            border-collapse: collapse;
-            background: #fff;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            overflow: hidden;
-            color: var(--text-color);
-        }
-
-        th, td {
-            padding: 0; /* Remove parent table padding */
-            text-align: center;
-            border: none;
-        }
-
-        th {
-            background: var(--menu-bg-color);
-            color: var(--menu-text-color);
-            font-size: 1rem;
-            padding: 1rem;
-        }
-
-        .nested-table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        .nested-table td {
-            border-top: 1px solid #eee;
-            padding: 10px;
-            text-align: center;
-        }
-
-        /* First row in the nested table should have no top border */
-        .nested-table tr:first-child td {
-            border-top: none;
-        }
-
-        .hidden {
-            display: none;
-        }
-    </style>
 </head>
 <body>
     <div id="header-container"></div>
-    <div class="content-container">
+    <div class="container">
         <h2 class="live-total" id="liveTotal">0</h2>
-        <p class="message" id="liveMessage">people present, as of --:--:--</p>
-        <hr>
+        <p class="message" id="liveMessage">live count as of --:--:--</p>
         <div class="buttons" id="filterButtons"></div>
         <table>
             <thead>
@@ -297,7 +116,7 @@
             const now = new Date();
             const timeString = now.toTimeString().split(" ")[0];
             document.getElementById("liveTotal").textContent = liveTotal;
-            document.getElementById("liveMessage").textContent = `people present, as of ${timeString}`;
+            document.getElementById("liveMessage").textContent = `live count as of ${timeString}`;
         }
 
         // Render filter buttons

@@ -1,143 +1,38 @@
 # surf-club-signin
-Simple wbesite to enable paperless signin for surf club activities
+Simple website to enable paperless sign-in-out for surf club activities.
 
-The intended use of this site is for very low volume (20 - 200 sign in/out events per day, for a specific club/group/activity).
-Initially, there will only be 1 club/group/activity (sorrento/youth/sunday)... but this format will support other groups & activities within Sorrento Surf Life Saving Club, and possibly beyond.
+This website is hosted in aws s3, using API Gateway for lambda & dynamodb backend
 
-For privacy and ease of use, there is no authentication or restrictions against signing in/out.
-Anyone can sign a single name in/out... 
-The assumption is that there is little to be gained by "fraudulently" signing someone else in/out, or signing in when not actually present.
+Currently (MVP release 0.1.0), much of the terraform and website config is hard coded, and not intended for re-use by others.
+The intention is to clean this up and enable others to easily re-use this repo.
 
-The digital sign in/out process is purely to help with head counting (safety) and reducing paper waste.
-So hopefully this simple trust model can provide a useful service.
+See [requirments.md](./docs/requirements.md) and [release_plan.md](./docs/release_plan.md) for more context on what this site does.
 
-## MVP
+## developer/project context
 
-- 1 use case (sorrento/youth/sunday), hard codes as necessary
-- users: ability to sign in & out via: index.html
-- minimal/no admin (names.txt can be created & managed manually)
-- minimal/no authentication (allow anyone to view reports)
-- simple live report view (near real-time live head count to enable monitoring)
-  - will need a filter to make list manageable (e.g. u14/u15/u17/u19)
-- leaders: ability to view live head count via: live.html
-- leaders: ability to bulk sign in & out via: leader.html
+The aims of this repo/project are:
+1. Build a useful web app that will reduce paper waste when I facilitate sign in/out in my local surf club.
+1. Practice AI assisted coding - see [ai prompts](./.github/co-pilot/)
 
-**Scrap S3-app, need DynamoDB equivalent**
-- .names.txt   # hardcoded list of all the names that can sign in & out, with a filter (e.g. u14/u15/u17/u19)
-- .config.yml  # hardcoded for sorrento youth sunday sessions, AWST
-  - days:      sunday
-  - in-start:  08:00
-  - in-end:    09:30
-  - out-start: 09:31
-  - out-end:   10:40
+## repo/code overview
 
-**Scrap S3-data, need DynamoDB equivalent**
-/club/group/activity/ => /sorrento/youth/sunday/
+[./app/](./app/):
+- [./app/config.json](./app/config.json) - set values used in html templates. Essential defines the site/sub-site
+- [./app/header.snippet](./app/header.snippet) - simple solution to enable different menu in demo/test site  
+- [./app/history.template.html](./app/history.template.html) - inject-configs.js uses this to create history.html
+- [./app/index.template.html](./app/index.template.html) - inject-configs.js uses this to create index.html
+- [./app/live.template.html](./app/index.template.html) - inject-configs.js uses this to create live.html
+- [./app/inject-config.js](./app/inject-config.js) - trigged by [./.github/workflows/upload-to-s3.yml](./.github/workflows/upload-to-s3.yml)
 
-/club/group/activity/reports/  # static report, created after end of activity
-- yyyy-mm-dd.csv - \<name\>,\<in\>,\<out\>  
+[./app-test/](./app-test/):
+- Everything except [./app/config.json](./app/config.json) is a symbolic link back to [./app/](./app/)
+- `"INJECT_ENABLE_TEST_MODE": "true"` in config.json is what enables all of the test/demo functionality 
 
-/club/group/activity/yyyy/mm/dd/
-- in.log - \<name\>,hh:mm
-- out.log - \<name\>,hh:mm
+[./scripts/](./scripts/):
+- Python scripts to simplify basic web-dev site admin via AWS cli
+- Plan is to build authentication and site driven admin, if more people want to create activities
 
-**lambdas - work with dynamo instead!**
-- addLog (club, group, activity, direction, name)
-  - calculate yyyy/mm/dd/hh/mm using AWST
-  - direction must be "in" or "out"
-  - prevent duplicate logs
-  - append name & time to /club/group/activity/yyyy/mm/dd/direction.log
-
-**javaScript**
-- index.html  # form to sign in / out  - display info relative to recent/next session if outside window
-- live.html   # live headcount, list of names & status
-- report.html # list any csv reports, so user can click to view/download
-- leader.html # form to do bulk sign in / out
-
-## Post MVP - extending features and use cases:
-
-## Website Primary Functionality - User POV
-
-Nippers/Youth need to sign in and out each Sunday morning. 
-A parent may want to do this on their child's behalf (e.g. child has no phone).
-
-Nippers/Youth should only sign 1 person in/out (i.e. themself).
-A parent may have more than 1 child they need to sign in/out (not supported currently, see age manager/leader for multi-sign in/out)
-
-Site should automatically display sign in / out form, based on the time, otherwise display "no activity found" / "sign in starts at hh:mm" / "sign out ended at hh:mm"
-
-## Website Primary Functionality - Age Manager POV (aka Leader, Coach, etc)
-
-Age Managers (leaders/coaches) should be able to quickly sign multiple names in/out.
-
-## Website Primary Functionality - Admins
-
-Admin need ability to:
-- set checking schedule (days of week, sign in window, sign out window)
-- create new club, group & activity
-- import list of names
-- add/remove names from list
-- generate report
-- view list of reports (like /club/group/activity/reports/yyyy-mm-dd.csv)
-- view individual report - display list of names, sign in time, sign out time
-- export report as csv
-
-## Site layout
-
-www.site.com/club/group/activity/
-- logically separate by club, group & activity (e.g. sorrento/youth/sunday, sorrento/redcaps/sunday,  etc)
-- display sign in form  (if current day matches config.days and current time between config.in-start and config.in-end)
-- display sign out form (if current day matches config.days and current time between config.out-start and config.out-end)
-`.config` (needs encryption?)
-  - leader:    \<aus_mobile\>,  # authenication against one of these mobiles allows multi-sign in/out
-  - admin:     \<aus_mobile\>,  # authenication against one of these mobiles allows name & report management
-  - days:      \<day\>,         # list of days the activity runs (monday, tuesday, wednesday, etc.)
-  - in-start:  hh:mm          # users can sign in between this start & end time 
-  - in-end:    hh:mm          # users can sign in between this start & end time 
-  - out-start: hh:mm          # users can sign out between this start & end time 
-  - out-end:   hh:mm          # users can sign out between this start & end time 
-
-**Form:**
-- name  (any chars except newline, comma, auto-complete against dictionary only)
-- sign_in/out (correct button displayed based on current time and )
-
-www.site.com/club/group/activity/admin/
-- authenticate against mobile number (send sms code)
-- display options: view reports, import names, add name, remove name, add admin/leader, remove admin/leader
-- /import/ - allow upload of list, or display error if activity already has a list of names
-- /add/name|admin|leader    - form to add one name (any chars except newline, comma) - clean for code injection - prompt for confo
-- /remove/name|admin/leader - form to add one name (any chars except newline, comma) - clean for code injection - prompt for confo
-- /view/ - form to select yyyy/mm/dd and generate (if needed) or display report - display error if no data
-
-www.site.com/club/group/activity/leader/
-- authenticate against mobile number (send sms code)
-- display easy scroll list of all names, with single tap to sign in / out (if within window) - submit button to write selections to file
-- need to clean / verify data so that duplicates are not appended to in.log or out.log 
-
-www.site.com/new/
-- authenticate against mobile number (send sms code)
-- display form to add new club/group/activity/admins/leaders
-`.config` (needs encryption)
-  - site-admin: \<aus_mobile\>,  # authentication against one of these mobiles allows creation of new club/group/activity
-
-**Form:**
-- club     (alpha-numeric + '-' only, no space, no special charaters, limit = 20chars)
-- group    (alpha-numeric + '-' only, no space, no special charaters, limit = 20chars)
-- activity (alpha-numeric + '-' only, no space, no special charaters, limit = 20chars)
-- days     (check box for mon - sun)
-- sign-in-start  (hh:mm)
-- sign-in-end    (hh:mm)
-- sign-out-start (hh:mm)
-- sign-out-start (hh:mm)
-- leaders  (0-9, space, comma only) - comma seperated list of aus mobiles (04+ only)
-- admins   (0-9, space, comma only) - comma seperated list of aus mobiles (04+ only)
-- submit_button
-
-
-## Advanced Features
-
-Automatically generate reports - 1 or 2 per day, scan folders (matching current date) and generate report (if missing) for any/all folders with data, if 8+ hours since last update 
-
-## Non-functional reuirements
-
-Only site can write to public S3 buckets - read only for everyone else
+[./terraform/](./terraform/):
+- Basic code to build all of the aws resources (s3 bucket, api gateways, lambdas, dynamodb, certs, cloudfront & IAM policies)
+- Targets a single environment and default VPC
+- Not super re-usable in it's current state, but plan to clean this up in future releases

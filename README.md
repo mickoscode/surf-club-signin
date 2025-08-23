@@ -1,23 +1,23 @@
 # surf-club-signin
 Simple website to enable paperless sign-in-out for surf club activities.
 
-This website is hosted in aws s3, using API Gateway for lambda & dynamodb backend
+This website is hosted in aws s3, using API Gateway for serverless backend (lambda & dynamodb).
 
-Currently (MVP release 0.1.0), much of the terraform and website config is hard coded, and not intended for re-use by others.
-The intention is to clean this up and enable others to easily re-use this repo.
+Currently (mvp release v0.1.0), much of the terraform and website config is hard coded.
+The intention is to clean this up and enable others to re-use this repo.
 
-See [requirments.md](./docs/requirements.md) and [release_plan.md](./docs/release_plan.md) for more context on what this site does.
+See [requirements.md](./docs/requirements.md) and [release_plan.md](./docs/release_plan.md) for more context on how this website can be used.
 
-## developer/project context
+## Project Context
 
 The aims of this repo/project are:
-1. Build a useful web app that will reduce paper waste when I facilitate sign in/out in my local surf club.
+1. Build a useful web app that will reduce paper waste when I facilitate surf club activities that require sign in/out.
 1. Practice AI assisted coding - see [ai prompts](./.github/co-pilot/)
 
-## repo/code overview
+## Repo Overview
 
 [./app/](./app/):
-- [./app/config.json](./app/config.json) - set values used in html templates. Essential defines the site/sub-site
+- [./app/config.json](./app/config.json) - set values used in html templates
 - [./app/header.snippet](./app/header.snippet) - simple solution to enable different menu in demo/test site  
 - [./app/history.template.html](./app/history.template.html) - inject-configs.js uses this to create history.html
 - [./app/index.template.html](./app/index.template.html) - inject-configs.js uses this to create index.html
@@ -36,3 +36,10 @@ The aims of this repo/project are:
 - Basic code to build all of the aws resources (s3 bucket, api gateways, lambdas, dynamodb, certs, cloudfront & IAM policies)
 - Targets a single environment and default VPC
 - Not super re-usable in it's current state, but plan to clean this up in future releases
+
+## Adding another club/group/activity - e.g. sorrento_redcaps_sunday
+- Populate names table with list of allowed names for activity_id
+- create new folder - e.g. `reds`
+- create ./reds/config.json
+- create symbolic links for relevant files from ./reds/* to ./app/* 
+- add `reds` to upload-to-s3.yml workflow

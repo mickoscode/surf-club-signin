@@ -147,9 +147,9 @@
         // Setup the form for sign-in or sign-out
         async function setupForm(direction) {
             messageEl.textContent = "";  // don't display a message, button text is enough
+            submitButton.disabled = false; // (re-)enable button
             submitButton.textContent = direction === "in" ? "Sign In" : "Sign Out";
             formEl.classList.remove("hidden");
-            submitButton.disabled = false; // (re-)enable button
             directionInput.value = direction;
 
             const savedName = localStorage.getItem("display");
@@ -193,7 +193,10 @@
                             nameInputField.value = match.display;
                             name_idHiddenField.value = match.name_id;
                             dropdown.classList.add("hidden");
-                            submitButton.disabled = false; // a (new) name has been selected, so (re-)enable button
+
+                            // a (new) name has been selected, so clear message and (re-)enable button 
+                            messageEl.textContent = "";
+                            submitButton.disabled = false;
                         });
 
                         dropdown.appendChild(item);
@@ -253,9 +256,9 @@
 
             try {
                 const result = await addLog(nameId, direction);
-                messageEl.textContent = `${nameInputField.value} has signed ` + direction;
                 localStorage.setItem("display", nameInputField.value);
                 localStorage.setItem("name_id", name_idHiddenField.value);
+                messageEl.textContent = `${nameInputField.value} has signed ` + direction;
                 submitButton.disabled = true; // Disable button after submission to prevent/reduce spam logs
             } catch (error) {
                 alert("Error: " + error.message);
@@ -268,9 +271,9 @@
         clearNameButton.addEventListener("click", () => {
             localStorage.removeItem("display");
             localStorage.removeItem("name_id");
-            messageEl.textContent = "";
             nameInputField.value = "";
             name_idHiddenField.value = "";
+            messageEl.textContent = "";
             submitButton.disabled = false; // re-enable button
         });
 

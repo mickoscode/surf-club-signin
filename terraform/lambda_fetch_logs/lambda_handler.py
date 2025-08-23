@@ -1,6 +1,27 @@
 import json
 import boto3
 
+"""
+If successful, this lamba wil return a json object like:
+
+logs = [
+  {
+    date_time: { S: "2025-08-12T10:11:00Z" },
+    log_id: { S: "2025-08-12T10:11:00Z#joe_bloggs" },
+    name_id: { S: "joe_bloggs" },
+    activity_id: { S: "sorrento_youth_sunday" },
+    direction: { S: "in" }
+  },
+  {
+    date_time: { S: "2025-08-12T10:11:00Z" },
+    log_id: { S: "2025-08-12T10:11:00Z#jen_summers" },
+    name_id: { S: "jen_summers" },
+    activity_id: { S: "sorrento_youth_sunday" },
+    direction: { S: "in" }
+  }
+]
+"""
+
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("log")
 

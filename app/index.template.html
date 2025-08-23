@@ -15,9 +15,8 @@
         <form id="signForm" class="hidden">
             <input type="text" id="nameInput" placeholder="Enter your name" autocomplete="off">
             <button type="button" id="clearName">Clear Name</button>
-            <input type="hidden" id="activityId" value="sorrento_youth_sunday">
             <input type="hidden" id="direction">
-            <input type="hidden" id="nameId">
+            <input type="hidden" id="name_id">
             <button type="submit" id="submitButton"></button>
         </form>
         <div id="spinner" class="spinner hidden"></div>
@@ -32,10 +31,10 @@
         const messageEl = document.getElementById("message");
         const formEl = document.getElementById("signForm");
         const spinnerEl = document.getElementById("spinner");
-        const nameInput = document.getElementById("nameInput");
+        const nameInputField = document.getElementById("nameInput");
+        const name_idHiddenField = document.getElementById("name_id");
         const clearNameButton = document.getElementById("clearName");
         const directionInput = document.getElementById("direction");
-        const nameIdInput = document.getElementById("nameId");
         const submitButton = document.getElementById("submitButton");
 
         // inject ./header.snippet
@@ -150,11 +149,14 @@
             messageEl.textContent = "";  // don't display a message, button text is enough
             submitButton.textContent = direction === "in" ? "Sign In" : "Sign Out";
             formEl.classList.remove("hidden");
+            submitButton.disabled = false; // (re-)enable button
             directionInput.value = direction;
 
-            const savedName = localStorage.getItem("name");
+            const savedName = localStorage.getItem("display");
+            const savedName_id = localStorage.getItem("name_id");
             if (savedName) {
-                nameInput.value = savedName;
+                nameInputField.value = savedName;
+                name_idHiddenField.value = savedName_id;
             }
 
             const dropdown = document.createElement("ul");
@@ -174,7 +176,7 @@
 
             // Filter and display matching names
             function filterNames() {
-                const inputValue = nameInput.value.toLowerCase();
+                const inputValue = nameInputField.value.toLowerCase();
                 const matches = names.filter(name => name.display.toLowerCase().includes(inputValue));
 
                 dropdown.innerHTML = ""; // Clear previous suggestions
@@ -188,9 +190,10 @@
                         );
 
                         item.addEventListener("click", () => {
-                            nameInput.value = match.display;
-                            nameIdInput.value = match.name_id;
+                            nameInputField.value = match.display;
+                            name_idHiddenField.value = match.name_id;
                             dropdown.classList.add("hidden");
+                            submitButton.disabled = false; // a (new) name has been selected, so (re-)enable button
                         });
 
                         dropdown.appendChild(item);
@@ -202,18 +205,18 @@
             }
 
             // Add event listeners
-            nameInput.addEventListener("input", debounce(filterNames, 300));
-            nameInput.addEventListener("blur", () => {
+            nameInputField.addEventListener("input", debounce(filterNames, 300));
+            nameInputField.addEventListener("blur", () => {
                 setTimeout(() => dropdown.classList.add("hidden"), 200);
             });
-            nameInput.addEventListener("focus", () => {
+            nameInputField.addEventListener("focus", () => {
                 if (dropdown.children.length > 0) {
                     dropdown.classList.remove("hidden");
                 }
             });
 
             // Keyboard navigation
-            nameInput.addEventListener("keydown", (e) => {
+            nameInputField.addEventListener("keydown", (e) => {
                 const items = dropdown.querySelectorAll(".dropdown-item");
                 let activeIndex = Array.from(items).findIndex(item => item.classList.contains("active"));
 
@@ -239,7 +242,7 @@
         // Handle form submission
         formEl.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const nameId = nameIdInput.value;
+            const nameId = name_idHiddenField.value;
             if (!nameId) {
                 messageEl.textContent = "type and select an allowed name!";
                 return;
@@ -250,8 +253,10 @@
 
             try {
                 const result = await addLog(nameId, direction);
-                messageEl.textContent = "You have signed " + direction;
-                localStorage.setItem("name", nameInput.value);
+                messageEl.textContent = `${nameInputField.value} has signed ` + direction;
+                localStorage.setItem("display", nameInputField.value);
+                localStorage.setItem("name_id", name_idHiddenField.value);
+                submitButton.disabled = true; // Disable button after submission to prevent/reduce spam logs
             } catch (error) {
                 alert("Error: " + error.message);
             } finally {
@@ -261,9 +266,12 @@
 
         // Clear saved name
         clearNameButton.addEventListener("click", () => {
-            localStorage.removeItem("name");
+            localStorage.removeItem("display");
+            localStorage.removeItem("name_id");
             messageEl.textContent = "";
-            nameInput.value = "";
+            nameInputField.value = "";
+            name_idHiddenField.value = "";
+            submitButton.disabled = false; // re-enable button
         });
 
         // Initialize the page on load

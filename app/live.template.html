@@ -12,7 +12,7 @@
     <div id="header-container"></div>
     <div class="container">
         <h2 class="live-total" id="liveTotal">0</h2>
-        <p class="message" id="liveMessage">live count as of --:--:--</p>
+        <p class="message" id="liveMessage">live count as of --:--</p>
         <div class="buttons" id="filterButtons"></div>
         <table class="records-table">
             <tbody id="recordsTable"></tbody>
@@ -23,6 +23,8 @@
         const ACTIVITY_ID = "{{INJECT_ACTIVITY_ID}}";
         const enableTestMode = {{INJECT_ENABLE_TEST_MODE}};
         let LOG_DATE_STRING = new Date().toISOString().split('T')[0]; // Default to today
+        let uniqueTotalCount = 0;
+        let uniqueOutCount = 0;
         let liveTotal = 0;
         let names = [];
         let logs = [];
@@ -71,24 +73,18 @@
             //setTimeout(fetchLogs, 30000); // every 30 seconds
         }
 
-        // Utility to filter logs with valid name_id
-        function filterValidLogs() {
-            const validNameIds = new Set(names.map(name => name.name_id));
-            return logs.filter(log => validNameIds.has(log.name_id));
-        }
-
         // Calculate live total
         function calculateLiveTotal() {
-            const validLogs = filterValidLogs(); // Filter invalid logs
-            const inEntries = new Set(validLogs.filter(log => log.direction === "in").map(log => log.name_id));
-            const outEntries = new Set(validLogs.filter(log => log.direction === "out").map(log => log.name_id));
-            return Math.max(0, inEntries.size - outEntries.size);
+            const validNameIds = new Set(names.map(name => name.name_id));
+            const validLogs = logs.filter(log => validNameIds.has(log.name_id));
+            uniqueTotalCount = new Set(validLogs.map(log => log.name_id)).size;
+            uniqueOutCount = new Set(validLogs.filter(log => log.direction === "out").map(log => log.name_id)).size;
+            return Math.max(0, uniqueTotalCount - uniqueOutCount); // use max to prevent negative count
         }
 
-        // Update live total display
-        function updateLiveTotalDisplay(liveTotal) {
-            const now = new Date();
-            const timeString = now.toTimeString().split(" ")[0];
+        // Update live total display using global var liveTotal
+        function updateLiveTotalDisplay() {
+            const timeString = convertTs2Time(new Date());
             document.getElementById("liveTotal").textContent = liveTotal;
             document.getElementById("liveMessage").textContent = `live count as of ${timeString}`;
         }
@@ -182,8 +178,8 @@
 
             await fetchNames();
             await fetchLogs();
-            const liveTotal = calculateLiveTotal();
-            updateLiveTotalDisplay(liveTotal);
+            liveTotal = calculateLiveTotal();
+            updateLiveTotalDisplay();
             renderFilterButtons();
 
             const tableData = micksLogRowObject();
@@ -191,7 +187,7 @@
             const tbody = document.getElementById("recordsTable");
             tbody.innerHTML = `
                 <thead>
-                  <tr><th>name</th><th>in</th><th>out</th></tr>
+                  <tr><th>name</th><th>in (${uniqueTotalCount})</th><th>out (${uniqueOutCount})</th></tr>
                 </thead>
                 <tbody></tbody>`;
 

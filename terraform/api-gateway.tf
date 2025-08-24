@@ -13,6 +13,48 @@ resource "aws_apigatewayv2_stage" "default" {
 }
 
 # -------------------------------
+# ACL Rule to Rate Limit APIs
+# -------------------------------
+resource "aws_wafv2_web_acl" "api_rate_limit_acl" {
+  name        = "api-rate-limit-acl"
+  description = "Rate limit API access to 20 requests per hour"
+  scope       = "CLOUDFRONT" # Use "REGIONAL" for ALB or API Gateway
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rate-limit-signin-users"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 20
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "apiRateLimit"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "apiWebACL"
+    sampled_requests_enabled   = true
+  }
+}
+
+
+# -------------------------------
 # Permissions
 # -------------------------------
 resource "aws_lambda_permission" "write_bulk" {

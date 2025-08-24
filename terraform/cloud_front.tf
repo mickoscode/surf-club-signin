@@ -62,4 +62,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   tags = {
     Name = "micko-training2025.info-cdn"
   }
+
+  # Attach the WAFv2 Web ACL to the CloudFront distribution (defined in api-gateway.tf)
+  web_acl_id = aws_wafv2_web_acl.api_rate_limit_acl.arn
 }

@@ -25,9 +25,11 @@ crash.log
 app/index.html
 app/live.html
 app/history.html
+app/bulk.html
 app-test/index.html
 app-test/live.html
 app-test/history.html
+app-test/bulk.html
 
 # any csv or json files in scripts folder are temporary
 scripts/*.csv

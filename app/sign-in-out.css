@@ -241,3 +241,18 @@ button#clearName:hover {
 .buttons button:hover {
     background: var(--secondary-color); /* rgba(255, 255, 255, 0.4); */
 }
+
+/* ensure toggle buttons for bulk form are visible */
+table input.name-toggle {
+  all: unset; /* resets inherited styles */
+  appearance: checkbox;
+  display: inline-block;
+}
+
+input.name-toggle {
+  appearance: checkbox; /* restores native checkbox look */
+  display: inline-block;
+  width: auto;
+  height: auto;
+  margin: 0 5px;
+}

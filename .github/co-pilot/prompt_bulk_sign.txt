@@ -1,0 +1,172 @@
+I want to create a new html & javascript form based on the example below.
+
+The new form will use the same fetchNames() function and should use identical variable names and element names where relevant.
+
+The new form requirements are:
+- use a hidden input to set value of "direction"
+- use a hidden input to set value of "activity_id"
+- use a table to list every names.display value in a separate table row.
+- names.display should be in column 1
+- each row must use a hidden input to set the value of names.name_id 
+- each row must have a visible toggle button so the user can decide if a name will be included in the form submission
+- toggle button should be in column 2
+- the same table/form filter logic as below should be retained
+
+When submitted, javascript should:
+- ignore all records if toggle not enabled
+- add name_id to listOfNameId[] if toggle is enabled
+- call a new function addBulkLogs() that includes:
+  - call to `${API_BASE}/bulk 
+  - payload = {
+                activity_id: ACTIVITY_ID,
+                name_id_list: listOfNameId,
+                direction: direction,
+                date_time: new Date().toISOString()
+            };
+
+
+<form id="signForm" class="hidden">
+    <input type="text" id="nameInput" placeholder="Enter your name" autocomplete="off">
+    <button type="button" id="clearName">Clear Name</button>
+    <input type="hidden" id="direction">
+    <input type="hidden" id="activity_id" value="sorrento_youth_sunday">
+    <input type="hidden" id="name_id">
+    <button type="submit" id="submitButton"></button>
+</form>
+<div id="spinner" class="spinner hidden"></div>
+
+
+// Setup the form for sign-in or sign-out
+async function setupForm(direction) {
+    messageEl.textContent = "";  // don't display a message, button text is enough
+    submitButton.disabled = false; // (re-)enable button
+    submitButton.textContent = direction === "in" ? "Sign In" : "Sign Out";
+    formEl.classList.remove("hidden");
+    directionInput.value = direction;
+
+    const savedName = localStorage.getItem("display");
+    const savedName_id = localStorage.getItem("name_id");
+    if (savedName) {
+        nameInputField.value = savedName;
+        name_idHiddenField.value = savedName_id;
+    }
+
+    const dropdown = document.createElement("ul");
+    dropdown.classList.add("dropdown", "hidden");
+    formEl.appendChild(dropdown);
+    const names = (await fetchNames()).names || [];
+
+    // Debounce function to limit filtering frequency
+    function debounce(func, delay) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func(...args), delay);
+        };
+    }
+
+    // Filter and display matching names
+    function filterNames() {
+        const inputValue = nameInputField.value.toLowerCase();
+        const matches = names.filter(name => name.display.toLowerCase().includes(inputValue));
+
+        dropdown.innerHTML = ""; // Clear previous suggestions
+        if (matches.length > 0 && inputValue) {
+            matches.forEach((match, index) => {
+                const item = document.createElement("li");
+                item.classList.add("dropdown-item");
+                item.innerHTML = match.display.replace(
+                    new RegExp(inputValue, "gi"),
+                    match => `<span class="highlight">${match}</span>`
+                );
+
+                item.addEventListener("click", () => {
+                    nameInputField.value = match.display;
+                    name_idHiddenField.value = match.name_id;
+                    dropdown.classList.add("hidden");
+
+                    // a (new) name has been selected, so clear message and (re-)enable button 
+                    messageEl.textContent = "";
+                    submitButton.disabled = false;
+                });
+
+                dropdown.appendChild(item);
+            });
+            dropdown.classList.remove("hidden");
+        } else {
+            dropdown.classList.add("hidden");
+        }
+    }
+
+    // Add event listeners
+    nameInputField.addEventListener("input", debounce(filterNames, 300));
+    nameInputField.addEventListener("blur", () => {
+        setTimeout(() => dropdown.classList.add("hidden"), 200);
+    });
+    nameInputField.addEventListener("focus", () => {
+        if (dropdown.children.length > 0) {
+            dropdown.classList.remove("hidden");
+        }
+    });
+
+    // Keyboard navigation
+    nameInputField.addEventListener("keydown", (e) => {
+        const items = dropdown.querySelectorAll(".dropdown-item");
+        let activeIndex = Array.from(items).findIndex(item => item.classList.contains("active"));
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (activeIndex < items.length - 1) {
+                if (activeIndex >= 0) items[activeIndex].classList.remove("active");
+                items[++activeIndex].classList.add("active");
+            }
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (activeIndex > 0) {
+                items[activeIndex].classList.remove("active");
+                items[--activeIndex].classList.add("active");
+            }
+        } else if (e.key === "Enter" && activeIndex >= 0) {
+            e.preventDefault();
+            items[activeIndex].click();
+        }
+    });
+}
+
+// Handle form submission
+formEl.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nameId = name_idHiddenField.value;
+    if (!nameId) {
+        messageEl.textContent = "type and select an allowed name!";
+        return;
+    }
+
+    spinnerEl.classList.remove("hidden");
+    const direction = directionInput.value;
+
+    try {
+        const result = await addLog(nameId, direction);
+        localStorage.setItem("display", nameInputField.value);
+        localStorage.setItem("name_id", name_idHiddenField.value);
+        messageEl.textContent = `${nameInputField.value} has signed ` + direction;
+        submitButton.disabled = true; // Disable button after submission to prevent/reduce spam logs
+    } catch (error) {
+        alert("Error: " + error.message);
+    } finally {
+        spinnerEl.classList.add("hidden");
+    }
+});
+
+// Clear saved name
+clearNameButton.addEventListener("click", () => {
+    localStorage.removeItem("display");
+    localStorage.removeItem("name_id");
+    nameInputField.value = "";
+    name_idHiddenField.value = "";
+    messageEl.textContent = "";
+    submitButton.disabled = false; // re-enable button
+});
+
+// Initialize the page on load
+init();

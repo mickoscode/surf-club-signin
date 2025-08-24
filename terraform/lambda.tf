@@ -1,4 +1,22 @@
 # -------------------------------
+# Lambda - Write Bulk Logs
+# -------------------------------
+data "archive_file" "write_bulk_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_write_bulk_logs"
+  output_path = "${path.module}/write_bulk.zip"
+}
+
+resource "aws_lambda_function" "write_bulk" {
+  function_name    = "WriteBulkLogsFunction"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.write_bulk_zip.output_path
+  source_code_hash = data.archive_file.write_bulk_zip.output_base64sha256
+}
+
+# -------------------------------
 # Lambda - Write Log
 # -------------------------------
 data "archive_file" "write_log_zip" {
@@ -51,7 +69,7 @@ resource "aws_lambda_function" "fetch_names" {
   filename         = data.archive_file.fetch_names_zip.output_path
   source_code_hash = data.archive_file.fetch_names_zip.output_base64sha256
 }
- 
+
 # -------------------------------
 # Lambda - Fetch Dates
 # -------------------------------

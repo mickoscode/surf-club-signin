@@ -15,6 +15,14 @@ resource "aws_apigatewayv2_stage" "default" {
 # -------------------------------
 # Permissions
 # -------------------------------
+resource "aws_lambda_permission" "write_bulk" {
+  statement_id  = "AllowWriteInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.write_bulk.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
 resource "aws_lambda_permission" "write_log" {
   statement_id  = "AllowWriteInvoke"
   action        = "lambda:InvokeFunction"
@@ -50,6 +58,14 @@ resource "aws_lambda_permission" "fetch_dates" {
 # -------------------------------
 # Integrations
 # -------------------------------
+resource "aws_apigatewayv2_integration" "write_bulk" {
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.write_bulk.invoke_arn
+  integration_method     = "POST"
+  payload_format_version = "2.0"
+}
+
 resource "aws_apigatewayv2_integration" "write_log" {
   api_id                 = aws_apigatewayv2_api.api.id
   integration_type       = "AWS_PROXY"
@@ -85,6 +101,19 @@ resource "aws_apigatewayv2_integration" "fetch_dates" {
 # -------------------------------
 # Routes for Log Table
 # -------------------------------
+resource "aws_apigatewayv2_route" "write_bulk" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /bulk"
+  target    = "integrations/${aws_apigatewayv2_integration.write_bulk.id}"
+}
+
+# OPTIONS is needed for CORS
+resource "aws_apigatewayv2_route" "write_bulk_options" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "OPTIONS /bulk"
+  target    = "integrations/${aws_apigatewayv2_integration.write_bulk.id}"
+}
+
 resource "aws_apigatewayv2_route" "write_log" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "POST /log"

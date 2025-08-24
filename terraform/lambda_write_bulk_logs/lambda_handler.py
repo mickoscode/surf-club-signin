@@ -48,7 +48,7 @@ def lambda_handler(event, context):
                     "date_time": date_time
                 },
                 ConditionExpression="attribute_not_exists(log_id)"
-        )
+            )
         return build_response(201, {"message": "Bulk log entries created successfully."})
 
     except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:

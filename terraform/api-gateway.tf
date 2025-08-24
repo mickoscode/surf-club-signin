@@ -14,8 +14,10 @@ resource "aws_apigatewayv2_stage" "default" {
 
 # -------------------------------
 # ACL Rule to Rate Limit APIs
+# TODO - my cloud front distro is old, using classic and needs to be upgraded before this will work!
 # -------------------------------
 resource "aws_wafv2_web_acl" "api_rate_limit_acl" {
+  count       = 0 # Disbale until CF is upgraded from classic
   name        = "api-rate-limit-acl"
   description = "Rate limit API access to 20 requests per hour"
   scope       = "CLOUDFRONT" # Use "REGIONAL" for ALB or API Gateway

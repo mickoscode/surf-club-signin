@@ -63,6 +63,50 @@ resource "aws_cloudfront_distribution" "cdn" {
     Name = "micko-training2025.info-cdn"
   }
 
+  # TODO - my cloud front distro is old, using classic and needs to be upgraded before this will work!
   # Attach the WAFv2 Web ACL to the CloudFront distribution (defined in api-gateway.tf)
-  web_acl_id = aws_wafv2_web_acl.api_rate_limit_acl.arn
+  #web_acl_id = aws_wafv2_web_acl.api_rate_limit_acl.arn
+  web_acl_id = aws_waf_web_acl.api_acl.arn
+}
+
+# CLASSIC compatible rate limiting:
+resource "aws_waf_ipset" "api_ip_set" {
+  name = "api-ip-set"
+
+  ip_set_descriptors {
+    type  = "IPV4"
+    value = "0.0.0.0/8" # Match all IPv4 addresses
+  }
+}
+
+resource "aws_waf_rate_based_rule" "api_rate_limit" {
+  name        = "api-rate-limit"
+  metric_name = "ApiRateLimit"
+  rate_key    = "IP"
+  rate_limit  = 100 # 100 is the min value
+
+  predicates {
+    data_id = aws_waf_ipset.api_ip_set.id
+    negated = false
+    type    = "IPMatch"
+  }
+}
+
+resource "aws_waf_web_acl" "api_acl" {
+  name        = "api-acl"
+  metric_name = "ApiACL"
+
+  default_action {
+    type = "ALLOW"
+  }
+
+  rules {
+    action {
+      type = "BLOCK"
+    }
+
+    priority = 1
+    rule_id  = aws_waf_rate_based_rule.api_rate_limit.id
+    type     = "RATE_BASED"
+  }
 }

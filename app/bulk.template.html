@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bulk sign-in-out</title>
+    <link rel="stylesheet" href="https://unpkg.com/picnic">
+    <link rel="stylesheet" href="./sign-in-out.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{INJECT_FAVICON}}">
+</head>
+<body>
+    <div id="header-container"></div>
+    <div class="container">
+        <h1 id="message"></h1>
+        <div class="buttons" id="filterButtons"></div>
+        <form id="bulkForm" class="hidden">
+            <input type="hidden" id="direction">
+            <input type="hidden" id="activity_id" value="{{INJECT_ACTIVITY_ID}}">
+            <table id="namesTable">
+                <!-- <thead> <tr> <th>Name</th> <th>Include</th> </tr> </thead> -->
+                <tbody></tbody>
+            </table>
+            <button type="submit" id="bulkSubmitButton"></button>
+        </form>
+        <div id="spinner" class="spinner hidden"></div>
+    </div>
+    <script>
+        const API_BASE = "{{INJECT_API_URL}}";
+        const ACTIVITY_ID = "{{INJECT_ACTIVITY_ID}}";
+        let IN_START_TIME = convertTimeStringToDateObj("08:00");
+        let OUT_START_TIME = convertTimeStringToDateObj("09:30");
+        let END_TIME = convertTimeStringToDateObj("10:40");
+
+        const messageEl = document.getElementById("message");
+        const formEl = document.getElementById("bulkForm");
+        const spinnerEl = document.getElementById("spinner");
+        const directionInputEl = document.getElementById("direction");
+        const activityInputEl = document.getElementById("activity_id");
+        const submitButton = document.getElementById("bulkSubmitButton");
+
+        // inject ./header.snippet
+        fetch('./header.snippet')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+            })
+            .catch(error => console.error('Header load error:', error));
+
+        // Utility to convert human readable time strings to date object.
+        function convertTimeStringToDateObj(timeString) {
+            const [hours, minutes] = timeString.split(":").map(Number);
+            const now = new Date();
+            now.setHours(hours, minutes, 0, 0);
+            return now;
+        }
+
+        // Utility to parse URL parameters
+        function getUrlParameter(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+
+        // Utility to check if today is Sunday
+        function isSunday() {
+            const enableTestMode = {{INJECT_ENABLE_TEST_MODE}};
+            if (enableTestMode) {
+                return true;  // For testing purposes, always return true
+            } else {
+                return new Date().getDay() === 0;
+            }
+        }
+
+        // Utility to calculate the next Sunday
+        function getNextSunday() {
+            const now = new Date();
+            let daysUntilSunday = (7 - now.getDay()) % 7;
+            // if today is sunday, then it will be 7 days to next sunday.
+            daysUntilSunday = daysUntilSunday === 0 ? 7 : daysUntilSunday;
+            const nextSunday = new Date(now);
+            nextSunday.setDate(now.getDate() + daysUntilSunday);
+            return nextSunday.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+        }
+
+        // Fetch names from the backend and populate global array
+        async function fetchNames() {
+            const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
+            const data = await response.json();
+            names = data.names || [];
+        }
+
+        // Add bulk log entries to the backend
+        async function addBulkLogs(payload) {
+
+            const response = await fetch(`${API_BASE}/bulk`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            return response.json();
+        }
+
+        // Initialize the page
+        async function init() {
+            const now = new Date();
+            const enableTestMode = {{INJECT_ENABLE_TEST_MODE}};
+            if (enableTestMode) {
+                const testParam = getUrlParameter("test");
+
+                if (testParam === "in") {
+                    IN_START_TIME = new Date(now.getTime() - 10 * 60 * 1000); // Override IN_START_TIME with current time - 10minutes
+                    OUT_START_TIME = new Date(now.getTime() + 10 * 60 * 1000); // Override OUT_START_TIME with current time + 10 minutes
+                    END_TIME = new Date(now.getTime() + 20 * 60 * 1000); // Override END_TIME with current time + 20minutes
+                }
+                if (testParam === "out") {
+                    IN_START_TIME = new Date(now.getTime() - 20 * 60 * 1000); // Override IN_START_TIME with current time - 10minutes
+                    OUT_START_TIME = new Date(now.getTime() - 10 * 60 * 1000); // Override OUT_START_TIME with current time + 10 minutes
+                    END_TIME = new Date(now.getTime() + 20 * 60 * 1000); // Override END_TIME with current time + 20minutes
+                }
+            }
+
+            if (!isSunday() || now > END_TIME) {
+                messageEl.textContent = `The next session is ${getNextSunday()}`;
+                return;
+            }
+
+            if (now < IN_START_TIME) {
+                messageEl.textContent = `Sign in starts at ${IN_START_TIME}`;
+                return;
+            }
+
+            let verified_direction = "in";
+            if (now >= OUT_START_TIME && now < END_TIME) {
+                verified_direction = "out";
+            }
+
+            await fetchNames(); //populates global names[]
+            renderFilterButtons();
+            setupBulkForm(verified_direction);
+            return;
+        }
+
+        // Render filter buttons
+        function renderFilterButtons() {
+            const filters = Array.from(new Set(names.map(name => name.filter))).sort();
+            const buttonsContainer = document.getElementById("filterButtons");
+            buttonsContainer.innerHTML = "";
+
+            // Add "all" button
+            const allButton = document.createElement("button");
+            allButton.textContent = "All";
+            allButton.onclick = () => filterTable("all");
+            buttonsContainer.appendChild(allButton);
+
+            // Add filter-specific buttons
+            filters.forEach(filter => {
+                const button = document.createElement("button");
+                button.textContent = filter;
+                button.onclick = () => filterTable(filter);
+                buttonsContainer.appendChild(button);
+            });
+        }
+
+        // Filter table based on filter value
+        function filterTable(filter) {
+            const allRows = document.querySelectorAll("[class^='filter-']");
+            allRows.forEach(row => row.classList.remove("hidden"));
+
+            if (filter !== "all") {
+                allRows.forEach(row => {
+                    if (!row.classList.contains(`filter-${filter}`)) {
+                        row.classList.add("hidden");
+                    }
+                });
+            }
+        }
+
+        // Setup the form for BULK sign-in or sign-out
+        async function setupBulkForm(direction) {
+            messageEl.textContent = "";  // don't display a message, button text is enough
+            submitButton.disabled = false; // (re-)enable button
+            submitButton.textContent = direction === "in" ? "Bulk Sign In" : "Bulk Sign Out";
+            formEl.classList.remove("hidden");
+            directionInputEl.value = direction;
+
+            const tbody = document.querySelector("#namesTable tbody");
+            tbody.innerHTML = "";
+          
+            names.forEach(name => {
+              const row = document.createElement("tr");
+              row.classList.add(`filter-${name.filter || "no-filter"}`);  // this enables filter buttons
+          
+              // Column 1: Display name
+              const nameCell = document.createElement("td");
+              nameCell.textContent = name.display;
+              row.appendChild(nameCell);
+          
+              // Column 2: Toggle button
+              const toggleCell = document.createElement("td");
+              const toggle = document.createElement("input");
+              toggle.type = "checkbox";
+              toggle.classList.add("name-toggle");
+              toggle.dataset.nameId = name.name_id;
+          
+              // Hidden input for name_id
+              const hiddenInput = document.createElement("input");
+              hiddenInput.type = "hidden";
+              hiddenInput.value = name.name_id;
+              hiddenInput.classList.add("name-id");
+          
+              toggleCell.appendChild(toggle);
+              toggleCell.appendChild(hiddenInput);
+              row.appendChild(toggleCell);
+          
+              tbody.appendChild(row);
+            });
+        }
+
+        // Handle form submission
+        formEl.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            spinnerEl.classList.remove("hidden");
+
+            const direction = directionInputEl.value;
+            const activity_id = activityInputEl.value;
+            const toggles = document.querySelectorAll(".name-toggle");
+            const listOfNameId = [];
+          
+            toggles.forEach(toggle => {
+              if (toggle.checked) {
+                listOfNameId.push(toggle.dataset.nameId);
+              }
+            });
+          
+            if (listOfNameId.length === 0) {
+              messageEl.textContent = "No names selected for submission"; 
+              spinnerEl.classList.add("hidden");
+              return;
+            }
+          
+            try {
+              await addBulkLogs({
+                activity_id: activity_id,
+                direction: direction,
+                name_id_list: listOfNameId,
+                date_time: new Date().toISOString()
+              });
+              messageEl.textContent = "Bulk Submission Completed";
+              submitButton.disabled = true;
+              //alert(listOfNameId.join(", "));
+            } catch (error) {
+              alert("Error: " + error.message);
+            } finally {
+              spinnerEl.classList.add("hidden");
+            }
+        });
+
+        // Initialize the page on load
+        (async () => { await init(); })();
+    </script>
+</body>
+</html>

@@ -38,8 +38,8 @@
         const activityInputEl = document.getElementById("activity_id");
         const submitButton = document.getElementById("bulkSubmitButton");
 
-        // inject ./header.snippet
-        fetch('./header.snippet')
+        // inject ./bulk.snippet
+        fetch('./bulk.snippet')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;
@@ -235,6 +235,7 @@
             if (listOfNameId.length === 0) {
               messageEl.textContent = "No names selected for submission"; 
               spinnerEl.classList.add("hidden");
+              window.scrollTo({ top: 0, behavior: 'smooth' });
               return;
             }
           
@@ -245,14 +246,15 @@
                 name_id_list: listOfNameId,
                 date_time: new Date().toISOString()
               });
+
               messageEl.textContent = "Bulk Submission Completed";
               submitButton.disabled = true;
-              //alert(listOfNameId.join(", "));
             } catch (error) {
               alert("Error: " + error.message);
             } finally {
               spinnerEl.classList.add("hidden");
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
         // Initialize the page on load

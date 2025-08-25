@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>about sign-in-out</title>
+    <link rel="stylesheet" href="https://unpkg.com/picnic">
+    <link rel="stylesheet" href="./sign-in-out.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="faviconV2.png">
+</head>
+<body>
+    <div id="header-container"></div>
+    <div class="container">
+        <h1 id="message">About</h1>
+        <p>
+            This is a simple sign-in-out application designed for <b>Sorrento Surf Life Saving Club</b>.<br />
+            <br />
+            It allows members to easily log their attendance for activities, starting with <b>Youth Sunday Sessions</b>.<br />
+            The intention is to provide an extremely simple electronic replacement of the traditional paper sign-in sheets.<br />
+            <br />
+            If this application is useful, it may be possible to extend it's use to Nippers or other activities.<br />
+            Please speak with <b>Mick O'Connor</b> if you would like to discuss this further. <br />
+        </p>
+    </div>
+    <script>
+        // inject ./header.snippet
+        fetch('./header.snippet')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+            })
+            .catch(error => console.error('Header load error:', error));
+    </script>
+</body>
+</html>

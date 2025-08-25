@@ -38,8 +38,8 @@
         const activityInputEl = document.getElementById("activity_id");
         const submitButton = document.getElementById("bulkSubmitButton");
 
-        // inject ./bulk.snippet
-        fetch('./bulk.snippet')
+        // inject ./header_leader.snippet
+        fetch('./header_leader.snippet')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;

@@ -12,7 +12,7 @@ jobs:
     env:
       bucket-name: sign-in-out.com
       region: ap-southeast-2
-      cf-distribution-id: d1zlfnk398yb22
+      cf-distribution-id: E2DY5SRXBRDW31
 
     steps:
       # Step 1: Check out your repository code.

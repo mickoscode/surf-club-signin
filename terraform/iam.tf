@@ -30,7 +30,7 @@ resource "aws_iam_policy" "mickos_github_s3_write_policy" {
         Action = [
           "cloudfront:CreateInvalidation"
         ]
-        Resource = "arn:aws:cloudfront::722937635825:distribution/d1zlfnk398yb22"
+        Resource = "arn:aws:cloudfront::722937635825:distribution/E2DY5SRXBRDW31"
       }
     ]
   })

@@ -47,6 +47,13 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  custom_error_response {
+    error_caching_min_ttl = 10
+    error_code            = 404
+    response_code         = 404
+    response_page_path    = "/about.html"
+  }
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -66,7 +73,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # TODO - my cloud front distro is old, using classic and needs to be upgraded before this will work!
   # Attach the WAFv2 Web ACL to the CloudFront distribution (defined in api-gateway.tf)
   #web_acl_id = aws_wafv2_web_acl.api_rate_limit_acl.arn
-  web_acl_id = aws_waf_web_acl.api_acl.arn
+  #web_acl_id = aws_waf_web_acl.api_acl.arn
 }
 
 # CLASSIC compatible rate limiting:
@@ -93,6 +100,7 @@ resource "aws_waf_rate_based_rule" "api_rate_limit" {
 }
 
 resource "aws_waf_web_acl" "api_acl" {
+  count = 0 # Disable until CF is upgraded from classic
   name        = "api-acl"
   metric_name = "ApiACL"
 

@@ -19,3 +19,16 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
 
 # The bucket policy grants the OAI permission to read objects from the bucket
 # moved to s3_site_hosting.tf
+
+
+# Request an SSL certificate for your domain. This must be done in us-east-3.
+# -----------------------------------------------------------
+resource "aws_acm_certificate" "domain2" {
+  provider          = aws.us-east-1
+  domain_name       = "sign-in-out.com"
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}

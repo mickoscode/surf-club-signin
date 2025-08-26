@@ -4,7 +4,7 @@ resource "aws_iam_user" "mickos_github" {
 
 resource "aws_iam_policy" "mickos_github_s3_write_policy" {
   name        = "mickos-github-s3-write-policy"
-  description = "Policy to allow write and delete access to the S3 bucket mickos-surf-club-website"
+  description = "Policy to allow write and delete access to the S3 buckets for sign-in-out.com"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -19,8 +19,18 @@ resource "aws_iam_policy" "mickos_github_s3_write_policy" {
         ]
         Resource = [
           "arn:aws:s3:::micko-training2025.info",
-          "arn:aws:s3:::micko-training2025.info/*"
+          "arn:aws:s3:::micko-training2025.info/*",
+          "arn:aws:s3:::sign-in-out.com",
+          "arn:aws:s3:::sign-in-out.com/*"
         ]
+      },
+      {
+        Sid    = "AllowCloudFrontInvalidation"
+        Effect = "Allow"
+        Action = [
+          "cloudfront:CreateInvalidation"
+        ]
+        Resource = "arn:aws:cloudfront::722937635825:distribution/d1zlfnk398yb22"
       }
     ]
   })

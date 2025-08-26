@@ -1,0 +1,78 @@
+name: Sync SIO on Merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      bucket-name: sign-in-out.com
+      region: ap-southeast-2
+      cf-distribution-id: d1zlfnk398yb22
+
+    steps:
+      # Step 1: Check out your repository code.
+      # This action makes your code available to the workflow.
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # Step 2: Configure AWS credentials.
+      # This action sets up the environment with your AWS credentials, which you should
+      # store securely as GitHub secrets.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.region }}
+
+      # Step 3: Setup Node.js and inject config into index.html
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # Step 4: Install dependencies
+      # not currently needed, as inject-config.js uses nly standard packages.
+      # if more advanced features are needed, a package.json file will be needed to 
+      # list out dependencies. Otherwise, npm install will fail!
+      #- name: Install dependencies
+      #  run: npm install
+
+      # Step 5 - inject config into index.html
+      - name: Inject config into index.html
+        run: |
+          echo "Injecting config into app: index.html | live.html | history.html | bulk.html"
+          cd ./app
+          node ./inject-config.js
+          node ./inject-config.js live
+          node ./inject-config.js history
+          node ./inject-config.js bulk
+          echo "Injecting config into app-test: index.html | live.html | history.html | bulk.html"
+          cd ../app-test
+          node ./inject-config.js
+          node ./inject-config.js live
+          node ./inject-config.js history
+          node ./inject-config.js bulk
+
+      # Step 6: Upload the index.html file to the S3 bucket.
+      # We use the AWS CLI to perform the synchronization. The 'sync' command
+      # is great for this as it only uploads new or changed files.
+      - name: Sync index.html to S3
+        run: |
+          echo "Syncing 'app' folder to s3://${{ env.bucket-name }}"
+          aws s3 sync ./app/ s3://${{ env.bucket-name }} --delete
+          echo "Syncing 'app-test' folder to s3://${{ env.bucket-name }}"
+          aws s3 sync ./app-test/ s3://${{ env.bucket-name }}/test --delete
+
+      # Step 7: Invalidate CloudFront cache (optional)
+      - name: Invalidate CloudFront cache
+        run: |
+          echo "Invalidating CloudFront cache"
+          aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/*"
+          aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/test/*"
+          echo "CloudFront cache invalidated"

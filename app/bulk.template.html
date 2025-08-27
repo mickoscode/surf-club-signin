@@ -17,7 +17,7 @@
             <input type="hidden" id="direction">
             <input type="hidden" id="activity_id" value="{{INJECT_ACTIVITY_ID}}">
             <table id="namesTable">
-                <!-- <thead> <tr> <th>Name</th> <th>Include</th> </tr> </thead> -->
+                <thead> <tr> <th>name</th> <th>in</th> <th>out</th> </tr> </thead>
                 <tbody></tbody>
             </table>
             <button type="submit" id="bulkSubmitButton"></button>
@@ -30,6 +30,7 @@
         let IN_START_TIME = convertTimeStringToDateObj("08:00");
         let OUT_START_TIME = convertTimeStringToDateObj("09:30");
         let END_TIME = convertTimeStringToDateObj("10:40");
+        let LOG_DATE_STRING = new Date().toISOString().split('T')[0]; // Default to today
 
         const messageEl = document.getElementById("message");
         const formEl = document.getElementById("bulkForm");
@@ -37,6 +38,9 @@
         const directionInputEl = document.getElementById("direction");
         const activityInputEl = document.getElementById("activity_id");
         const submitButton = document.getElementById("bulkSubmitButton");
+
+        let names = [];
+        let logs = [];
 
         // inject ./header_leader.snippet
         fetch('./header_leader.snippet')
@@ -52,6 +56,15 @@
             const now = new Date();
             now.setHours(hours, minutes, 0, 0);
             return now;
+        }
+
+        // convert timestamp string to HH:MM format
+        function convertTs2Time(timestamp) {
+            if (!timestamp || timestamp === "-") return "-";
+            const date = new Date(timestamp);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
         }
 
         // Utility to parse URL parameters
@@ -86,6 +99,13 @@
             const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
             const data = await response.json();
             names = data.names || [];
+        }
+
+        // Fetch logs from the backend
+        async function fetchLogs() {
+            const response = await fetch(`${API_BASE}/log?activity_id=${ACTIVITY_ID}&date=${LOG_DATE_STRING}`);
+            const data = await response.json();
+            logs = data.logs || [];
         }
 
         // Add bulk log entries to the backend
@@ -134,7 +154,9 @@
                 verified_direction = "out";
             }
 
+            messageEl.textContent = `Select a group for bulk sign-${verified_direction}`;
             await fetchNames(); //populates global names[]
+            await fetchLogs();  //populates global logs[]
             renderFilterButtons();
             setupBulkForm(verified_direction);
             return;
@@ -164,6 +186,7 @@
         // Filter table based on filter value
         function filterTable(filter) {
             const allRows = document.querySelectorAll("[class^='filter-']");
+            messageEl.textContent = filter;
             allRows.forEach(row => row.classList.remove("hidden"));
 
             if (filter !== "all") {
@@ -177,7 +200,6 @@
 
         // Setup the form for BULK sign-in or sign-out
         async function setupBulkForm(direction) {
-            messageEl.textContent = "";  // don't display a message, button text is enough
             submitButton.disabled = false; // (re-)enable button
             submitButton.textContent = direction === "in" ? "Bulk Sign In" : "Bulk Sign Out";
             formEl.classList.remove("hidden");
@@ -187,32 +209,67 @@
             tbody.innerHTML = "";
           
             names.forEach(name => {
-              const row = document.createElement("tr");
-              row.classList.add(`filter-${name.filter || "no-filter"}`);  // this enables filter buttons
-          
-              // Column 1: Display name
-              const nameCell = document.createElement("td");
-              nameCell.textContent = name.display;
-              row.appendChild(nameCell);
-          
-              // Column 2: Toggle button
-              const toggleCell = document.createElement("td");
-              const toggle = document.createElement("input");
-              toggle.type = "checkbox";
-              toggle.classList.add("name-toggle");
-              toggle.dataset.nameId = name.name_id;
-          
-              // Hidden input for name_id
-              const hiddenInput = document.createElement("input");
-              hiddenInput.type = "hidden";
-              hiddenInput.value = name.name_id;
-              hiddenInput.classList.add("name-id");
-          
-              toggleCell.appendChild(toggle);
-              toggleCell.appendChild(hiddenInput);
-              row.appendChild(toggleCell);
-          
-              tbody.appendChild(row);
+                const name_id = name.name_id;
+                const row = document.createElement("tr");
+                row.classList.add(`filter-${name.filter || "no-filter"}`);  // this enables filter buttons
+            
+                // Column 1: Display name & hidden input for name_id
+                const nameCell = document.createElement("td");
+                nameCell.textContent = name.display;
+  
+                const hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.value = name_id;
+                hiddenInput.classList.add("name-id");
+                nameCell.appendChild(hiddenInput);
+                row.appendChild(nameCell);
+
+                // Column 2: In  [time if in-log found / checkbox if direction=in / - if direction=out] 
+                const inCell = document.createElement("td");
+                const matchIn = logs.find(
+                    log => log.name_id === name_id && log.direction === "in"
+                );
+
+                if (matchIn) {
+                    inCell.textContent = convertTs2Time(matchIn.date_time);
+                } else if (direction === "in") {
+                    const toggle = document.createElement("input");
+                    toggle.type = "checkbox";
+                    toggle.classList.add("name-toggle");
+                    toggle.dataset.nameId = name.name_id;
+                    inCell.appendChild(toggle);
+                } else {
+                    inCell.textContent = "-";
+                }
+                row.appendChild(inCell);
+
+                // Column 3: Out  [time if out-log found / checkbox if direction=out AND matchIn / - if direction=in] 
+                const outCell = document.createElement("td");
+                const matchOut = logs.find(
+                    log => log.name_id === name.name_id && log.direction === "out"
+                );
+
+                if (matchOut) {
+                    outCell.textContent = convertTs2Time(matchOut.date_time);
+                } else if (direction === "out") {
+                    if (matchIn) {
+                        const toggle = document.createElement("input");
+                        toggle.type = "checkbox";
+                        toggle.classList.add("name-toggle");
+                        toggle.dataset.nameId = name.name_id;
+                        outCell.appendChild(toggle);
+                    } else {
+                        outCell.textContent = "-";
+                    }
+                } else {
+                  outCell.textContent = "-";
+                }
+                row.appendChild(outCell);
+
+                // Initially hide all rows; they will be shown when a filter button is clicked
+                row.classList.add("hidden");
+
+                tbody.appendChild(row);
             });
         }
 
@@ -225,20 +282,20 @@
             const activity_id = activityInputEl.value;
             const toggles = document.querySelectorAll(".name-toggle");
             const listOfNameId = [];
-          
+
             toggles.forEach(toggle => {
               if (toggle.checked) {
                 listOfNameId.push(toggle.dataset.nameId);
               }
             });
-          
+
             if (listOfNameId.length === 0) {
               messageEl.textContent = "No names selected for submission"; 
               spinnerEl.classList.add("hidden");
               window.scrollTo({ top: 0, behavior: 'smooth' });
               return;
             }
-          
+
             try {
               await addBulkLogs({
                 activity_id: activity_id,

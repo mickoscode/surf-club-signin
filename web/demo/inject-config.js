@@ -1,0 +1,1 @@
+../main/inject-config.js

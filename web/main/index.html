@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{INJECT_PAGE_TITLE}}</title>
+    <title>sign-in-out</title>
     <link rel="stylesheet" href="https://unpkg.com/picnic">
     <link rel="stylesheet" href="./sign-in-out.css">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{INJECT_FAVICON}}">
+    <link rel="icon" type="image/png" sizes="32x32" href="faviconV2.png">
 </head>
 <body>
     <div id="header-container"></div>
@@ -22,8 +22,8 @@
         <div id="spinner" class="spinner hidden"></div>
     </div>
     <script>
-        const API_BASE = "{{INJECT_API_URL}}";
-        const ACTIVITY_ID = "{{INJECT_ACTIVITY_ID}}";
+        const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
+        const ACTIVITY_ID = "sorrento_youth_sunday";
         let IN_START_TIME = convertTimeStringToDateObj("08:00");
         let OUT_START_TIME = convertTimeStringToDateObj("09:30");
         let END_TIME = convertTimeStringToDateObj("10:40");
@@ -61,7 +61,7 @@
 
         // Utility to check if today is Sunday
         function isSunday() {
-            const enableTestMode = {{INJECT_ENABLE_TEST_MODE}};
+            const enableTestMode = false;
             if (enableTestMode) {
                 return true;  // For testing purposes, always return true
             } else {
@@ -107,7 +107,7 @@
         // Initialize the page
         function init() {
             const now = new Date();
-            const enableTestMode = {{INJECT_ENABLE_TEST_MODE}};
+            const enableTestMode = false;
             if (enableTestMode) {
                 const testParam = getUrlParameter("test");
 

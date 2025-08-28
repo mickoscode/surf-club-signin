@@ -199,23 +199,16 @@ button#clearName:hover {
 }
 
 .menu-left,
-.menu-center,
-.menu-right {
+.menu-cell {
     flex: 1;
     padding: 0 0.5rem;
     white-space: nowrap; /* Prevents wrapping for short strings */
 }
-
 .menu-left {
     text-align: left;
 }
-
-.menu-center {
+.menu-cell {
     text-align: center;
-}
-
-.menu-right {
-    text-align: right;
 }
 
 /* Filter Buttons */

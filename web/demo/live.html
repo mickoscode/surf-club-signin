@@ -6,7 +6,7 @@
     <title>Live Counter</title>
     <link rel="stylesheet" href="https://unpkg.com/picnic">
     <link rel="stylesheet" href="./sign-in-out.css">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{INJECT_FAVICON}}">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-test.png">
 </head>
 <body>
     <div id="header-container"></div>
@@ -19,9 +19,9 @@
         </table>
     </div>
     <script>
-        const API_BASE = "{{INJECT_API_URL}}";
-        const ACTIVITY_ID = "{{INJECT_ACTIVITY_ID}}";
-        const enableTestMode = {{INJECT_ENABLE_TEST_MODE}};
+        const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
+        const ACTIVITY_ID = "sorrento_youth_sunday";
+        const enableTestMode = true;
         let LOG_DATE_STRING = new Date().toISOString().split('T')[0]; // Default to today
         let uniqueTotalCount = 0;
         let uniqueOutCount = 0;

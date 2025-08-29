@@ -9,9 +9,9 @@
     <link rel="icon" type="image/png" sizes="32x32" href="faviconV2.png">
 </head>
 <body>
-    <div id="header-container"></div>
     <div class="container">
-        <h1 id="message">About</h1>
+    <div class="aboutpage">
+        <h1 id="about-overview">About</h1>
         <p>
             This is a simple sign-in-out application designed for <b>Sorrento Surf Life Saving Club</b>.<br />
             <br />
@@ -21,15 +21,33 @@
             If this application is useful, it may be possible to extend it's use to Nippers or other activities.<br />
             Please speak with <b>Mick O'Connor</b> if you would like to discuss this further. <br />
         </p>
+        <h1 id="about-how">How the app works</h1>
+        <p>
+            Currently, the sign-in-out forms can only be used on Sunday mornings, during standard Youth/Nipper session times.<br />
+            i.e.<br /> 
+            Sign <b>in</b> is accessible from 8:00am to 9.30am<br />
+            Sign <b>out</b> is accessible from 9:31am to 10:40am.<br />
+            <br />
+            Youth simply enter their name and click the "Sign In/Out" button.<br />
+            Only registed Youth will be able to sign in. Unrecognised names will be rejected.<br />
+            <br />
+            Age Managers have addiitonal features to see <b>live</b> number of sign-ins, historical data, etc.<br />
+            Again, these features are only available during standard Youth/Nipper session times.<br />
+        </p>
+        <h1 id="about-faq">FAQ</h1>
+        <h3>I am a registered memember, but my name is not listed (or is incorrect)</h3>
+        Please use paper sign-in backup, and discuss with Age Managers, so missing/incorrect name can be corrected.<br />
+        <h3>I would like some extra features added to the app - e.g. tracking profeciencies/awards, etc</h3>
+        This is not the purpose of the app... but if used successfully for sign-in-out, then perhaps this could be considered in future.<br />
+        <h3>I am an Age Manager and I incorrectly signed someone in/out - how can I delete/correct this?</h3>
+        Currently, there is no way to delete data... please be more careful :D<br />
+        The ability to delete/edit data will be added in the future.<br />
+        <h3>The site currently says the next session is this weekend, but the season is over!</h3>
+        The sign-in-out application is not aware of the season dates... it simply assumes that sessions are every Sunday.<br />
+        Please ignore the "Next Session" message when the season is over and during xmas break :)<br />
+        <br />
+        <br />
     </div>
-    <script>
-        // inject ./header.snippet
-        fetch('./header.snippet')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('header-container').innerHTML = data;
-            })
-            .catch(error => console.error('Header load error:', error));
-    </script>
+    </div>
 </body>
 </html>

@@ -35,6 +35,9 @@ body {
     color: var(--text-color);
     text-align: center;
 }
+.aboutpage {
+    text-align: left;
+}
 
 /* Live Counter Section */
 .live-total {
@@ -205,6 +208,8 @@ button#clearName:hover {
     white-space: nowrap; /* Prevents wrapping for short strings */
 }
 .menu-left {
+    color: red;
+    font-weight: bold;
     text-align: left;
 }
 .menu-cell {

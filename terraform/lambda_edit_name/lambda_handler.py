@@ -2,6 +2,11 @@ import json
 import boto3
 
 def lambda_handler(event, context):
+    method = event.get("requestContext", {}).get("http", {}).get("method", "")
+
+    if method == "OPTIONS":
+        return build_response(200, {"message": "CORS preflight OK"})
+
     body = json.loads(event["body"])
     name_id = body["name_id"]
     activity_id = body["activity_id"]

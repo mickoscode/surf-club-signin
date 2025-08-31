@@ -8,6 +8,11 @@ def sanitize_name_id(display: str) -> str:
     return re.sub(r"[ ]+", "_", cleaned)
 
 def lambda_handler(event, context):
+    method = event.get("requestContext", {}).get("http", {}).get("method", "")
+
+    if method == "OPTIONS":
+        return build_response(200, {"message": "CORS preflight OK"})
+
     body = json.loads(event["body"])
     display = body["display"]
     activity_id = body["activity_id"]

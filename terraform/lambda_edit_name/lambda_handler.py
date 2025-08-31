@@ -21,6 +21,7 @@ def lambda_handler(event, context):
         if not all([activity_id, name_id, display, filter]):
             return build_response(400, {"message": "Missing required fields."})
 
+        print("Attempting update for:", name_id, activity_id)
         dynamodb = boto3.client("dynamodb")
         dynamodb.update_item(
             TableName="names",
@@ -36,9 +37,11 @@ def lambda_handler(event, context):
         return build_response(201, {"message": "Name updated successfully."})
 
     except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
+        print("Conditional check failed for:", name_id, activity_id)
         return build_response(409, {"message": "Could not match an existing entry for updating"})
 
     except Exception as e:
+        print("500 Error for:", name_id, activity_id, str(e))
         return build_response(500, {"message": "Internal server error", "error": str(e)})
 
 # Add cors headers to the response

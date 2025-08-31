@@ -47,7 +47,7 @@ jobs:
       - name: Sync content to S3/data folder
         run: |
           echo "Syncing 'data' folder to s3://${{ github.event.inputs.bucket-name }}/data"
-          aws s3 sync ./data/ s3://${{ github.event.inputs.bucket-name }}/data --delete
+          aws s3 sync ./web/data/ s3://${{ github.event.inputs.bucket-name }}/data --delete
 
       # Invalidate CloudFront cache (optional)
       - name: Invalidate CloudFront cache

@@ -1,5 +1,5 @@
 # This workflow is named "Deploy to S3" and will be displayed in the Actions tab.
-name: SURF to S3
+name: OUTDATED - SURF to S3
 
 # This is the trigger that allows you to run the workflow manually from the GitHub UI.
 on:

@@ -83,6 +83,22 @@ resource "aws_lambda_permission" "fetch_logs" {
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }
 
+resource "aws_lambda_permission" "write_name" {
+  statement_id  = "AllowFetchInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.write_name.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "edit_name" {
+  statement_id  = "AllowFetchInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.edit_name.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+}
+
 resource "aws_lambda_permission" "fetch_names" {
   statement_id  = "AllowFetchInvoke"
   action        = "lambda:InvokeFunction"
@@ -126,6 +142,22 @@ resource "aws_apigatewayv2_integration" "fetch_logs" {
   payload_format_version = "2.0"
 }
 
+resource "aws_apigatewayv2_integration" "write_name" {
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.write_name.invoke_arn
+  integration_method     = "POST"
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_integration" "edit_name" {
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.edit_name.invoke_arn
+  integration_method     = "POST"
+  payload_format_version = "2.0"
+}
+
 resource "aws_apigatewayv2_integration" "fetch_names" {
   api_id                 = aws_apigatewayv2_api.api.id
   integration_type       = "AWS_PROXY"
@@ -150,7 +182,6 @@ resource "aws_apigatewayv2_route" "write_bulk" {
   route_key = "POST /bulk"
   target    = "integrations/${aws_apigatewayv2_integration.write_bulk.id}"
 }
-
 # OPTIONS is needed for CORS
 resource "aws_apigatewayv2_route" "write_bulk_options" {
   api_id    = aws_apigatewayv2_api.api.id
@@ -163,7 +194,6 @@ resource "aws_apigatewayv2_route" "write_log" {
   route_key = "POST /log"
   target    = "integrations/${aws_apigatewayv2_integration.write_log.id}"
 }
-
 # OPTIONS is needed for CORS
 resource "aws_apigatewayv2_route" "write_log_options" {
   api_id    = aws_apigatewayv2_api.api.id
@@ -184,6 +214,30 @@ resource "aws_apigatewayv2_route" "fetch_names" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "GET /name"
   target    = "integrations/${aws_apigatewayv2_integration.fetch_names.id}"
+}
+
+resource "aws_apigatewayv2_route" "write_name" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /addname"
+  target    = "integrations/${aws_apigatewayv2_integration.write_name.id}"
+}
+# OPTIONS is needed for CORS
+resource "aws_apigatewayv2_route" "write_name_options" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "OPTIONS /addname"
+  target    = "integrations/${aws_apigatewayv2_integration.write_name.id}"
+}
+
+resource "aws_apigatewayv2_route" "edit_name" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /editname"
+  target    = "integrations/${aws_apigatewayv2_integration.edit_name.id}"
+}
+# OPTIONS is needed for CORS
+resource "aws_apigatewayv2_route" "edit_name_options" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "OPTIONS /editname"
+  target    = "integrations/${aws_apigatewayv2_integration.edit_name.id}"
 }
 
 # -------------------------------

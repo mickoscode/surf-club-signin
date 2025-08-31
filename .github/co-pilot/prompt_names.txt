@@ -1,0 +1,90 @@
+I have an aws dynamodb table called 'names'. The schema and typical content can be seen below. 
+Can you please create a simple web app (names.html) using html & java for the front end, and python for the backend lambda function(s). 
+The lambda functions should be accessed via POST and get requests to aws api-gateway, as shown in the example below.
+
+I would like the web app to have the following functionality.
+1)
+define a const list VALID_ACTIVITY_ID = ["sorrento_youth_sunday", "demo", "redcaps"]
+define a const list VALID_FILTER = ["u14", "u15", "u17", "u19"]
+
+2)
+On Page load, if no url parameter inputs, and no form submission: 
+- top of page, display a "add name" form for adding 1 new name
+- form should have a drop down selection to choose a valid activity_id from VALID_ACTIVITY_ID
+- form should have a drop down selection to choose a valid filter from  VALID_FILTER
+- form should have a input field for an input called 'display' that allows up to 50 characters for a name. The entered value should be stripped of non-alpha numberic characters, to protect against bad data
+
+3)
+Below the "add name" form, a complete list of existing names should be show, with one name per line.
+The list of names can be obtained via the existing api /name using a function similar to fetchNames() shown below.
+Each name line should be displayed as a url like <a href="./names.html?activity_id=activity_id&name_id=name_id&filter=filter">activity_id | display | filter</a>
+
+4)
+When the "add name" form is submitted, the page should process the form as follows:
+- clean 'display' (to remove illegal or dangerous characters)
+- call /addname API, and supply value for activity_id, display, filter
+- the backend lambda python function for /addname will be responsible for generating value for name_id. An example of this is shown below.
+
+5)
+on page load, if all 3 url parameters (activity_id, name_id & filter) are present, then display an "edit name" form 
+- the form should be similar to add name, but the existing 'display' name value should be visible in the input field.
+- display name will need to be fetched via getName api/function, using the 3 url parameters
+- the form should include name_id as a hidden input
+
+6)
+When the "edit name" form is submitted, the page should process the form as follows:
+- clean 'display' (to remove illegal or dangerous characters)
+- call /editname API, and supply value for activity_id, name_id, display, filter
+the backend lambda python function for editname will need to update existing records in 'names' table, updating the values for display and filter for the matching activity_id and name_id 
+
+
+
+# Example function to 
+const names = fetchNames();
+
+async function fetchNames() {
+      const response = await fetch(`${API_BASE}/name?activity_id=sorrento_youth_sunday`);
+      return response;
+}
+
+
+# Example lambda python -  name_id generation from display value:
+# Converts display name to a lowercase, underscore-separated ID
+def sanitize_name_id(display: str) -> str:
+    # Normalize accented characters to ASCII equivalents
+    normalized = unicodedata.normalize("NFKD", display)
+    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
+    # Lowercase and remove unwanted characters (keep a-z, 0-9, and space)
+    cleaned = re.sub(r"[^a-z0-9 ]+", "", ascii_only.lower()).strip(" ")
+    # Replace spaces with underscores
+    return re.sub(r"[ ]+", "_", cleaned)
+
+name_id = sanitize_name_id(display)
+
+
+# Example javascript api call:
+        // Fetch valid names from the backend
+        async function fetchNames() {
+            const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
+            return response.json();
+        }
+
+
+# Example aws cli command to get data in names table:
+aws dynamodb scan --table-name names
+{
+    "Items": [
+        {
+            "name_id": { "S": "abbey_thomson" },
+            "filter": { "S": "u17" },
+            "activity_id": { "S": "sorrento_youth_sunday" },
+            "display": { "S": "Abbey Thomson" }
+        },
+        {
+            "name_id": { "S": "abby_hermann" },
+            "filter": { "S": "u17" },
+            "activity_id": { "S": "sorrento_youth_sunday" },
+            "display": { "S": "Abby Hermann" }
+        }
+]
+}

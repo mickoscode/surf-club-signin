@@ -1,0 +1,57 @@
+# This workflow is named "Deploy to S3" and will be displayed in the Actions tab.
+name: Data to S3
+
+# This is the trigger that allows you to run the workflow manually from the GitHub UI.
+on:
+  workflow_dispatch:
+    inputs:
+      # You can add a description here that will show up in the GitHub UI
+      bucket-name:
+        description: 'The S3 bucket name to deploy to'
+        required: true
+        default: 'sign-in-out.com'
+      region:
+        description: 'The AWS region of the S3 bucket'
+        required: true
+        default: 'ap-southeast-2'
+      cf-distribution-id:
+        description: 'The ID of the CloudFront distribution to invalidate'
+        required: true
+        default: 'E25MMIJS9KLCP2'
+
+# The 'jobs' section defines the tasks the workflow will perform.
+jobs:
+  # The 'deploy' job will handle the upload to S3.
+  deploy:
+    # We use a recent version of the Ubuntu Linux runner.
+    runs-on: ubuntu-latest
+
+    # The 'steps' section contains a sequence of tasks to be executed.
+    steps:
+      # Check out your repository code so it's available to the workflow.
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # Configure AWS credentials.
+      # This action sets up the environment with your AWS credentials, which you should store securely as GitHub secrets.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.region }}
+
+      # Upload content to the S3 bucket.
+      # We use the AWS CLI to perform the synchronization. The 'sync' command
+      # is great for this as it only uploads new or changed files.
+      - name: Sync content to S3/data folder
+        run: |
+          echo "Syncing 'data' folder to s3://${{ github.event.inputs.bucket-name }}/data"
+          aws s3 sync ./data/ s3://${{ github.event.inputs.bucket-name }}/data --delete
+
+      # Invalidate CloudFront cache (optional)
+      - name: Invalidate CloudFront cache
+        run: |
+          echo "Invalidating CloudFront cache"
+          aws cloudfront create-invalidation --distribution-id ${{ github.event.inputs.cf-distribution-id }} --paths "/data/*"
+          echo "CloudFront cache invalidated"

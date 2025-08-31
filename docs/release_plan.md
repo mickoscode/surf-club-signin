@@ -12,15 +12,19 @@
 Public Functioning Pages:
 - index.html  # form to sign in / out  - display info relative to recent/next session if outside window
 - live.html   # live headcount, list of names & status
-- report.html # list any csv reports, so user can click to view/download
+- history.html # list any csv reports, so user can click to view/download
 - test/demo mirrors
 
 ## MVP - release v0.2.0
 - Fix bugs!
-- leaders: ability to bulk sign in & out via: leader.html
+- leaders: ability to bulk sign in & out via: bulk.html
+- Improve TF/cloud front IAM to allow cache clearing and add to github workflow
+- Enable github workflow to run on merge (instead of manually)
+- admin: ability to add & edit names
 
 Public Functioning Pages:
-- leader.html # form to do bulk sign in / out
+- bulk.html # form to do bulk sign in / out
+- data/names.html # admin page for managing names
 
 ## Release v0.3.0
 - Fix bugs!
@@ -30,9 +34,36 @@ Public Functioning Pages:
 
 ## Release v0.4.0
 - Fix bugs!
-- Improve TF/cloud front IAM to allow cache clearing and add to github workflow
-- Enable github workflow to run on merge (instead of manually)
 - All TF code cleaned up to be modular and multi-environment using tfvars
+- Improve lambda/CORS preflight - use mock instead, to avoid invoking lambda for options.
+e.g.
+```hcl
+resource "aws_apigatewayv2_route" "edit_name_options" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "OPTIONS /editname"
+  target    = "integrations/${aws_apigatewayv2_integration.options_mock.id}"
+}
+
+resource "aws_apigatewayv2_integration" "options_mock" {
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "MOCK"
+  integration_method     = "OPTIONS"
+  payload_format_version = "1.0"
+}
+
+# configure default response with correct headers:
+resource "aws_apigatewayv2_route_response" "options_response" {
+  api_id      = aws_apigatewayv2_api.api.id
+  route_id    = aws_apigatewayv2_route.edit_name_options.id
+  route_response_key = "$default"
+
+  response_parameters = {
+    "Access-Control-Allow-Origin" = "'*'"
+    "Access-Control-Allow-Methods" = "'POST, OPTIONS'"
+    "Access-Control-Allow-Headers" = "'Content-Type'"
+  }
+}
+```
 
 # Release v1.0.0
 - Fix bugs!

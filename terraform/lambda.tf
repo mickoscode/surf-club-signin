@@ -17,6 +17,42 @@ resource "aws_lambda_function" "write_bulk" {
 }
 
 # -------------------------------
+# Lambda - Edit Name
+# -------------------------------
+data "archive_file" "edit_name_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_edit_name"
+  output_path = "${path.module}/edit_name.zip"
+}
+
+resource "aws_lambda_function" "edit_name" {
+  function_name    = "EditNameFunction"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.edit_name_zip.output_path
+  source_code_hash = data.archive_file.edit_name_zip.output_base64sha256
+}
+
+# -------------------------------
+# Lambda - Write Name
+# -------------------------------
+data "archive_file" "write_name_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_write_name"
+  output_path = "${path.module}/write_name.zip"
+}
+
+resource "aws_lambda_function" "write_name" {
+  function_name    = "WriteNameFunction"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.write_name_zip.output_path
+  source_code_hash = data.archive_file.write_name_zip.output_base64sha256
+}
+
+# -------------------------------
 # Lambda - Write Log
 # -------------------------------
 data "archive_file" "write_log_zip" {

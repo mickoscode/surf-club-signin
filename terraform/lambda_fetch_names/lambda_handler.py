@@ -1,5 +1,7 @@
 import json
 import boto3
+from boto3.dynamodb.conditions import Key
+
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("names")
@@ -21,13 +23,12 @@ def lambda_handler(event, context):
         if (name_id):
             response = table.query(
                 KeyConditionExpression=Key('activity_id').eq(activity_id) & Key('name_id').eq(name_id)
+                #KeyConditionExpression="activity_id = :aid and name_id = :nid", ExpressionAttributeValues={":aid": activity_id, ":nid": name_id}
             )
-            #KeyConditionExpression="activity_id = :aid and name_id = :nid",
-            #ExpressionAttributeValues={":aid": activity_id, ":nid": name_id}
         else:
             response = table.query(
-                KeyConditionExpression="activity_id = :aid",
-                ExpressionAttributeValues={":aid": activity_id}
+                KeyConditionExpression=Key('activity_id').eq(activity_id)
+                #KeyConditionExpression="activity_id = :aid", ExpressionAttributeValues={":aid": activity_id}
             )
 
         return build_response(200, {"names": response.get("Items", [])})

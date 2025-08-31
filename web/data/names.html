@@ -129,6 +129,7 @@
         try {
           await editName(payload);
           //messageEl.textContent = "name edited successfully";
+          alert("get to here?")
         } catch (error) {
           alert("Error: " + error.message);
         }
@@ -168,6 +169,6 @@
 </head>
 <body>
   <h1 id="message"></h1>
-  <h1>Manage Names</h1>
+  <h1>Manage <a href="./names.html">Names</a></h1>
 </body>
 </html>

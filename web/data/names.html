@@ -1,27 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>names - sign-in-out</title>
-    <link rel="stylesheet" href="https://unpkg.com/picnic">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-data.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>names - sign-in-out</title>
+  <link rel="stylesheet" href="https://unpkg.com/picnic">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-data.png">
   <script>
     const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
     const VALID_ACTIVITY_ID = ["sorrento_youth_sunday", "demo", "redcaps"];
+    const DEFAULT_ACTIVITY_ID = "demo";
     const VALID_FILTER = ["u14", "u15", "u17", "u19"];
 
     document.addEventListener("DOMContentLoaded", async () => {
+      const messageEl = document.getElementById("message");
       const params = new URLSearchParams(window.location.search);
       const activity_id = params.get("activity_id");
       const name_id = params.get("name_id");
       const filter = params.get("filter");
 
       if (activity_id && name_id && filter) {
-        renderEditForm(activity_id, name_id, filter);
+        await renderEditForm(activity_id, name_id, filter);
       } else {
-        renderAddForm();
-        const names = (await fetchNames("sorrento_youth_sunday")).names || [];
+        renderAddForm(messageEl);
+        const names = (await fetchNames(DEFAULT_ACTIVITY_ID)).names || [];
         renderNameList(names);
       }
     });
@@ -37,56 +39,84 @@
 
     async function fetchName(activity_id, name_id, filter) {
       const response = await fetch(`${API_BASE}/name?activity_id=${activity_id}&name_id=${name_id}&filter=${filter}`);
-      return response.json();
+      const data = await response.json();
+      return data.names[0].display || "no name found for name_id";
     }
 
-    function renderAddForm() {
-      document.body.innerHTML += `
-        <h2>Add Name</h2>
-        <form id="addForm">
-          <label>Activity ID:</label>
-          <select name="activity_id">${VALID_ACTIVITY_ID.map(id => `<option value="${id}">${id}</option>`).join("")}</select><br>
-          <label>Filter:</label>
-          <select name="filter">${VALID_FILTER.map(f => `<option value="${f}">${f}</option>`).join("")}</select><br>
-          <label>Display Name:</label>
-          <input type="text" name="display" maxlength="50"><br>
-          <button type="submit">Add</button>
-        </form>
+    function renderAddForm(messageEl) {
+      const container = document.createElement("div");
+
+      const heading = document.createElement("h2");
+      heading.textContent = "Add Name";
+      container.appendChild(heading);
+
+      const form = document.createElement("form");
+      form.id = "addForm";
+
+      form.innerHTML = `
+        <label>Activity ID:</label>
+        <select name="activity_id">${VALID_ACTIVITY_ID.map(id => `<option value="${id}">${id}</option>`).join("")}</select><br>
+        <label>Filter:</label>
+        <select name="filter">${VALID_FILTER.map(f => `<option value="${f}">${f}</option>`).join("")}</select><br>
+        <label>Display Name:</label>
+        <input type="text" name="display" maxlength="50"><br>
+        <button type="submit">Add</button>
       `;
-      document.getElementById("addForm").onsubmit = async (e) => {
+
+      form.onsubmit = async (e) => {
         e.preventDefault();
         const form = e.target;
         const display = sanitizeDisplay(form.display.value);
         const payload = {
           activity_id: form.activity_id.value,
           filter: form.filter.value,
-          display
+          display: display
         };
-        await fetch(`${API_BASE}/addname`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        location.reload();
+
+        try {
+          await addName(payload);
+          messageEl.textContent = "name added successfully";
+        } catch (error) {
+          alert("Error: " + error.message);
+        }
       };
+
+      container.appendChild(form);
+      document.body.appendChild(container);
+    }
+
+    async function addName(payload) {
+      const response = await fetch(`${API_BASE}/addname`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      return response.json();
     }
 
     async function renderEditForm(activity_id, name_id, filter) {
-      const data = await fetchName(activity_id, name_id, filter);
-      document.body.innerHTML += `
-        <h2>Edit Name</h2>
-        <form id="editForm">
-          <input type="hidden" name="name_id" value="${name_id}">
-          <label>Activity ID:</label>
-          <select name="activity_id">${VALID_ACTIVITY_ID.map(id => `<option value="${id}" ${id === activity_id ? "selected" : ""}>${id}</option>`).join("")}</select><br>
-          <label>Filter:</label>
-          <select name="filter">${VALID_FILTER.map(f => `<option value="${f}" ${f === filter ? "selected" : ""}>${f}</option>`).join("")}</select><br>
-          <label>Display Name:</label>
-          <input type="text" name="display" value="${data.display}" maxlength="50"><br>
-          <button type="submit">Update</button>
-        </form>
+      const display = await fetchName(activity_id, name_id, filter);
+      const container = document.createElement("div");
+
+      const heading = document.createElement("h2");
+      heading.textContent = "Edit Name";
+      container.appendChild(heading);
+
+      const form = document.createElement("form");
+      form.id = "editForm";
+
+      form.innerHTML = `
+        <input type="hidden" name="name_id" value="${name_id}">
+        <label>Activity ID:</label>
+        <select name="activity_id">${VALID_ACTIVITY_ID.map(id => `<option value="${id}" ${id === activity_id ? "selected" : ""}>${id}</option>`).join("")}</select><br>
+        <label>Filter:</label>
+        <select name="filter">${VALID_FILTER.map(f => `<option value="${f}" ${f === filter ? "selected" : ""}>${f}</option>`).join("")}</select><br>
+        <label>Display Name:</label>
+        <input type="text" name="display" value="${display}" maxlength="50"><br>
+        <button type="submit">Update</button>
       `;
-      document.getElementById("editForm").onsubmit = async (e) => {
+
+      form.onsubmit = async (e) => {
         e.preventDefault();
         const form = e.target;
         const display = sanitizeDisplay(form.display.value);
@@ -94,27 +124,50 @@
           activity_id: form.activity_id.value,
           name_id: form.name_id.value,
           filter: form.filter.value,
-          display
+          display: display
         };
-        await fetch(`${API_BASE}/editname`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+        try {
+          await editName(payload);
+          //messageEl.textContent = "name edited successfully";
+        } catch (error) {
+          alert("Error: " + error.message);
+        }
         location.href = "./names.html";
       };
+
+      container.appendChild(form);
+      document.body.appendChild(container);
+    }
+
+    async function editName(payload) {
+      const response = await fetch(`${API_BASE}/editname`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      return response.json();
     }
 
     function renderNameList(names) {
-      document.body.innerHTML += `<h2>Existing Names</h2><ul>`;
+      const heading = document.createElement("h2");
+      heading.textContent = "Existing Names";
+      document.body.appendChild(heading);
+
+      const list = document.createElement("ul");
       names.forEach(n => {
-        document.body.innerHTML += `<li><a href="./names.html?activity_id=${n.activity_id}&name_id=${n.name_id}&filter=${n.filter}">${n.activity_id} | ${n.display} | ${n.filter}</a></li>`;
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `./names.html?activity_id=${n.activity_id}&name_id=${n.name_id}&filter=${n.filter}`;
+        link.textContent = `${n.activity_id} | ${n.display} | ${n.filter}`;
+        item.appendChild(link);
+        list.appendChild(item);
       });
-      document.body.innerHTML += `</ul>`;
+      document.body.appendChild(list);
     }
   </script>
 </head>
 <body>
+  <h1 id="message"></h1>
   <h1>Manage Names</h1>
 </body>
 </html>

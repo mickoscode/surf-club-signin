@@ -31,7 +31,8 @@
     const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
 
     async function fetchNames() {
-      const response = await fetch(`${API_BASE}/name?activity_id=sorrento_youth_sunday`);
+      //const response = await fetch(`${API_BASE}/name?activity_id=sorrento_youth_sunday`);
+      const response = await fetch(`${API_BASE}/name?activity_id=demo`);
       const data = await response.json();
       const tableBody = document.querySelector("#namesTable tbody");
       tableBody.innerHTML = "";

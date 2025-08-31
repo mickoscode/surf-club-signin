@@ -1,6 +1,7 @@
 import json
 import boto3
 from logger import log_event
+import traceback
 
 def lambda_handler(event, context):
     method = event.get("requestContext", {}).get("http", {}).get("method", "")
@@ -42,6 +43,7 @@ def lambda_handler(event, context):
 
     except Exception as e:
         print("500 Error for:", name_id, activity_id, str(e))
+        print("Unhandled exception:", traceback.format_exc())
         return build_response(500, {"message": "Internal server error", "error": str(e)})
 
 # Add cors headers to the response

@@ -28,12 +28,7 @@ Public Functioning Pages:
 
 ## Release v0.3.0
 - Fix bugs!
-- All activity config (days & times) pulled from activity table (instead of hard coded)
-- All html/java script cleaned up and modular
-- Second club added (e.g. sorrento_redcaps_sunday, sorrento_youth_clubswim, etc.)
-
-## Release v0.4.0
-- Fix bugs!
+- Add rate limiting for APIs
 - All TF code cleaned up to be modular and multi-environment using tfvars
 - Improve lambda/CORS preflight - use mock instead, to avoid invoking lambda for options.
 e.g.
@@ -64,6 +59,12 @@ resource "aws_apigatewayv2_route_response" "options_response" {
   }
 }
 ```
+
+## Release v0.4.0
+- Fix bugs!
+- All activity config (days & times) pulled from activity table (instead of hard coded)
+- All html/java script cleaned up and modular
+- Second club added (e.g. sorrento_redcaps_sunday, sorrento_youth_clubswim, etc.)
 
 # Release v1.0.0
 - Fix bugs!

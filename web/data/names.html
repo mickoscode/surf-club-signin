@@ -21,7 +21,7 @@
         renderEditForm(activity_id, name_id, filter);
       } else {
         renderAddForm();
-        const names = await fetchNames("sorrento_youth_sunday"); // Default activity
+        const names = (await fetchNames("sorrento_youth_sunday")).names || [];
         renderNameList(names);
       }
     });
@@ -36,7 +36,7 @@
     }
 
     async function fetchName(activity_id, name_id, filter) {
-      const response = await fetch(`${API_BASE}/getname?activity_id=${activity_id}&name_id=${name_id}&filter=${filter}`);
+      const response = await fetch(`${API_BASE}/name?activity_id=${activity_id}&name_id=${name_id}&filter=${filter}`);
       return response.json();
     }
 

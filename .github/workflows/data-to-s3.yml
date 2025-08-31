@@ -17,7 +17,7 @@ on:
       cf-distribution-id:
         description: 'The ID of the CloudFront distribution to invalidate'
         required: true
-        default: 'E25MMIJS9KLCP2'
+        default: 'E2DY5SRXBRDW31'
 
 # The 'jobs' section defines the tasks the workflow will perform.
 jobs:

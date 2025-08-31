@@ -44,6 +44,8 @@ resource "aws_iam_policy" "lambda_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
+        # TODO - tighten this to something like... 
+        # "Resource": "arn:aws:logs:ap-southeast-2:YOUR_ACCOUNT_ID:log-group:/aws/lambda/EditNameFunction:*"
         Resource = "arn:aws:logs:*:*:*"
       }
     ]

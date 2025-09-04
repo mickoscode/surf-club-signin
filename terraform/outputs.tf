@@ -21,10 +21,6 @@ output "acm_validation_record2" {
 
 # An output value to get the CloudFront domain name, which you will use
 # to create a CNAME record in your DNS.
-output "cloudfront_domain_name" {
-  value = aws_cloudfront_distribution.cdn.domain_name
-}
-
 output "sio_cloudfront_domain_name" {
   value = aws_cloudfront_distribution.sio.domain_name
 }

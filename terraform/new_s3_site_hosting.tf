@@ -103,7 +103,8 @@ data "aws_iam_policy_document" "sio" {
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
-      values   = ["arn:aws:cloudfront::722937635825:distribution/E25MMIJS9KLCP2"]
+      #values   = ["arn:aws:cloudfront::722937635825:distribution/E25MMIJS9KLCP2"] # old CDN for micko-training2025
+      values   = ["arn:aws:cloudfront::722937635825:distribution/E2DY5SRXBRDW31"]
     }
   }
 }

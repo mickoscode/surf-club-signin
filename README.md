@@ -16,16 +16,16 @@ The aims of this repo/project are:
 
 ## Repo Overview
 
-[./app/](./app/):
-- [./app/config.json](./app/config.json) - set values used in html templates
-- [./app/header.snippet](./app/header.snippet) - simple solution to enable different menu in demo/test site  
-- [./app/history.template.html](./app/history.template.html) - inject-configs.js uses this to create history.html
-- [./app/index.template.html](./app/index.template.html) - inject-configs.js uses this to create index.html
-- [./app/live.template.html](./app/index.template.html) - inject-configs.js uses this to create live.html
-- [./app/inject-config.js](./app/inject-config.js) - trigged by [./.github/workflows/upload-to-s3.yml](./.github/workflows/upload-to-s3.yml)
+[./web/main/](./web/main/):
+- [./web/main/config.json](./web/main/config.json) - set values used in html templates
+- [./web/main/header.snippet](./web/main/header.snippet) - simple solution to enable different menu in demo/test site  
+- [./web/main/history.template.html](./web/main/history.template.html) - inject-configs.js uses this to create history.html
+- [./web/main/index.template.html](./web/main/index.template.html) - inject-configs.js uses this to create index.html
+- [./web/main/live.template.html](./web/main/index.template.html) - inject-configs.js uses this to create live.html
+- [./web/main/inject-config.js](./web/main/inject-config.js) - trigged by [./.github/workflows/upload-to-s3.yml](./.github/workflows/upload-to-s3.yml)
 
-[./app-test/](./app-test/):
-- Everything except [./app/config.json](./app/config.json) is a symbolic link back to [./app/](./app/)
+[./web/demo/](./web/demo/):
+- Everything except [config.json](config.json) is a symbolic link back to [./web/main/](./web/main/)
 - `"INJECT_ENABLE_TEST_MODE": "true"` in config.json is what enables all of the test/demo functionality 
 
 [./scripts/](./scripts/):
@@ -39,7 +39,7 @@ The aims of this repo/project are:
 
 ## Adding another club/group/activity - e.g. sorrento_redcaps_sunday
 - Populate names table with list of allowed names for activity_id
-- create new folder - e.g. `reds`
-- create ./reds/config.json
-- create symbolic links for relevant files from ./reds/* to ./app/* 
-- add `reds` to upload-to-s3.yml workflow
+- create new folder - e.g. `./web/reds`
+- create ./web/reds/config.json
+- create symbolic links for relevant files from ./reds/* to ../main/* 
+- add `reds` to sync.sio.yml workflow

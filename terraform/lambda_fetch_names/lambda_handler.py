@@ -1,6 +1,7 @@
 import json
 import boto3
 from boto3.dynamodb.conditions import Key
+from logger import log_event
 
 
 dynamodb = boto3.resource("dynamodb")
@@ -10,6 +11,7 @@ table = dynamodb.Table("names")
 # if only activity_id is supplied, return a list of all names
 # if both activity_id and name_id are supplied, return a single record (in theory)
 def lambda_handler(event, context):
+    log_event(event, context)
     try:
         # Parse query parameters
         params = event.get("queryStringParameters", {})

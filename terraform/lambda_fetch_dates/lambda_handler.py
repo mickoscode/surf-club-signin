@@ -1,10 +1,12 @@
 import json
 import boto3
+from logger import log_event
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("log")
 
 def lambda_handler(event, context):
+    log_event(event, context)
     try:
         # Parse query parameters
         params = event.get("queryStringParameters", {})

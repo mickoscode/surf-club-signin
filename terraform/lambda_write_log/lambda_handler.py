@@ -1,11 +1,13 @@
 import json
 import boto3
 from datetime import datetime
+from logger import log_event
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("log")
 
 def lambda_handler(event, context):
+    log_event(event, context)
     method = event.get("requestContext", {}).get("http", {}).get("method", "")
 
     if method == "OPTIONS":

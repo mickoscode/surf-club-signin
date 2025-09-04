@@ -1,5 +1,6 @@
 import json, re, unicodedata
 import boto3
+from logger import log_event
 
 def sanitize_name_id(display: str) -> str:
     normalized = unicodedata.normalize("NFKD", display)
@@ -8,6 +9,7 @@ def sanitize_name_id(display: str) -> str:
     return re.sub(r"[ ]+", "_", cleaned)
 
 def lambda_handler(event, context):
+    log_event(event, context)
     method = event.get("requestContext", {}).get("http", {}).get("method", "")
 
     if method == "OPTIONS":

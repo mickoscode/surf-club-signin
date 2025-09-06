@@ -1,6 +1,6 @@
 # SIO = SIGN-IN-OUT :) 
 resource "aws_s3_bucket" "sio" {
-  bucket = "sign-in-out.com" #must exactly match domain name
+  bucket = var.bucket_name #must exactly match domain name
 
   tags = {
     Name        = "Sign-In-Out Public Bucket"
@@ -57,35 +57,9 @@ data "aws_iam_policy_document" "sio" {
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::722937635825:user/micko-cli"]
+      identifiers = ["arn:aws:iam::${var.aws_account_id}:user/${var.iam_user_cli}"]
     }
   }
-
-  #OAI permissions for CloudFront to access the bucket
-  # possibly not needed now, following update to OAC... but leaving in place for now
-  #  statement {
-  #    sid       = "AllowCloudFrontGet"
-  #    effect    = "Allow"
-  #    actions   = ["s3:GetObject"]
-  #    resources = ["${aws_s3_bucket.sio.arn}/*"]
-
-  #    principals {
-  #      type        = "AWS"
-  #      identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
-  #    }
-  #  }
-
-  #  statement {
-  #    sid       = "AllowCloudFrontList"
-  #    effect    = "Allow"
-  #    actions   = ["s3:ListBucket"]
-  #    resources = [aws_s3_bucket.sio.arn]
-
-  #    principals {
-  #      type        = "AWS"
-  #      identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
-  #    }
-  #  }
 
   # Newer OAC permissions for CloudFront to access the bucket
   # generated via AWS console when cloud front was correctly updated to point to s3 website (instead of s3 api).
@@ -103,8 +77,7 @@ data "aws_iam_policy_document" "sio" {
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
-      #values   = ["arn:aws:cloudfront::722937635825:distribution/E25MMIJS9KLCP2"] # old CDN for micko-training2025
-      values   = ["arn:aws:cloudfront::722937635825:distribution/E2DY5SRXBRDW31"]
+      values   = ["arn:aws:cloudfront::${var.aws_account_id}:distribution/${var.cloudfront_dist_id}"]
     }
   }
 }

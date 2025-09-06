@@ -1,10 +1,10 @@
-resource "aws_iam_user" "mickos_github" {
-  name = "mickos-github"
+resource "aws_iam_user" "github_user" {
+  name = var.iam_user_github
 }
 
-resource "aws_iam_policy" "mickos_github_s3_write_policy" {
-  name        = "mickos-github-s3-write-policy"
-  description = "Policy to allow write and delete access to the S3 buckets for sign-in-out.com"
+resource "aws_iam_policy" "github_s3_write" {
+  name        = "github-s3-write-policy"
+  description = "Policy to allow write and delete access to the website S3 bucket"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -18,10 +18,8 @@ resource "aws_iam_policy" "mickos_github_s3_write_policy" {
           "s3:DeleteObject"
         ]
         Resource = [
-          "arn:aws:s3:::micko-training2025.info",
-          "arn:aws:s3:::micko-training2025.info/*",
-          "arn:aws:s3:::sign-in-out.com",
-          "arn:aws:s3:::sign-in-out.com/*"
+          "arn:aws:s3:::${var.bucket_name}",
+          "arn:aws:s3:::${var.bucket_name}/*"
         ]
       },
       {
@@ -30,13 +28,13 @@ resource "aws_iam_policy" "mickos_github_s3_write_policy" {
         Action = [
           "cloudfront:CreateInvalidation"
         ]
-        Resource = "arn:aws:cloudfront::722937635825:distribution/E2DY5SRXBRDW31"
+        Resource = "arn:aws:cloudfront::${var.aws_account_id}:distribution/${var.cloudfront_dist_id}"
       }
     ]
   })
 }
 
-resource "aws_iam_user_policy_attachment" "mickos_github_policy_attachment" {
-  user       = aws_iam_user.mickos_github.name
-  policy_arn = aws_iam_policy.mickos_github_s3_write_policy.arn
+resource "aws_iam_user_policy_attachment" "github" {
+  user       = aws_iam_user.github_user.name
+  policy_arn = aws_iam_policy.github_s3_write.arn
 }

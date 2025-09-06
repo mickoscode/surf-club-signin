@@ -1,0 +1,5 @@
+aws_account_id     = "722937635825"
+bucket_name        = "sign-in-out.com"
+cloudfront_dist_id = "E2DY5SRXBRDW31"
+iam_user_cli       = "micko-cli"
+iam_user_github    = "mickos-github"

@@ -8,6 +8,8 @@ resource "aws_cloudfront_distribution" "sio" {
   # after the ACM certificate has been validated and is in a ready state.
   depends_on = [aws_acm_certificate.domain2]
 
+  web_acl_id = aws_wafv2_web_acl.sio_api_rate_limit.arn
+
   origin {
     domain_name = aws_s3_bucket_website_configuration.sio.website_endpoint
     origin_id   = "S3-Origin"
@@ -69,8 +71,45 @@ resource "aws_cloudfront_distribution" "sio" {
   tags = {
     Name = "${aws_s3_bucket.sio.bucket}-cdn"
   }
+}
 
-  # TODO - my cloud front distro is old, using classic and needs to be upgraded before this will work!
-  # Attach the WAFv2 Web ACL to the CloudFront distribution (defined in api-gateway.tf)
-  #web_acl_id = aws_wafv2_web_acl.api_rate_limit_acl.arn
+
+# This rule blocks any IP that exceeds 20 requests in a 5-minute window (WAF’s default granularity)
+resource "aws_wafv2_web_acl" "sio_api_rate_limit" {
+  provider    = aws.us-east-1
+  name        = "api-rate-limit-acl"
+  description = "Rate limit API access to 20 requests per hour"
+  scope       = "CLOUDFRONT" # Required for CloudFront
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rate-limit-ip"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 20
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "apiRateLimit"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "apiWebACL"
+    sampled_requests_enabled   = true
+  }
 }

@@ -14,36 +14,36 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
 # I had to import these resources before log retention could be changed from 0 (forever) to 7 days
 
 #import {
-  #to = aws_cloudwatch_log_group.lambda_logs["WriteBulkLogsFunction"]
-  #id = "/aws/lambda/WriteBulkLogsFunction"
+#to = aws_cloudwatch_log_group.lambda_logs["WriteBulkLogsFunction"]
+#id = "/aws/lambda/WriteBulkLogsFunction"
 #}
 
 #import {
-  #to = aws_cloudwatch_log_group.lambda_logs["EditNameFunction"]
-  #id = "/aws/lambda/EditNameFunction"
+#to = aws_cloudwatch_log_group.lambda_logs["EditNameFunction"]
+#id = "/aws/lambda/EditNameFunction"
 #}
 
 #import {
-  #to = aws_cloudwatch_log_group.lambda_logs["WriteNameFunction"]
-  #id = "/aws/lambda/WriteNameFunction"
+#to = aws_cloudwatch_log_group.lambda_logs["WriteNameFunction"]
+#id = "/aws/lambda/WriteNameFunction"
 #}
 
 #import {
-  #to = aws_cloudwatch_log_group.lambda_logs["WriteLogFunction"]
-  #id = "/aws/lambda/WriteLogFunction"
+#to = aws_cloudwatch_log_group.lambda_logs["WriteLogFunction"]
+#id = "/aws/lambda/WriteLogFunction"
 #}
 
 #import {
-  #to = aws_cloudwatch_log_group.lambda_logs["FetchLogsFunction"]
-  #id = "/aws/lambda/FetchLogsFunction"
+#to = aws_cloudwatch_log_group.lambda_logs["FetchLogsFunction"]
+#id = "/aws/lambda/FetchLogsFunction"
 #}
 
 #import {
-  #to = aws_cloudwatch_log_group.lambda_logs["FetchNamesFunction"]
-  #id = "/aws/lambda/FetchNamesFunction"
+#to = aws_cloudwatch_log_group.lambda_logs["FetchNamesFunction"]
+#id = "/aws/lambda/FetchNamesFunction"
 #}
 
 #import {
-  #to = aws_cloudwatch_log_group.lambda_logs["FetchDatesFunction"]
-  #id = "/aws/lambda/FetchDatesFunction"
+#to = aws_cloudwatch_log_group.lambda_logs["FetchDatesFunction"]
+#id = "/aws/lambda/FetchDatesFunction"
 #}

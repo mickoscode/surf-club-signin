@@ -9,8 +9,7 @@ output "acm_validation_record2" {
   }
 }
 
-# An output value to get the CloudFront domain name, which you will use
-# to create a CNAME record in your DNS.
+# Output CloudFront domain name, needed to create a CNAME DNS record
 output "sio_cloudfront_domain_name" {
   value = aws_cloudfront_distribution.sio.domain_name
 }
@@ -19,4 +18,3 @@ output "api_url" {
   value       = aws_apigatewayv2_api.api.api_endpoint
   description = "Base URL for the API Gateway"
 }
-

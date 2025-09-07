@@ -1,7 +1,19 @@
 
 # -----------------------------------------------------------
-# CloudFront Distribution 
-# This CDN will serve your content and enforce HTTPS using the ACM certificate.
+# Request an SSL certificate for your domain/bucket. Must be done in us-east-1
+# -----------------------------------------------------------
+resource "aws_acm_certificate" "domain2" {
+  provider          = aws.us-east-1
+  domain_name       = var.bucket_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# -----------------------------------------------------------
+# CloudFront Distribution to serve content and enforce HTTPS using the ACM certificate.
 # -----------------------------------------------------------
 resource "aws_cloudfront_distribution" "sio" {
   # This 'depends_on' block ensures that this resource is not created until

@@ -67,6 +67,8 @@ jobs:
           aws s3 sync ./web/main/ s3://${{ env.bucket-name }} --delete
           echo "Syncing 'demo' folder to s3://${{ env.bucket-name }}"
           aws s3 sync ./web/demo/ s3://${{ env.bucket-name }}/demo --delete
+          echo "Syncing 'data' folder to s3://${{ env.bucket-name }}"
+          aws s3 sync ./web/data/ s3://${{ env.bucket-name }}/data --delete
 
       # Step 7: Invalidate CloudFront cache (optional)
       - name: Invalidate CloudFront cache
@@ -74,4 +76,5 @@ jobs:
           echo "Invalidating CloudFront cache"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/*"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/demo/*"
+          aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/data/*"
           echo "CloudFront cache invalidated"

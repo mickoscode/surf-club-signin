@@ -28,22 +28,25 @@ resource "aws_dynamodb_table" "names" {
   }
 }
 
-resource "aws_dynamodb_table_item" "names_sample" {
-  table_name = aws_dynamodb_table.names.name
-  hash_key   = "activity_id" #must include sanitised name - e.g. aidan_oconnor
-  range_key  = "name_id"
-
-  item = jsonencode({
-    activity_id = { S = local.activity_id }
-    name_id     = { S = "aidan_oconnor" }
-    display     = { S = "Aidan O'Connor" }
-    filter      = { S = "u17" }
-  })
-}
+# Sample record to help with debugging - not needed anymore, but keeping as doco!
+# ------------------------------------
+#resource "aws_dynamodb_table_item" "names_sample" {
+#  table_name = aws_dynamodb_table.names.name
+#  hash_key   = "activity_id" #must include sanitised name - e.g. aidan_oconnor
+#  range_key  = "name_id"
+#
+#  item = jsonencode({
+#    activity_id = { S = local.activity_id }
+#    name_id     = { S = "aidan_oconnor" }
+#    display     = { S = "Aidan O'Connor" }
+#    filter      = { S = "u17" }
+#  })
+#}
 
 # -------------------------------
 # 📘 Table: Log
 # -------------------------------
+
 # Get all logs for "sorrento_youth_sunday" on "2025-08-12"
 #aws dynamodb query \
 # --table-name log \
@@ -102,19 +105,21 @@ resource "aws_dynamodb_table" "log" {
   #  }
 }
 
-resource "aws_dynamodb_table_item" "log_sample" {
-  table_name = aws_dynamodb_table.log.name
-  hash_key   = "activity_id"
-  range_key  = "log_id"
-
-  item = jsonencode({
-    activity_id = { S = local.activity_id }
-    log_id      = { S = "2025-08-12T11:15:00Z#aidan_oconnor" }
-    direction   = { S = "in" }
-    name_id     = { S = "aidan_oconnor" }
-    date_time   = { S = "2025-08-12T11:15:00Z" }
-  })
-}
+# Sample record to help with debugging - not needed anymore, but keeping as doco!
+# ------------------------------------
+#resource "aws_dynamodb_table_item" "log_sample" {
+#  table_name = aws_dynamodb_table.log.name
+#  hash_key   = "activity_id"
+#  range_key  = "log_id"
+#
+#  item = jsonencode({
+#    activity_id = { S = local.activity_id }
+#    log_id      = { S = "2025-08-12T11:15:00Z#aidan_oconnor" }
+#    direction   = { S = "in" }
+#    name_id     = { S = "aidan_oconnor" }
+#    date_time   = { S = "2025-08-12T11:15:00Z" }
+#  })
+#}
 
 
 # -------------------------------

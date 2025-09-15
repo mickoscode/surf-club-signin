@@ -52,12 +52,16 @@ jobs:
           node ./inject-config.js live
           node ./inject-config.js history
           node ./inject-config.js bulk
-          echo "Injecting config into app-test: index.html | live.html | history.html | bulk.html"
-          cd ../demo
-          node ./inject-config.js
-          node ./inject-config.js live
-          node ./inject-config.js history
-          node ./inject-config.js bulk
+
+          caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
+          for c in $caps; do
+            echo "Injecting config for $c" 
+            cd ../$c
+            node ./inject-config.js
+            node ./inject-config.js live
+            node ./inject-config.js history
+            node ./inject-config.js bulk
+          done
 
       # Step 6: Upload the site content to s3
       # The 'sync' command only uploads new or changed files.
@@ -65,16 +69,23 @@ jobs:
         run: |
           echo "Syncing 'main' folder to s3://${{ env.bucket-name }}"
           aws s3 sync ./web/main/ s3://${{ env.bucket-name }} --delete
-          echo "Syncing 'demo' folder to s3://${{ env.bucket-name }}"
-          aws s3 sync ./web/demo/ s3://${{ env.bucket-name }}/demo --delete
           echo "Syncing 'data' folder to s3://${{ env.bucket-name }}"
           aws s3 sync ./web/data/ s3://${{ env.bucket-name }}/data --delete
+
+          caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
+          for c in $caps; do
+            echo "Syncing '$c' folder to s3://${{ env.bucket-name }}/$c"
+            aws s3 sync ./web/$c/ s3://${{ env.bucket-name }}/$c --delete
+          done
 
       # Step 7: Invalidate CloudFront cache (optional)
       - name: Invalidate CloudFront cache
         run: |
           echo "Invalidating CloudFront cache"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/*"
-          aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/demo/*"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/data/*"
+          caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
+          for c in $caps; do
+            aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/$c/*"
+          done
           echo "CloudFront cache invalidated"

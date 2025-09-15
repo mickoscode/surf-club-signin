@@ -69,8 +69,12 @@ jobs:
         run: |
           echo "Syncing 'main' folder to s3://${{ env.bucket-name }}"
           aws s3 sync ./web/main/ s3://${{ env.bucket-name }} --delete
-          echo "Syncing 'data' folder to s3://${{ env.bucket-name }}"
+
+          echo "Syncing 'data' folder to s3://${{ env.bucket-name }}/data"
           aws s3 sync ./web/data/ s3://${{ env.bucket-name }}/data --delete
+
+          echo "Syncing 'age-manger' folder to s3://${{ env.bucket-name }}/age-manager"
+          aws s3 sync ./web/age-manager/ s3://${{ env.bucket-name }}/age-manager --delete
 
           caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
           for c in $caps; do
@@ -84,6 +88,7 @@ jobs:
           echo "Invalidating CloudFront cache"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/*"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/data/*"
+          aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/age-manager/*"
           caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
           for c in $caps; do
             aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/$c/*"

@@ -54,7 +54,7 @@ jobs:
           node ./inject-config.js bulk
 
           caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
-          for c in $caps; do
+          for c in "${caps[@]}"; do
             echo "Injecting config for $c" 
             cd ../$c
             node ./inject-config.js
@@ -77,7 +77,7 @@ jobs:
           aws s3 sync ./web/age-manager/ s3://${{ env.bucket-name }}/age-manager --delete
 
           caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
-          for c in $caps; do
+          for c in "${caps[@]}"; do
             echo "Syncing '$c' folder to s3://${{ env.bucket-name }}/$c"
             aws s3 sync ./web/$c/ s3://${{ env.bucket-name }}/$c --delete
           done
@@ -90,7 +90,7 @@ jobs:
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/data/*"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/age-manager/*"
           caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
-          for c in $caps; do
+          for c in "${caps[@]}"; do
             aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/$c/*"
           done
           echo "CloudFront cache invalidated"

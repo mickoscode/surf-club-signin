@@ -1,1 +1,1 @@
-./main/inject-config.js
+../main/inject-config.js

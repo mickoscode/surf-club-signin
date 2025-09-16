@@ -53,7 +53,7 @@ jobs:
           node ./inject-config.js history
           node ./inject-config.js bulk
 
-          caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
+          caps=("demo" "pink" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
           for c in "${caps[@]}"; do
             echo "Injecting config for $c" 
             cd ../$c
@@ -76,7 +76,7 @@ jobs:
           echo "Syncing 'age-manger' folder to s3://${{ env.bucket-name }}/age-manager"
           aws s3 sync ./web/age-manager/ s3://${{ env.bucket-name }}/age-manager --delete
 
-          caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
+          caps=("demo" "pink" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
           for c in "${caps[@]}"; do
             echo "Syncing '$c' folder to s3://${{ env.bucket-name }}/$c"
             aws s3 sync ./web/$c/ s3://${{ env.bucket-name }}/$c --delete
@@ -89,7 +89,7 @@ jobs:
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/*"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/data/*"
           aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/age-manager/*"
-          caps=("demo" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
+          caps=("demo" "pink" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
           for c in "${caps[@]}"; do
             aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/$c/*"
           done

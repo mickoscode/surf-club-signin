@@ -86,11 +86,11 @@ resource "aws_cloudfront_distribution" "sio" {
 }
 
 
-# This rule blocks any IP that exceeds 20 requests in a 5-minute window (WAF’s default granularity)
+# This rule blocks any IP that exceeds 300 requests in a 5-minute window (WAF’s default granularity)
 resource "aws_wafv2_web_acl" "sio_api_rate_limit" {
   provider    = aws.us-east-1
   name        = "api-rate-limit-acl"
-  description = "Rate limit API access to 20 requests per hour"
+  description = "Rate limit API access to 300 requests per hour"
   scope       = "CLOUDFRONT" # Required for CloudFront
 
   default_action {
@@ -107,7 +107,7 @@ resource "aws_wafv2_web_acl" "sio_api_rate_limit" {
 
     statement {
       rate_based_statement {
-        limit              = 20
+        limit              = 300
         aggregate_key_type = "IP"
       }
     }

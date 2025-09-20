@@ -2,6 +2,6 @@
   "INJECT_PAGE_TITLE": "TEST-in-out",
   "INJECT_API_URL": "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com",
   "INJECT_FAVICON": "favicon-test.png",
-  "INJECT_ACTIVITY_ID": "sorrento_youth_sunday",
+  "INJECT_ACTIVITY_ID": "demo",
   "INJECT_ENABLE_TEST_MODE": "true"
 }

@@ -1,3 +1,7 @@
+# Usage:  python3 import_names_csv.py <activity_id>
+# Eample: python3 ./import_names_csv.py sorrento_youth_sunday
+#         script expects ./names.csv to exist
+
 import argparse
 import csv
 import json

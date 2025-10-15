@@ -1,9 +1,28 @@
+# Usage:  python3 delete_all_log_history.py <activity_id>
+# Example: python3 ./delete_all_log_history.py sorrento_youth_sunday
+#         Deletes all log history for the specified activity_id
+#         Ensure AWS CLI is configured and has appropriate permissions.
+
 import subprocess
 import json
 import os
+import argparse
+import sys
 from collections import OrderedDict
 
-ACTIVITY_ID = "sorrento_youth_sunday"
+# Constants
+VALID_ACTIVITY_IDS = [
+    "sorrento_pink_sunday", 
+    "sorrento_white_sunday", 
+    "sorrento_yellow_sunday", 
+    "sorrento_green_sunday", 
+    "sorrento_lblue_sunday", 
+    "sorrento_purple_sunday",
+    "sorrento_dblue_sunday", 
+    "sorrento_red_sunday", 
+    "sorrento_youth_sunday", 
+    "demo"
+]
 TABLE_NAME = "log"
 BATCH_SIZE = 25
 SCAN_FILE = "./current_logs.json"
@@ -25,11 +44,11 @@ def run_aws_cli(command):
         raise RuntimeError(f"Command failed: {result.stderr}")
     return json.loads(result.stdout)
 
-def scan_table():
+def scan_table(activity_id):
     """Scan the DynamoDB table for items matching a specific activity_id and save to file."""
-    print(f"🔍 Scanning table: {TABLE_NAME} for activity_id = '{ACTIVITY_ID}'")
+    print(f"🔍 Scanning table: {TABLE_NAME} for activity_id = '{activity_id}'")
 
-    expression_values = json.dumps({":aid": {"S": ACTIVITY_ID}}).replace('"', '\\"')
+    expression_values = json.dumps({":aid": {"S": activity_id}}).replace('"', '\\"')
 
     command = (
         f"aws dynamodb scan "
@@ -89,8 +108,27 @@ def delete_batches(batches):
     #if os.path.exists(BATCH_FILE):
     #    os.remove(BATCH_FILE)
 
+def parse_arguments():
+    """Parse and validate command-line arguments."""
+    parser = argparse.ArgumentParser(description="Delete all log history for a specific activity_id.")
+    parser.add_argument(
+        "activity_id",
+        help=f"Activity ID (must be one of: {', '.join(VALID_ACTIVITY_IDS)})"
+    )
+    
+    args = parser.parse_args()
+    
+    # Validate activity_id
+    if args.activity_id not in VALID_ACTIVITY_IDS:
+        print(f"❌ Error: Invalid activity_id '{args.activity_id}'")
+        print(f"Valid options are: {', '.join(VALID_ACTIVITY_IDS)}")
+        sys.exit(1)
+    
+    return args.activity_id
+
 def main():
-    items = scan_table()
+    activity_id = parse_arguments()
+    items = scan_table(activity_id)
     if not items:
         print("No matching items found.")
         return

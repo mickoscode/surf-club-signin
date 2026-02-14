@@ -89,6 +89,24 @@ resource "aws_lambda_function" "fetch_logs" {
 }
 
 # -------------------------------
+# Lambda - Fetch User Logs
+# -------------------------------
+data "archive_file" "fetch_user_logs_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda_fetch_user_logs"
+  output_path = "${path.module}/fetch_user_logs.zip"
+}
+
+resource "aws_lambda_function" "fetch_user_logs" {
+  function_name    = "FetchUserLogsFunction"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda_handler.lambda_handler"
+  runtime          = "python3.12"
+  filename         = data.archive_file.fetch_user_logs_zip.output_path
+  source_code_hash = data.archive_file.fetch_user_logs_zip.output_base64sha256
+}
+
+# -------------------------------
 # Lambda - Fetch Names
 # -------------------------------
 data "archive_file" "fetch_names_zip" {

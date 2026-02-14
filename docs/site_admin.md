@@ -28,3 +28,8 @@ Viewing all names via front end - [sign-in-out.com/data/list-names.html](https:/
 - Ensure LiveServer plugin installed via https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer&ssr=false#overview
 - In vsCode, goto any html file and click "Go Live" option in footer menu to activate plugin (and determine ports, etc) and select to launch in browser
 - URL may not be right / navigable, so manually goto necessary page - e.g. http://localhost:5500/web/main/index.html
+
+## name_id format / generation
+
+- name_id should only have lower case ascii a-z, 0-9 and underscores
+- see scripts/import_names_csv.py for implementation

@@ -39,11 +39,11 @@ def lambda_handler(event, context):
 
         # Query DynamoDB
         response = table.query(
-            KeyConditionExpression="activity_id = :aid AND name_id = :name",
-
+            KeyConditionExpression="activity_id = :aid",
+            FilterExpression="name_id = :nid",
             ExpressionAttributeValues={
                 ":aid": activity_id,
-                ":name": name_id
+                ":nid": name_id
             }
         )
 

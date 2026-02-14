@@ -14,8 +14,20 @@
   </style>
 </head>
 <body>
-  <h1>Names for Sorrento Youth Sunday</h1>
+  <h1>Names for Activity: <span id="activityName"></span></h1>
   <button onclick="fetchNames()">Fetch Names</button>
+  <div>
+    <a href="./list-names.html?activity_id=sorrento_youth_sunday">youth</a> - 
+    <a href="./list-names.html?activity_id=sorrento_pink_sunday">pink</a> - 
+    <a href="./list-names.html?activity_id=sorrento_white_sunday">white</a> -
+    <a href="./list-names.html?activity_id=sorrento_yellow_sunday">yellow</a> -
+    <a href="./list-names.html?activity_id=sorrento_green_sunday">green</a> -
+    <a href="./list-names.html?activity_id=sorrento_lblue_sunday">lblue</a> -
+    <a href="./list-names.html?activity_id=sorrento_purple_sunday">purple</a> -
+    <a href="./list-names.html?activity_id=sorrento_dblue_sunday">dblue</a> -
+    <a href="./list-names.html?activity_id=sorrento_red_sunday">red</a> -
+    <a href="./list-names.html?activity_id=demo">demo</a>
+  </div>
   <table id="namesTable">
     <thead>
       <tr>
@@ -29,10 +41,30 @@
 
   <script>
     const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
+    const VALID_ACTIVITY_ID = [
+      "sorrento_pink_sunday", 
+      "sorrento_white_sunday", 
+      "sorrento_yellow_sunday", 
+      "sorrento_green_sunday", 
+      "sorrento_lblue_sunday", 
+      "sorrento_purple_sunday",
+      "sorrento_dblue_sunday", 
+      "sorrento_red_sunday", 
+      "sorrento_youth_sunday", 
+      "demo"
+    ];
+    //const DEFAULT_ACTIVITY_ID = "sorrento_youth_sunday";
+    const DEFAULT_ACTIVITY_ID = "demo";
+
+    const params = new URLSearchParams(window.location.search);
+    activity_id = params.get("activity_id");
+    if (!VALID_ACTIVITY_ID.includes(activity_id)) {
+      activity_id = DEFAULT_ACTIVITY_ID;
+    }
+    document.getElementById("activityName").textContent = activity_id;
 
     async function fetchNames() {
-      //const response = await fetch(`${API_BASE}/name?activity_id=sorrento_youth_sunday`);
-      const response = await fetch(`${API_BASE}/name?activity_id=demo`);
+      const response = await fetch(`${API_BASE}/name?activity_id=${activity_id}`);
       const data = await response.json();
       const tableBody = document.querySelector("#namesTable tbody");
       tableBody.innerHTML = "";

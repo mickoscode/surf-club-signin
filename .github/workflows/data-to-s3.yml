@@ -19,6 +19,14 @@ on:
         required: true
         default: 'E2DY5SRXBRDW31'
 
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # request the OIDC token to assume the AWS role
+  contents: read
+
 # The 'jobs' section defines the tasks the workflow will perform.
 jobs:
   # The 'deploy' job will handle the upload to S3.
@@ -30,15 +38,14 @@ jobs:
     steps:
       # Check out your repository code so it's available to the workflow.
       - name: Checkout repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Configure AWS credentials.
-      # This action sets up the environment with your AWS credentials, which you should store securely as GitHub secrets.
+      # Assumes the deploy IAM role via GitHub OIDC (role defined in terraform/iam.tf); no stored keys.
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::722937635825:role/github-deploy-role
           aws-region: ${{ github.event.inputs.region }}
 
       # Upload content to the S3 bucket.

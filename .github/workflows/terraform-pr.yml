@@ -1,0 +1,177 @@
+name: Terraform PR checks
+
+# Runs on pull requests that touch terraform/. Jobs are skipped (not absent) when
+# terraform/ is unchanged, so they can safely be marked as required status checks.
+on:
+  pull_request:
+    branches:
+      - main
+
+# One run per PR; a new push cancels the previous (superseded) run.
+concurrency:
+  group: terraform-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_WORKING_DIR: terraform
+  TF_VAR_FILE: tfvars/prod.tfvars
+
+jobs:
+  changes:
+    name: Detect terraform changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      terraform: ${{ steps.diff.outputs.terraform }}
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check for terraform changes
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(terraform/|\.github/workflows/terraform-pr\.yml$)'; then
+            echo "terraform=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "terraform=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  validate:
+    name: Terraform validate
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "~> 1.16"
+          # Terraform Cloud backend token (repo secret TF_API_TOKEN)
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      - name: Terraform fmt
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform fmt -check -recursive -diff
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate -no-color
+
+  plan:
+    name: Terraform plan
+    needs: [changes, validate]
+    if: needs.changes.outputs.terraform == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write # post/update the plan summary comment
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "~> 1.16"
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      # Speculative plan: runs in Terraform Cloud, can never be applied, and
+      # prints a link to the full plan output on app.terraform.io.
+      - name: Terraform plan
+        id: plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          set +e
+          terraform plan -no-color -detailed-exitcode -var-file="$TF_VAR_FILE" 2>&1 | tee "$RUNNER_TEMP/plan.txt"
+          code=${PIPESTATUS[0]}
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          # 0 = no changes, 2 = changes present, anything else = error
+          if [ "$code" -eq 0 ] || [ "$code" -eq 2 ]; then exit 0; fi
+          exit "$code"
+
+      - name: Build plan summary
+        if: always() && steps.plan.outcome != 'skipped'
+        env:
+          EXIT_CODE: ${{ steps.plan.outputs.exitcode }}
+        run: |
+          plan="$RUNNER_TEMP/plan.txt"
+          out="$RUNNER_TEMP/summary.md"
+          run_url=$(grep -oE 'https://app\.terraform\.io/app/[^[:space:]]+/runs/run-[A-Za-z0-9]+' "$plan" | head -n1)
+
+          case "$EXIT_CODE" in
+            0) status="✅ **No changes.** Infrastructure matches the configuration." ;;
+            2) status="📝 **Changes proposed:** $(grep -E '^Plan: ' "$plan" | tail -n1)" ;;
+            *) status="❌ **Plan failed.** See the workflow log for the error." ;;
+          esac
+
+          {
+            echo "<!-- terraform-plan-comment -->"
+            echo "### Terraform plan"
+            echo
+            echo "$status"
+            echo
+            if [ "$EXIT_CODE" = "2" ]; then
+              echo "<details><summary>Resources affected</summary>"
+              echo
+              echo '```'
+              grep -E '^\s*# .* (will be|must be) ' "$plan" | sed -E 's/^\s+//' | head -n 100
+              echo '```'
+              echo "</details>"
+              echo
+            fi
+            if [ -n "$run_url" ]; then
+              echo "🔗 [Full plan output in Terraform Cloud]($run_url)"
+            fi
+            echo
+            echo "_Commit ${GITHUB_SHA::7} · [workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)_"
+          } > "$out"
+
+          cat "$out" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment plan on PR
+        if: always() && steps.plan.outcome != 'skipped'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync(`${process.env.RUNNER_TEMP}/summary.md`, 'utf8');
+            const marker = '<!-- terraform-plan-comment -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

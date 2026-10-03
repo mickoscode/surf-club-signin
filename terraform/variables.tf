@@ -25,15 +25,6 @@ variable "iam_user_cli" {
   }
 }
 
-variable "iam_user_github" {
-  description = "GitHub username"
-  type        = string
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9-]{1,39}$", var.iam_user_github))
-    error_message = "GitHub username must be 1–39 characters and contain only letters, numbers, or hyphens."
-  }
-}
-
 variable "bucket_name" {
   description = "S3 bucket name"
   type        = string

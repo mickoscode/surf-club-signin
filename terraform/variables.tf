@@ -42,3 +42,12 @@ variable "bucket_name" {
     error_message = "Bucket name must be 3–63 characters, lowercase, and valid for S3."
   }
 }
+
+variable "github_repo" {
+  description = "GitHub repository (owner/name) allowed to assume the deploy role"
+  type        = string
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-]{1,39}/[a-zA-Z0-9._-]+$", var.github_repo))
+    error_message = "GitHub repository must be in the form owner/name."
+  }
+}

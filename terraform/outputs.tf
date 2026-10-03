@@ -18,3 +18,8 @@ output "api_url" {
   value       = aws_apigatewayv2_api.api.api_endpoint
   description = "Base URL for the API Gateway"
 }
+
+output "github_deploy_role_arn" {
+  value       = aws_iam_role.github_deploy.arn
+  description = "Role ARN for GitHub Actions to assume via OIDC (role-to-assume)"
+}

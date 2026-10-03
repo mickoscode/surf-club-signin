@@ -1,0 +1,58 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Overview
+
+Paperless sign-in/out web app for surf club activities, live at sign-in-out.com. Static HTML/JS frontend hosted on S3 + CloudFront, serverless backend of API Gateway (HTTP API) → Python Lambdas → DynamoDB. Much of the config is hard-coded to one AWS account/environment (ap-southeast-2). There is no build system, package.json, test suite or linter.
+
+## Commands
+
+Generate HTML from templates (must run from inside the site folder — `inject-config.js` resolves paths from `process.cwd()` so symlinked copies work):
+
+```bash
+cd web/main && node ./inject-config.js          # index.html
+node ./inject-config.js live                    # live.html (also: history, bulk)
+```
+
+Local dev: serve the repo with the VS Code Live Server extension and browse to e.g. `http://localhost:5500/web/main/index.html`. Pages call the real prod API URL from `config.json`; use `web/demo` (activity `demo`, test mode on) to avoid touching prod data.
+
+Infrastructure (Terraform Cloud backend, org `mickoscode`, workspace `surf-club-signin`):
+
+```bash
+cd terraform && terraform plan -var-file=tfvars/prod.tfvars
+```
+
+Data admin scripts in `scripts/` shell out to the AWS CLI, e.g. `python3 scripts/import_names_csv.py <activity_id>` (expects `./names.csv`; `VALID_ACTIVITY_IDS` in the script must include the activity). `scripts/get-logs.bash <name_id> [--full]` queries the log table.
+
+## Architecture
+
+### Frontend: one shared template set, many "sites"
+
+- `web/main/` holds the real templates (`*.template.html`), `inject-config.js`, CSS and `about.html`. **Edit `*.template.html`, never the generated `index.html`/`live.html`/`history.html`/`bulk.html`** (generated files are gitignored for main/demo).
+- `inject-config.js` replaces `{{KEY}}` placeholders with values from the folder's `config.json` (`INJECT_PAGE_TITLE`, `INJECT_API_URL`, `INJECT_FAVICON`, `INJECT_ACTIVITY_ID`, `INJECT_ENABLE_TEST_MODE`). Every key a template uses must exist in config.json.
+- Each other folder (`demo`, and the age groups `pink`, `white`, `yellow`, `green`, `lblue`, `purple`, `dblue`, `red`) contains its own `config.json`, `header.snippet` and `header_leader.snippet`; everything else is a **symlink to `../main/`**. Pages `fetch('./header.snippet')` at runtime to get a per-site nav menu.
+- `INJECT_ENABLE_TEST_MODE: "true"` (demo) enables the test/demo behaviour (e.g. bypassing the activity time window).
+- `web/data/` (name admin pages) and `web/age-manager/` are standalone pages, not templated.
+
+Adding a new activity site: populate the `names` table for the new `activity_id`, create `web/<x>/` with `config.json` + snippets + symlinks to `../main/*`, add `<x>` to the `caps` arrays in `.github/workflows/sync-sio.yml` (three places), and to `VALID_ACTIVITY_IDS` in `scripts/import_names_csv.py`.
+
+### Deployment
+
+`.github/workflows/sync-sio.yml` runs on push to `main`: runs `inject-config.js` for every site, `aws s3 sync`s `web/main` to the bucket root and each other folder to `/<folder>`, then invalidates CloudFront. Merging to main deploys to prod. `upload-to-s3.yml` is outdated; `data-to-s3.yml` is a manual sync of `web/data`.
+
+Terraform is applied separately (not by CI).
+
+### Backend
+
+- `terraform/api-gateway.tf` defines routes: `POST /log`, `GET /log`, `GET /userlog`, `POST /bulk`, `GET /name`, `POST /addname`, `POST /editname`, `GET /date` (POST routes also have `OPTIONS` routes for CORS). Each maps to a Lambda in `terraform/lambda_<name>/lambda_handler.py`, zipped by `archive_file` in `lambda.tf`. Adding an endpoint means touching `lambda.tf`, `api-gateway.tf` (integration, route, permission) and possibly `iam.tf`.
+- Lambdas build their own CORS response headers (`build_response`). Each `lambda_*/logger.py` is a symlink to `lambda_common/logger.py`; new lambdas should symlink it and call `log_event(event, context)`.
+- DynamoDB tables (`dynamodb.tf`), all keyed by activity:
+  - `names`: PK `activity_id`, SK `name_id`; attrs `display`, `filter` (age group).
+  - `log`: PK `activity_id`, SK `log_id` = `<ISO date_time>#<name_id>` so a day's logs are fetched with `begins_with(log_id, "YYYY-MM-DD")`; attrs `direction` (`in`/`out`), `name_id`, `date_time`.
+  - `activity`: PK `name_id` (= activity_id); sign-in/out time windows (`in_h_start`, … `out_m_end`) and `days_string`.
+- `name_id` must be lowercase `a-z`, `0-9` and `_` only — see the sanitising logic in `scripts/import_names_csv.py`.
+
+## Docs
+
+`docs/requirements.md`, `docs/release_plan.md` and `docs/site_admin.md` describe product requirements, release plan, and season data reset/admin procedures. Past AI prompts used to build the pages are in `.github/co-pilot/`.

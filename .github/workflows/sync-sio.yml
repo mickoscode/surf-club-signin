@@ -5,6 +5,14 @@ on:
     branches:
       - main
 
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # request the OIDC token to assume the AWS role
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -18,23 +26,22 @@ jobs:
       # Step 1: Check out your repository code.
       # This action makes your code available to the workflow.
       - name: Checkout repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Step 2: Configure AWS credentials.
-      # This action sets up the environment with your AWS credentials, which you should
-      # store securely as GitHub secrets.
+      # Assumes the deploy IAM role via GitHub OIDC (role defined in terraform/iam.tf);
+      # no long-lived keys are stored in GitHub secrets.
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::722937635825:role/github-deploy-role
           aws-region: ${{ env.region }}
 
       # Step 3: Setup Node.js and inject config into index.html
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '18'
+          node-version: '24'
 
       # Step 4: Install dependencies
       # not currently needed, as inject-config.js uses nly standard packages.

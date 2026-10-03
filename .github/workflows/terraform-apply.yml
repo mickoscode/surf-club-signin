@@ -1,0 +1,176 @@
+name: Terraform apply
+
+# Runs after a merge to main that touches terraform/. The apply job is gated by the
+# "terraform-production" environment, which requires a manual approval in the GitHub UI.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-apply.yml"
+  workflow_dispatch:
+
+# Never run two applies at once, and never cancel one part-way through.
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_WORKING_DIR: terraform
+  TF_VAR_FILE: tfvars/prod.tfvars
+
+jobs:
+  checks:
+    name: Terraform checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "~> 1.16"
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      - name: Terraform fmt
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform fmt -check -recursive -diff
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate -no-color
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
+        with:
+          tflint_version: v0.64.0
+
+      - name: TFLint init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: tflint --init
+
+      - name: TFLint
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: tflint --format compact
+
+  plan:
+    name: Terraform plan
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      has_changes: ${{ steps.plan.outputs.exitcode == '2' }}
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "~> 1.16"
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      # Speculative plan of what main would change right now. Shown on the run summary
+      # so the approver can review it before approving the apply job.
+      - name: Terraform plan
+        id: plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          set +e
+          terraform plan -no-color -detailed-exitcode -var-file="$TF_VAR_FILE" 2>&1 | tee "$RUNNER_TEMP/plan.txt"
+          code=${PIPESTATUS[0]}
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" -eq 0 ] || [ "$code" -eq 2 ]; then exit 0; fi
+          exit "$code"
+
+      - name: Plan summary
+        if: always() && steps.plan.outcome != 'skipped'
+        env:
+          EXIT_CODE: ${{ steps.plan.outputs.exitcode }}
+        run: |
+          plan="$RUNNER_TEMP/plan.txt"
+          run_url=$(grep -oE 'https://app\.terraform\.io/app/[^[:space:]]+/runs/run-[A-Za-z0-9]+' "$plan" | head -n1)
+          {
+            echo "### Terraform plan (pending approval)"
+            echo
+            case "$EXIT_CODE" in
+              0) echo "✅ **No changes.** The apply job will be skipped." ;;
+              2) echo "📝 **Changes proposed:** $(grep -E '^Plan: ' "$plan" | tail -n1)"
+                 echo
+                 echo '```'
+                 grep -E '^\s*# .* (will be|must be) ' "$plan" | sed -E 's/^\s+//' | head -n 100
+                 echo '```'
+                 echo
+                 echo "Review, then approve the **apply** job (Review deployments) to proceed." ;;
+              *) echo "❌ **Plan failed.** See the job log." ;;
+            esac
+            echo
+            if [ -n "$run_url" ]; then echo "🔗 [Full plan output in Terraform Cloud]($run_url)"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  apply:
+    name: Terraform apply
+    needs: plan
+    if: needs.plan.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Required reviewers on this environment provide the manual approval gate.
+    environment:
+      name: terraform-production
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "~> 1.16"
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      # Executes in Terraform Cloud against the remote workspace (state and AWS credentials live there).
+      - name: Terraform apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -no-color -auto-approve -var-file="$TF_VAR_FILE" 2>&1 | tee "$RUNNER_TEMP/apply.txt"; exit "${PIPESTATUS[0]}"
+
+      - name: Apply summary
+        if: always()
+        run: |
+          run_url=$(grep -oE 'https://app\.terraform\.io/app/[^[:space:]]+/runs/run-[A-Za-z0-9]+' "$RUNNER_TEMP/apply.txt" 2>/dev/null | head -n1)
+          {
+            echo "### Terraform apply"
+            echo
+            grep -E '^(Apply complete|Error:)' "$RUNNER_TEMP/apply.txt" 2>/dev/null | head -n 5
+            echo
+            if [ -n "$run_url" ]; then echo "🔗 [Run in Terraform Cloud]($run_url)"; fi
+          } >> "$GITHUB_STEP_SUMMARY"

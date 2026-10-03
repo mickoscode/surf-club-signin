@@ -16,7 +16,6 @@ crash.log
 # !*.tfvars.example
 
 # Module and provider information (might be in .terraform)
-.terraform.lock.hcl
 
 # config for vscode plugins
 .vscode/

@@ -50,12 +50,13 @@ const reply = (status, body = {}) => ({ __reply: true, status, body });
  *   file:  path under web/, e.g. "demo/index.html"
  *   query: e.g. "?test=in"
  *   api:   (url, { method, body }) => object | reply(status, body)
+ *   setup: optional (window) => void, run before the page's scripts (to shim browser APIs jsdom lacks)
  *   now:   optional Date; the page's clock is frozen at that instant (use local-time constructors,
  *          e.g. new Date(2025, 7, 10, 8, 30) = Sunday 10 Aug 2025, 08:30, so tests don't depend on timezone)
  * Returns { window, document, errors, alerts, calls, get, close }.
  *   errors: uncaught page errors   alerts: alert() messages   calls: every API request made
  */
-async function loadPage(file, { query = "", api = () => ({}), now = null } = {}) {
+async function loadPage(file, { query = "", api = () => ({}), now = null, setup = null } = {}) {
   const full = path.join(WEB_ROOT, file);
   if (!fs.existsSync(full)) {
     throw new Error(`${file} not found. Run ./scripts/build-sites.sh first to generate the pages.`);
@@ -89,6 +90,7 @@ async function loadPage(file, { query = "", api = () => ({}), now = null } = {})
           }
         };
       }
+      if (setup) setup(window);
       window.alert = (message) => alerts.push(String(message));
       window.scrollTo = () => {}; // not implemented in jsdom
       window.fetch = async (input, init = {}) => {
@@ -127,8 +129,15 @@ async function typeInto(page, input, value) {
   await sleep(350);
 }
 
+// jsdom lacks the `form.fieldName` shortcut that real browsers (and the pages) rely on; add it to one form.
+function addFormFieldShortcuts(form) {
+  for (const field of form.elements) {
+    if (field.name && !(field.name in form)) Object.defineProperty(form, field.name, { value: field, configurable: true });
+  }
+}
+
 function submit(page, form) {
   form.dispatchEvent(new page.window.Event("submit", { bubbles: true, cancelable: true }));
 }
 
-module.exports = { XSS, sleep, until, reply, loadPage, typeInto, submit };
+module.exports = { XSS, sleep, until, reply, loadPage, typeInto, submit, addFormFieldShortcuts };

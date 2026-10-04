@@ -14,9 +14,29 @@ resource "aws_acm_certificate" "domain2" {
 
 # -----------------------------------------------------------
 # Security headers added by CloudFront to every response (pages, assets and the 404 page).
-# There is deliberately no Content-Security-Policy yet: every page still has an inline <script>
-# and loads third-party CSS/JS, so a CSP would need those moved first.
 # -----------------------------------------------------------
+
+# Content-Security-Policy: the browser only runs scripts and applies styles served from this site
+# (no inline code, no CDNs), and only talks to this site, the API and the Auth0 tenant. The pages
+# were changed to fit this (no inline scripts, handlers or styles; libraries vendored in web/main/vendor);
+# tests/web/csp.test.js keeps it that way.
+locals {
+  # Auth0 tenant used by the login stub in web/data/index.js (a test checks the two agree).
+  auth0_domain = "dev-zpl25b7w2wfbe4ne.us.auth0.com"
+
+  content_security_policy = join("; ", [
+    "default-src 'none'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data:", # data: for the SVG icons inside picnic.min.css
+    "connect-src 'self' ${aws_apigatewayv2_api.api.api_endpoint} https://${local.auth0_domain}",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests",
+  ])
+}
+
 resource "aws_cloudfront_response_headers_policy" "security" {
   name    = "sign-in-out-security-headers"
   comment = "Browser security headers for the static site"
@@ -47,6 +67,15 @@ resource "aws_cloudfront_response_headers_policy" "security" {
       referrer_policy = "strict-origin-when-cross-origin"
       override        = true
     }
+
+    # Enforced only when var.csp_enforce is true; otherwise it is sent as Report-Only (see below).
+    dynamic "content_security_policy" {
+      for_each = var.csp_enforce ? [1] : []
+      content {
+        content_security_policy = local.content_security_policy
+        override                = true
+      }
+    }
   }
 
   custom_headers_config {
@@ -55,6 +84,17 @@ resource "aws_cloudfront_response_headers_policy" "security" {
       header   = "Permissions-Policy"
       value    = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
       override = true
+    }
+
+    # Report-Only: browsers log violations to the developer console but block nothing. Used to check the
+    # policy against the real site before enforcing it.
+    dynamic "items" {
+      for_each = var.csp_enforce ? [] : [1]
+      content {
+        header   = "Content-Security-Policy-Report-Only"
+        value    = local.content_security_policy
+        override = true
+      }
     }
   }
 }

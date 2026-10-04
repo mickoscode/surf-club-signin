@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Paperless sign-in/out web app for surf club activities, live at sign-in-out.com. Static HTML/JS frontend hosted on S3 + CloudFront, serverless backend of API Gateway (HTTP API) → Python Lambdas → DynamoDB. Much of the config is hard-coded to one AWS account/environment (ap-southeast-2). There is no build system, package.json, test suite or linter.
+Paperless sign-in/out web app for surf club activities, live at sign-in-out.com. Static HTML/JS frontend hosted on S3 + CloudFront, serverless backend of API Gateway (HTTP API) → Python Lambdas → DynamoDB. Much of the config is hard-coded to one AWS account/environment (ap-southeast-2). There is no build system, package.json or test suite; the only linting is `tflint`/`terraform fmt` on `terraform/`, run in CI.
 
 ## Commands
 
@@ -21,6 +21,7 @@ Infrastructure (Terraform Cloud backend, org `mickoscode`, workspace `surf-club-
 
 ```bash
 cd terraform && terraform plan -var-file=tfvars/prod.tfvars
+cd terraform && terraform fmt -recursive && tflint --init && tflint   # same checks CI runs (config: terraform/.tflint.hcl)
 ```
 
 Data admin scripts in `scripts/` shell out to the AWS CLI, e.g. `python3 scripts/import_names_csv.py <activity_id>` (expects `./names.csv`; `VALID_ACTIVITY_IDS` in the script must include the activity). `scripts/get-logs.bash <name_id> [--full]` queries the log table.
@@ -39,9 +40,14 @@ Adding a new activity site: populate the `names` table for the new `activity_id`
 
 ### Deployment
 
-`.github/workflows/sync-sio.yml` runs on push to `main`: runs `inject-config.js` for every site, `aws s3 sync`s `web/main` to the bucket root and each other folder to `/<folder>`, then invalidates CloudFront. Merging to main deploys to prod. `upload-to-s3.yml` is outdated; `data-to-s3.yml` is a manual sync of `web/data`.
+All workflows live in `.github/workflows/`; third-party actions are pinned to commit SHAs (Dependabot updates them weekly).
 
-Terraform is applied separately (not by CI).
+- `sync-sio.yml` (frontend) runs on push to `main`: runs `inject-config.js` for every site, `aws s3 sync`s `web/main` to the bucket root and each other folder to `/<folder>`, then invalidates CloudFront. Merging to main deploys to prod.
+- `data-to-s3.yml` is a manual sync of `web/data`.
+- `terraform-pr.yml` runs on PRs that touch `terraform/`: `terraform fmt -check`, `validate`, `tflint`, an informational Trivy scan, and a speculative `terraform plan` posted as a PR comment with a link to the full plan in HCP Terraform. Jobs are skipped (not absent) when `terraform/` is unchanged, so `Terraform validate` and `Terraform plan` are required checks on `main`.
+- `terraform-apply.yml` runs on push to `main` when `terraform/` changes (or by manual dispatch): checks, a plan, then an `apply` job gated by the `terraform-production` GitHub Environment, which needs a manual approval. It is skipped when the plan has no changes. Terraform runs remotely in HCP Terraform; GitHub only needs the `TF_API_TOKEN` secret.
+
+AWS auth for the frontend workflows is GitHub OIDC: they assume `github-deploy-role` (defined in `terraform/iam.tf`, trusted for the `main` branch only), so there are no AWS keys in GitHub secrets. Running `data-to-s3.yml` from another branch will fail to assume the role.
 
 ### Backend
 

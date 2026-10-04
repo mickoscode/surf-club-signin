@@ -31,6 +31,19 @@ web/demo/live.html
 web/demo/history.html
 web/demo/bulk.html
 
+# the age-group sites (generated pages only; their symlinks and snippets stay tracked)
+web/pink/*.html
+web/white/*.html
+web/yellow/*.html
+web/green/*.html
+web/lblue/*.html
+web/purple/*.html
+web/dblue/*.html
+web/red/*.html
+
+# frontend test dependencies
+node_modules/
+
 # any csv or json files in scripts folder are temporary
 scripts/*.csv
 scripts/*.json

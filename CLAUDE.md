@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Paperless sign-in/out web app for surf club activities, live at sign-in-out.com. Static HTML/JS frontend hosted on S3 + CloudFront, serverless backend of API Gateway (HTTP API) → Python Lambdas → DynamoDB. Much of the config is hard-coded to one AWS account/environment (ap-southeast-2). There is no build system, package.json or test suite; the only linting is `tflint`/`terraform fmt` on `terraform/`, run in CI.
+Paperless sign-in/out web app for surf club activities, live at sign-in-out.com. Static HTML/JS frontend hosted on S3 + CloudFront, serverless backend of API Gateway (HTTP API) → Python Lambdas → DynamoDB. Much of the config is hard-coded to one AWS account/environment (ap-southeast-2). The site itself has no build system or dependencies. The only `package.json` is dev tooling for the frontend tests (jsdom), and the only linting is `tflint`/`terraform fmt` on `terraform/`, run in CI.
 
 ## Commands
 
 Build and validate every site at once (what CI runs; needs Node): `./scripts/build-sites.sh`. It fails on broken symlinks, missing `config.json` keys, or unreplaced `{{INJECT_*}}` placeholders. Note it regenerates the HTML in every site folder.
+
+Frontend tests (Node 24; loads the generated pages into jsdom against a fake API, no network): run `./scripts/build-sites.sh` first, then `npm ci --ignore-scripts && npm test`. Tests live in `tests/web/` (`helpers.js` has `loadPage`, which fakes `fetch` and can freeze the clock; `fixtures.js` has sample data). CI runs them in `Validate sites`.
 
 Generate HTML for a single site from templates (must run from inside the site folder — `inject-config.js` resolves paths from `process.cwd()` so symlinked copies work):
 
@@ -45,7 +47,7 @@ Adding a new activity site: populate the `names` table for the new `activity_id`
 All workflows live in `.github/workflows/`; third-party actions are pinned to commit SHAs (Dependabot updates them weekly).
 
 - `sync-sio.yml` (frontend) runs on push to `main`: runs `scripts/build-sites.sh`, `aws s3 sync`s `web/main` to the bucket root and each other folder to `/<folder>`, then invalidates CloudFront (one `/*` invalidation). Merging to main deploys to prod.
-- `web-pr.yml` runs on PRs that touch the frontend and runs the same `scripts/build-sites.sh`; `Validate sites` can be a required check (skipped, not absent, when `web/` is unchanged).
+- `web-pr.yml` runs on PRs that touch the frontend and runs the same `scripts/build-sites.sh`; it also runs the frontend tests, and `Validate sites` can be a required check (skipped, not absent, when `web/` is unchanged).
 - `data-to-s3.yml` is a manual "push only `web/data`" button (no inputs; bucket, region and distribution are fixed). `sync-sio.yml` also syncs `web/data` on every merge.
 - `terraform-pr.yml` runs on PRs that touch `terraform/`: `terraform fmt -check`, `validate`, `tflint`, a blocking Trivy scan (accepted findings are listed with reasons in `terraform/.trivyignore.yaml`), and a speculative `terraform plan` posted as a PR comment with a link to the full plan in HCP Terraform. Jobs are skipped (not absent) when `terraform/` is unchanged, so `Terraform validate`, `Terraform plan` and `Terraform security scan` are required checks on `main`.
 - `terraform-apply.yml` runs on push to `main` when `terraform/` changes (or by manual dispatch): checks, a plan, then an `apply` job gated by the `terraform-production` GitHub Environment, which needs a manual approval. It is skipped when the plan has no changes. Terraform runs remotely in HCP Terraform; GitHub only needs the `TF_API_TOKEN` secret.

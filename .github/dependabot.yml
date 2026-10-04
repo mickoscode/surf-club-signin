@@ -19,3 +19,13 @@ updates:
       terraform:
         patterns:
           - "*"
+
+  # Dev-only tooling for the frontend tests (jsdom). Nothing here is deployed.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm:
+        patterns:
+          - "*"

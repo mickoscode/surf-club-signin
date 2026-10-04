@@ -1,0 +1,14 @@
+{
+  "name": "surf-club-signin",
+  "private": true,
+  "description": "Developer tooling only (frontend tests). The deployed site has no npm dependencies.",
+  "scripts": {
+    "test": "node --test \"tests/web/*.test.js\""
+  },
+  "devDependencies": {
+    "jsdom": "30.1.1"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

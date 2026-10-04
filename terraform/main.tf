@@ -25,6 +25,13 @@ terraform {
 # Configure the AWS Provider
 provider "aws" {
   region = "ap-southeast-2"
+
+  default_tags {
+    tags = {
+      Project   = "surf-club-signin"
+      ManagedBy = "terraform"
+    }
+  }
 }
 
 # CloudFront requires the ACM certificate to be in the 'us-east-1' (N. Virginia) region.
@@ -32,4 +39,11 @@ provider "aws" {
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
+
+  default_tags {
+    tags = {
+      Project   = "surf-club-signin"
+      ManagedBy = "terraform"
+    }
+  }
 }

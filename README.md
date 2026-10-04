@@ -31,11 +31,11 @@ browser ──> CloudFront ──> S3 (static html/js/css)
 [./web/main/](./web/main/) - the shared templates for every site:
 - [config.json](./web/main/config.json) - values injected into the html templates (page title, API URL, favicon, activity id, test mode)
 - [header.snippet](./web/main/header.snippet) / [header_leader.snippet](./web/main/header_leader.snippet) - the menu for users and for leaders; each site can have its own copy
-- `index.template.html`, `bulk.template.html`, `live.template.html`, `history.template.html` - [inject-config.js](./web/main/inject-config.js) turns these into the `.html` pages (the generated pages are not committed)
+- `index.template.html`, `bulk.template.html`, `live.template.html`, `history.template.html` - [inject-config.js](./web/main/inject-config.js) turns these into the `.html` pages (the generated pages are not committed). The templates contain markup only; the page logic is in [common.js](./web/main/common.js) (shared helpers) and one script per page (`index.js`, `bulk.js`, `live.js`, `history.js`)
 - [about.html](./web/main/about.html), [sign-in-out.css](./web/main/sign-in-out.css) - shared as-is
 
 Other site folders: [./web/demo/](./web/demo/) plus the age groups `pink`, `white`, `yellow`, `green`, `lblue`, `purple`, `dblue` and `red`:
-- Everything except `config.json` and the two `.snippet` files is a symbolic link back to [./web/main/](./web/main/)
+- Everything except `config.json` and the two `.snippet` files (templates, scripts, CSS) is a symbolic link back to [./web/main/](./web/main/)
 - `"INJECT_ENABLE_TEST_MODE": "true"` in config.json (demo only) enables the test/demo functionality, e.g. `index.html?test=in` or `?test=out`. Use the demo site so you don't touch real data.
 
 Standalone pages (not templated): [./web/data/](./web/data/) (manage names and view logs) and [./web/age-manager/](./web/age-manager/) (one page linking to each age group's bulk and single sign-in).
@@ -68,7 +68,7 @@ npm ci --ignore-scripts           # one-off: installs jsdom, used only by the te
 npm test                          # frontend tests: real pages in jsdom against a fake API
 ```
 
-Edit the `*.template.html` files, never the generated `index.html`, `live.html`, `history.html` or `bulk.html`.
+Edit the `*.template.html` files and the `.js` files in `web/main/`, never the generated `index.html`, `live.html`, `history.html` or `bulk.html`.
 
 Infrastructure:
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>data - sign-in-out</title>
-    <link rel="stylesheet" href="https://unpkg.com/picnic">
+    <link rel="stylesheet" href="vendor/picnic.min.css">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-data.png">
 </head>
 <body>
@@ -18,7 +18,7 @@
     <a href="./list-names.html">list all names</a><br />
     <a href="./logs.html">list all logs</a><br />
 </p> 
-  <script src="https://cdn.auth0.com/js/auth0-spa-js/1.22/auth0-spa-js.production.js"></script>
+  <script src="vendor/auth0-spa-js.production.js"></script>
   <script>
   (async () => {
     const auth0 = await createAuth0Client({

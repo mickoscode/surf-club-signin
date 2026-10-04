@@ -1,0 +1,203 @@
+const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
+const VALID_ACTIVITY_ID = [
+  "sorrento_pink_sunday", 
+  "sorrento_white_sunday", 
+  "sorrento_yellow_sunday", 
+  "sorrento_green_sunday", 
+  "sorrento_lblue_sunday", 
+  "sorrento_purple_sunday",
+  "sorrento_dblue_sunday", 
+  "sorrento_red_sunday", 
+  "sorrento_youth_sunday", 
+  "demo"
+];
+const DEFAULT_ACTIVITY_ID = "sorrento_youth_sunday";
+const VALID_FILTER = ["u14", "u15", "u17", "u19", "swordfish", "marlin", "stinger", "narwhal"];
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const messageEl = document.getElementById("message");
+  const params = new URLSearchParams(window.location.search);
+  const activity_id = params.get("activity_id");
+  const name_id = params.get("name_id");
+  const filter = params.get("filter");
+
+  if (activity_id && name_id && filter) {
+    await renderEditForm(activity_id, name_id, filter);
+  } else {
+    renderAddForm(messageEl);
+    const names = (await fetchNames(DEFAULT_ACTIVITY_ID)).names || [];
+    renderNameList(names);
+  }
+});
+
+// Form-building helpers. Controls are created with DOM APIs (not innerHTML) because the edit form is
+// populated from URL query parameters and API data, which must never be interpreted as HTML.
+function createSelect(name, options, selected) {
+  const select = document.createElement("select");
+  select.name = name;
+  options.forEach(optionValue => {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionValue;
+    if (optionValue === selected) option.selected = true;
+    select.appendChild(option);
+  });
+  return select;
+}
+
+function createTextInput(name, value) {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.name = name;
+  input.value = value;
+  input.maxLength = 50;
+  return input;
+}
+
+// label + control + line break, as in the original markup
+function appendField(form, labelText, control) {
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  form.appendChild(label);
+  form.appendChild(document.createTextNode(" "));
+  form.appendChild(control);
+  form.appendChild(document.createElement("br"));
+}
+
+function createButton(text) {
+  const button = document.createElement("button");
+  button.type = "submit";
+  button.textContent = text;
+  return button;
+}
+
+function sanitizeDisplay(display) {
+  return display.replace(/[^a-zA-Z0-9 ]/g, "").substring(0, 50);
+}
+
+async function fetchNames(activity_id) {
+  const response = await fetch(`${API_BASE}/name?activity_id=${encodeURIComponent(activity_id)}`);
+  return response.json();
+}
+
+async function fetchName(activity_id, name_id, filter) {
+  const response = await fetch(`${API_BASE}/name?activity_id=${encodeURIComponent(activity_id)}&name_id=${encodeURIComponent(name_id)}&filter=${encodeURIComponent(filter)}`);
+  const data = await response.json();
+  return data.names[0].display || "no name found for name_id";
+}
+
+function renderAddForm(messageEl) {
+  const container = document.createElement("div");
+
+  const heading = document.createElement("h2");
+  heading.textContent = "Add Name";
+  container.appendChild(heading);
+
+  const form = document.createElement("form");
+  form.id = "addForm";
+
+  appendField(form, "Activity ID:", createSelect("activity_id", VALID_ACTIVITY_ID));
+  appendField(form, "Filter:", createSelect("filter", VALID_FILTER));
+  appendField(form, "Display Name:", createTextInput("display", ""));
+  form.appendChild(createButton("Add"));
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const display = sanitizeDisplay(form.display.value);
+    const payload = {
+      activity_id: form.activity_id.value,
+      filter: form.filter.value,
+      display: display
+    };
+
+    try {
+      await addName(payload);
+      messageEl.textContent = "name added successfully";
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  };
+
+  container.appendChild(form);
+  document.body.appendChild(container);
+}
+
+async function addName(payload) {
+  const response = await fetch(`${API_BASE}/addname`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return response.json();
+}
+
+async function renderEditForm(activity_id, name_id, filter) {
+  const display = await fetchName(activity_id, name_id, filter);
+  const container = document.createElement("div");
+
+  const heading = document.createElement("h2");
+  heading.textContent = "Edit Name";
+  container.appendChild(heading);
+
+  const form = document.createElement("form");
+  form.id = "editForm";
+
+  const nameIdInput = document.createElement("input");
+  nameIdInput.type = "hidden";
+  nameIdInput.name = "name_id";
+  nameIdInput.value = name_id;
+  form.appendChild(nameIdInput);
+  appendField(form, "Activity ID:", createSelect("activity_id", VALID_ACTIVITY_ID, activity_id));
+  appendField(form, "Filter:", createSelect("filter", VALID_FILTER, filter));
+  appendField(form, "Display Name:", createTextInput("display", display));
+  form.appendChild(createButton("Update"));
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const display = sanitizeDisplay(form.display.value);
+    const payload = {
+      activity_id: form.activity_id.value,
+      name_id: form.name_id.value,
+      filter: form.filter.value,
+      display: display
+    };
+    try {
+      await editName(payload);
+      //messageEl.textContent = "name edited successfully";
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+    location.href = "./names.html";
+  };
+
+  container.appendChild(form);
+  document.body.appendChild(container);
+}
+
+async function editName(payload) {
+  const response = await fetch(`${API_BASE}/editname`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  return response.json();
+}
+
+function renderNameList(names) {
+  const heading = document.createElement("h2");
+  heading.textContent = "Existing Names";
+  document.body.appendChild(heading);
+
+  const list = document.createElement("ul");
+  names.forEach(n => {
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = `./names.html?activity_id=${encodeURIComponent(n.activity_id)}&name_id=${encodeURIComponent(n.name_id)}&filter=${encodeURIComponent(n.filter)}`;
+    link.textContent = `${n.activity_id} | ${n.display} | ${n.filter}`;
+    item.appendChild(link);
+    list.appendChild(item);
+  });
+  document.body.appendChild(list);
+}

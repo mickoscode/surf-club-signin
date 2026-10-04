@@ -1,6 +1,6 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
-const { XSS, until, loadPage } = require("./helpers");
+const { XSS, until, reply, loadPage, submit, addFormFieldShortcuts } = require("./helpers");
 const { names, logs, readApi } = require("./fixtures");
 
 describe("data/names.html (manage names)", () => {
@@ -68,6 +68,59 @@ describe("data/logs.html", () => {
     await page.window.fetchLogs();
     assert.equal(page.document.querySelectorAll("#logTable tbody tr").length, logs.length);
     assert.equal(page.document.querySelectorAll("#logTable img").length, 0);
+    page.close();
+  });
+});
+
+// These pages used inline onclick/onsubmit attributes; they are now wired with addEventListener
+// (inline handlers are blocked by the Content-Security-Policy).
+describe("data pages: buttons and forms are wired up without inline handlers", () => {
+  it("list-names: the Fetch Names button loads the names", async () => {
+    const page = await loadPage("data/list-names.html", { query: "?activity_id=demo", api: readApi });
+    assert.equal(page.document.querySelectorAll("#namesTable tbody tr").length, 0);
+    page.document.getElementById("fetchNamesButton").click();
+    await until(() => page.document.querySelectorAll("#namesTable tbody tr").length === names.length, "names table");
+    assert.deepEqual(page.errors, []);
+    page.close();
+  });
+
+  it("logs: the Fetch Logs button loads the day's logs", async () => {
+    const page = await loadPage("data/logs.html", { query: "?date=2025-08-12", api: readApi });
+    page.document.getElementById("fetchLogsButton").click();
+    await until(() => page.document.querySelectorAll("#logTable tbody tr").length === logs.length, "logs table");
+    page.close();
+  });
+
+  it("logs: submitting the form posts the log, shows the result and refreshes the table", async () => {
+    const api = (url, init) => (init.method === "POST" ? reply(201, { message: "Log added." }) : readApi(url));
+    const page = await loadPage("data/logs.html", { query: "?date=2025-08-12", api });
+    const form = page.document.getElementById("addLogForm");
+    addFormFieldShortcuts(form); // submitLog reads form.name_id etc., as browsers allow
+    form.elements.name_id.value = "alice";
+    form.elements.direction.value = "out";
+    form.elements.date_time.value = "2025-08-12T09:40:00Z";
+    submit(page, form);
+    await until(() => page.document.getElementById("message").textContent === "Log added.", "message");
+    const post = page.calls.find((c) => c.method === "POST");
+    assert.deepEqual(post.body, {
+      activity_id: "sorrento_youth_sunday",
+      name_id: "alice",
+      direction: "out",
+      date_time: "2025-08-12T09:40:00Z",
+    });
+    await until(() => page.document.querySelectorAll("#logTable tbody tr").length === logs.length, "refreshed table");
+    page.close();
+  });
+
+  it("index: Log Out starts hidden (stylesheet rule), Log In is offered, no script errors", async () => {
+    // jsdom has no WebCrypto; the Auth0 SDK only checks that crypto.subtle exists before it starts.
+    const page = await loadPage("data/index.html", {
+      setup: (window) => Object.defineProperty(window.crypto, "subtle", { value: {} }),
+    });
+    const logout = page.document.getElementById("logout");
+    assert.equal(page.window.getComputedStyle(logout).display, "none");
+    await until(() => page.document.getElementById("login").style.display === "inline", "login button shown");
+    assert.equal(page.window.getComputedStyle(logout).display, "none");
     page.close();
   });
 });

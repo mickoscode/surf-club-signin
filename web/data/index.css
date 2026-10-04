@@ -1,0 +1,2 @@
+/* Log Out is hidden until the script shows it (it sets style.display, which overrides this rule). */
+#logout { display: none; }

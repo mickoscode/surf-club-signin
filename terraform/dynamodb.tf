@@ -1,7 +1,6 @@
 # Enable DynamoDB Free Tier: Use on-demand billing
 locals {
   billing_mode = "PAY_PER_REQUEST"
-  activity_id  = "sorrento_youth_sunday"
 }
 
 # ensure name_id is sanitised 
@@ -154,21 +153,12 @@ resource "aws_dynamodb_table" "activity" {
   }
 }
 
-resource "aws_dynamodb_table_item" "activity_sample" {
-  table_name = aws_dynamodb_table.activity.name
-  hash_key   = "name_id"
+# The activity's sign-in/out time windows are operational data, edited outside Terraform, so the
+# seed item is no longer managed here (destroy = false: it is removed from state only, the item stays).
+removed {
+  from = aws_dynamodb_table_item.activity_sample
 
-  item = jsonencode({
-    name_id     = { S = local.activity_id }
-    url_code    = { S = "YOUTH" }
-    days_string = { S = "sunday" }
-    in_h_start  = { N = "8" }
-    in_m_start  = { N = "0" }
-    in_h_end    = { N = "9" }
-    in_m_end    = { N = "30" }
-    out_h_start = { N = "9" }
-    out_m_start = { N = "31" }
-    out_h_end   = { N = "10" }
-    out_m_end   = { N = "40" }
-  })
+  lifecycle {
+    destroy = false
+  }
 }

@@ -46,7 +46,7 @@ All workflows live in `.github/workflows/`; third-party actions are pinned to co
 
 - `sync-sio.yml` (frontend) runs on push to `main`: runs `scripts/build-sites.sh`, `aws s3 sync`s `web/main` to the bucket root and each other folder to `/<folder>`, then invalidates CloudFront (one `/*` invalidation). Merging to main deploys to prod.
 - `web-pr.yml` runs on PRs that touch the frontend and runs the same `scripts/build-sites.sh`; `Validate sites` can be a required check (skipped, not absent, when `web/` is unchanged).
-- `data-to-s3.yml` is a manual sync of `web/data`.
+- `data-to-s3.yml` is a manual "push only `web/data`" button (no inputs; bucket, region and distribution are fixed). `sync-sio.yml` also syncs `web/data` on every merge.
 - `terraform-pr.yml` runs on PRs that touch `terraform/`: `terraform fmt -check`, `validate`, `tflint`, a blocking Trivy scan (accepted findings are listed with reasons in `terraform/.trivyignore.yaml`), and a speculative `terraform plan` posted as a PR comment with a link to the full plan in HCP Terraform. Jobs are skipped (not absent) when `terraform/` is unchanged, so `Terraform validate`, `Terraform plan` and `Terraform security scan` are required checks on `main`.
 - `terraform-apply.yml` runs on push to `main` when `terraform/` changes (or by manual dispatch): checks, a plan, then an `apply` job gated by the `terraform-production` GitHub Environment, which needs a manual approval. It is skipped when the plan has no changes. Terraform runs remotely in HCP Terraform; GitHub only needs the `TF_API_TOKEN` secret.
 

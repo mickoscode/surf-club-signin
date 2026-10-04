@@ -98,4 +98,5 @@ GitHub Actions workflows are in [./.github/workflows/](./.github/workflows/). Ac
 - [site_admin.md](./docs/site_admin.md) - season reset and other admin procedures
 - [go_live_prep.md](./docs/go_live_prep.md) - pre-launch checklist for the first season
 - [temp_upgrade_aws_cdn.md](./docs/temp_upgrade_aws_cdn.md) - historic notes on an old AWS WAF Classic error (the WAF has since been removed)
+- [vendored_assets.md](./docs/vendored_assets.md) - the CSS/JS libraries served from this repo instead of a CDN, and how to update them
 - [CLAUDE.md](./CLAUDE.md) - detailed architecture and conventions (also used by AI coding assistants)

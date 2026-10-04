@@ -7,7 +7,7 @@
 #
 # Checks per site: no broken symlinks, valid config.json with every INJECT_ key,
 # header snippets present, no unreplaced {{INJECT_*}} placeholders in the output, and every
-# local <script src> the pages load exists in the site folder.
+# local <script src> and stylesheet the pages load exists in the site folder.
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -56,9 +56,9 @@ PY
     left=$(grep -o '{{INJECT_[A-Z_]*}}' "$dir/$page.html" | sort -u | tr '\n' ' ' || true)
     [ -z "$left" ] || fail "$page.html has unreplaced placeholders: $left"
 
-    # every local <script src="..."> must exist in this site folder (a missing symlink would ship a broken page)
-    for src in $(grep -oE '<script src="[^"]+"' "$dir/$page.html" | sed -E 's/<script src="([^"]+)"/\1/' | grep -vE '^(https?:)?//' || true); do
-      [ -f "$dir/$src" ] || fail "$page.html loads $src, which is missing from the site folder (add a symlink to ../main/$src)"
+    # every local <script src="..."> and stylesheet must exist in this site folder (a missing symlink would ship a broken page)
+    for src in $(grep -oE '(<script src|<link rel="stylesheet" href)="[^"]+"' "$dir/$page.html" | sed -E 's/.*"([^"]+)"$/\1/' | grep -vE '^(https?:)?//' || true); do
+      [ -f "$dir/$src" ] || fail "$page.html loads $src, which is missing from the site folder (add a symlink to ../main/$(echo "${src#./}" | cut -d/ -f1))"
     done
   done
 done

@@ -13,6 +13,53 @@ resource "aws_acm_certificate" "domain2" {
 }
 
 # -----------------------------------------------------------
+# Security headers added by CloudFront to every response (pages, assets and the 404 page).
+# There is deliberately no Content-Security-Policy yet: every page still has an inline <script>
+# and loads third-party CSS/JS, so a CSP would need those moved first.
+# -----------------------------------------------------------
+resource "aws_cloudfront_response_headers_policy" "security" {
+  name    = "sign-in-out-security-headers"
+  comment = "Browser security headers for the static site"
+
+  security_headers_config {
+    # Tell browsers to only ever use HTTPS for this domain (1 year). No includeSubDomains/preload,
+    # which are hard to undo and not needed here.
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = false
+      preload                    = false
+      override                   = true
+    }
+
+    # Stop browsers guessing a file's type (blocks script/style served as the wrong type).
+    content_type_options {
+      override = true
+    }
+
+    # Stop other sites embedding this one in a frame (clickjacking).
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+
+    # Send only the origin (not the full URL with query strings) to other sites.
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+  }
+
+  custom_headers_config {
+    # The site uses none of these browser features.
+    items {
+      header   = "Permissions-Policy"
+      value    = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      override = true
+    }
+  }
+}
+
+# -----------------------------------------------------------
 # CloudFront Distribution to serve content and enforce HTTPS using the ACM certificate.
 # -----------------------------------------------------------
 resource "aws_cloudfront_distribution" "sio" {
@@ -43,6 +90,8 @@ resource "aws_cloudfront_distribution" "sio" {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-Origin"
+
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
 
     # This is the key setting that redirects all HTTP traffic to HTTPS.
     viewer_protocol_policy = "redirect-to-https"

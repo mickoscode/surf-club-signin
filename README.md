@@ -50,7 +50,7 @@ Standalone pages (not templated): [./web/data/](./web/data/) (manage names and v
 - Plan is to build authentication and site driven admin, if more people want to create activities
 
 [./terraform/](./terraform/):
-- Code to build all of the aws resources (s3 bucket, cloudfront, api gateway with throttling, one least-privilege IAM role per lambda, lambdas, dynamodb with point-in-time recovery, certs, cloudwatch alarms, a cost budget alert, and the GitHub OIDC deploy role)
+- Code to build all of the aws resources (s3 bucket, cloudfront, api gateway with throttling, one least-privilege IAM role per lambda, lambdas, dynamodb with point-in-time recovery, certs, cloudwatch alarms, browser security headers, a cost budget alert, and the GitHub OIDC deploy role)
 - Runs in HCP Terraform (org `mickoscode`, workspace `surf-club-signin`)
 - Targets a single environment and default VPC
 - Not super re-usable in it's current state, but plan to clean this up in future releases

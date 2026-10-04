@@ -54,7 +54,7 @@ AWS auth for the frontend workflows is GitHub OIDC: they assume `github-deploy-r
 
 ### Backend
 
-- `terraform/api-gateway.tf` defines routes: `POST /log`, `GET /log`, `GET /userlog`, `POST /bulk`, `GET /name`, `POST /addname`, `POST /editname`, `GET /date` (POST routes also have `OPTIONS` routes for CORS). Each maps to a Lambda in `terraform/lambda_<name>/lambda_handler.py`, zipped by `archive_file` in `lambda.tf`. Adding an endpoint means touching `lambda.tf`, `api-gateway.tf` (integration, route, permission) and possibly `iam.tf`.
+- `terraform/api-gateway.tf` defines routes: `POST /log`, `GET /log`, `GET /userlog`, `POST /bulk`, `GET /name`, `POST /addname`, `POST /editname`, `GET /date` (POST routes also have `OPTIONS` routes for CORS). Each maps to a Lambda in `terraform/lambda_<name>/lambda_handler.py`, zipped by `archive_file` in `lambda.tf`. Adding an endpoint means touching `lambda.tf`, `api-gateway.tf` (integration, route, permission), and `iam.tf`: each Lambda has its own least-privilege role built from the `lambda_access` map (one table, only the DynamoDB actions it uses, its own log group), so a new function needs an entry there (and in `var.lambda_names` in `cloudwatch.tf`). No Lambda uses the `activity` table.
 - Lambdas build their own CORS response headers (`build_response`). Each `lambda_*/logger.py` is a symlink to `lambda_common/logger.py`; new lambdas should symlink it and call `log_event(event, context)`.
 - DynamoDB tables (`dynamodb.tf`), all keyed by activity:
   - `names`: PK `activity_id`, SK `name_id`; attrs `display`, `filter` (age group).

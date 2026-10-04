@@ -71,60 +71,63 @@ resource "aws_iam_role_policy_attachment" "github_deploy" {
 }
 
 # -------------------------------
-# IAM Role for Lambda
+# IAM roles for Lambda (one least-privilege role per function)
 # -------------------------------
-resource "aws_iam_role" "lambda_role" {
-  name = "LogLambdaExecutionRole"
+# Each function gets its own role that can only (a) run the DynamoDB actions it uses against the
+# one table it uses, and (b) write to its own CloudWatch log group. Nothing else.
+# Log groups are managed in cloudwatch.tf, so logs:CreateLogGroup is deliberately not granted.
+data "aws_region" "current" {}
+
+locals {
+  lambda_access = {
+    WriteBulkLogsFunction = { table = aws_dynamodb_table.log.arn, actions = ["dynamodb:PutItem"] }
+    WriteLogFunction      = { table = aws_dynamodb_table.log.arn, actions = ["dynamodb:PutItem"] }
+    FetchLogsFunction     = { table = aws_dynamodb_table.log.arn, actions = ["dynamodb:Query"] }
+    FetchUserLogsFunction = { table = aws_dynamodb_table.log.arn, actions = ["dynamodb:Query"] }
+    FetchDatesFunction    = { table = aws_dynamodb_table.log.arn, actions = ["dynamodb:Query"] }
+    FetchNamesFunction    = { table = aws_dynamodb_table.names.arn, actions = ["dynamodb:Query"] }
+    WriteNameFunction     = { table = aws_dynamodb_table.names.arn, actions = ["dynamodb:PutItem"] }
+    EditNameFunction      = { table = aws_dynamodb_table.names.arn, actions = ["dynamodb:UpdateItem"] }
+  }
+}
+
+resource "aws_iam_role" "lambda" {
+  for_each = local.lambda_access
+  name     = "${each.key}Role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect = "Allow",
-      Principal = {
-        Service = "lambda.amazonaws.com"
-      },
-      Action = "sts:AssumeRole"
+      Effect    = "Allow",
+      Principal = { Service = "lambda.amazonaws.com" },
+      Action    = "sts:AssumeRole"
     }]
   })
 }
 
-resource "aws_iam_policy" "lambda_policy" {
-  name = "LogLambdaPolicy"
+resource "aws_iam_role_policy" "lambda" {
+  for_each = local.lambda_access
+  name     = "${each.key}Access"
+  role     = aws_iam_role.lambda[each.key].id
 
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow",
-        Action = [
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:DescribeTable",
-          "dynamodb:Query"
-        ],
-        Resource = [
-          aws_dynamodb_table.log.arn,
-          aws_dynamodb_table.activity.arn,
-          aws_dynamodb_table.names.arn,
-          #"${aws_dynamodb_table.names.arn}/index/activity_id"  # For GSI access
-        ]
+        Sid      = "DynamoDBAccess"
+        Effect   = "Allow",
+        Action   = each.value.actions,
+        Resource = [each.value.table]
       },
       {
+        Sid    = "OwnLogGroupOnly"
         Effect = "Allow",
         Action = [
-          "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
-        # TODO - tighten this to something like... 
-        # "Resource": "arn:aws:logs:ap-southeast-2:YOUR_ACCOUNT_ID:log-group:/aws/lambda/EditNameFunction:*"
-        Resource = "arn:aws:logs:*:*:*"
+        Resource = "arn:aws:logs:${data.aws_region.current.region}:${var.aws_account_id}:log-group:/aws/lambda/${each.key}:*"
       }
     ]
   })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_policy_attach" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_policy.arn
 }

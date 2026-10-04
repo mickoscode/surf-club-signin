@@ -1,7 +1,8 @@
 name: Web PR checks
 
-# Builds every site on pull requests that touch the frontend, so a missing config key,
-# broken symlink or unreplaced placeholder is caught before merge (merging to main deploys to prod).
+# Builds every site and runs the frontend tests on pull requests that touch the frontend, so a missing
+# config key, broken symlink, unreplaced placeholder or broken page logic is caught before merge
+# (merging to main deploys to prod).
 # Jobs are skipped (not absent) when the frontend is unchanged, so "Validate sites" can be a required check.
 on:
   pull_request:
@@ -35,7 +36,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(web/|scripts/build-sites\.sh$|\.github/workflows/(web-pr|sync-sio)\.yml$)'; then
+          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(web/|tests/|package(-lock)?\.json$|scripts/build-sites\.sh$|\.github/workflows/(web-pr|sync-sio)\.yml$)'; then
             echo "web=true" >> "$GITHUB_OUTPUT"
           else
             echo "web=false" >> "$GITHUB_OUTPUT"
@@ -57,7 +58,16 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24"
+          cache: npm
 
-      # inject-config.js uses only built-in modules, so no npm install is needed.
+      # inject-config.js uses only built-in modules; npm is needed only for the tests' jsdom dependency.
       - name: Build and validate all sites
         run: ./scripts/build-sites.sh
+
+      # --ignore-scripts: no dependency may run install-time code in CI.
+      - name: Install test dependencies
+        run: npm ci --ignore-scripts
+
+      # Loads the generated pages into jsdom against a fake API (see tests/web/).
+      - name: Frontend tests
+        run: npm test

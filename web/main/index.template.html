@@ -82,7 +82,7 @@
 
         // Fetch valid names from the backend
         async function fetchNames() {
-            const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
+            const response = await fetch(`${API_BASE}/name?activity_id=${encodeURIComponent(ACTIVITY_ID)}`);
             return response.json();
         }
 
@@ -187,6 +187,25 @@
                 };
             }
 
+            // Append text to parent, wrapping each case-insensitive occurrence of query in a highlight span.
+            // Built with DOM nodes (not innerHTML) so names and typed text can never be interpreted as HTML or a regex.
+            function appendHighlighted(parent, text, query) {
+                const lowerText = text.toLowerCase();
+                const lowerQuery = query.toLowerCase();
+                let pos = 0;
+                while (lowerQuery) {
+                    const found = lowerText.indexOf(lowerQuery, pos);
+                    if (found === -1) break;
+                    if (found > pos) parent.appendChild(document.createTextNode(text.slice(pos, found)));
+                    const span = document.createElement("span");
+                    span.classList.add("highlight");
+                    span.textContent = text.slice(found, found + lowerQuery.length);
+                    parent.appendChild(span);
+                    pos = found + lowerQuery.length;
+                }
+                if (pos < text.length) parent.appendChild(document.createTextNode(text.slice(pos)));
+            }
+
             // Filter and display matching names
             function filterNames() {
                 const inputValue = nameInputField.value.toLowerCase();
@@ -197,10 +216,7 @@
                     matches.forEach((match, index) => {
                         const item = document.createElement("li");
                         item.classList.add("dropdown-item");
-                        item.innerHTML = match.display.replace(
-                            new RegExp(inputValue, "gi"),
-                            match => `<span class="highlight">${match}</span>`
-                        );
+                        appendHighlighted(item, match.display, inputValue);
 
                         item.addEventListener("click", () => {
                             nameInputField.value = match.display;

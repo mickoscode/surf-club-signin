@@ -49,6 +49,7 @@ All workflows live in `.github/workflows/`; third-party actions are pinned to co
 - `data-to-s3.yml` is a manual "push only `web/data`" button (no inputs; bucket, region and distribution are fixed). `sync-sio.yml` also syncs `web/data` on every merge.
 - `terraform-pr.yml` runs on PRs that touch `terraform/`: `terraform fmt -check`, `validate`, `tflint`, a blocking Trivy scan (accepted findings are listed with reasons in `terraform/.trivyignore.yaml`), and a speculative `terraform plan` posted as a PR comment with a link to the full plan in HCP Terraform. Jobs are skipped (not absent) when `terraform/` is unchanged, so `Terraform validate`, `Terraform plan` and `Terraform security scan` are required checks on `main`.
 - `terraform-apply.yml` runs on push to `main` when `terraform/` changes (or by manual dispatch): checks, a plan, then an `apply` job gated by the `terraform-production` GitHub Environment, which needs a manual approval. It is skipped when the plan has no changes. Terraform runs remotely in HCP Terraform; GitHub only needs the `TF_API_TOKEN` secret.
+- `terraform-drift.yml` runs weekly (and manually): a speculative plan of `main`; it fails, so GitHub emails you, if the live AWS resources differ from the code. It never applies.
 
 AWS auth for the frontend workflows is GitHub OIDC: they assume `github-deploy-role` (defined in `terraform/iam.tf`, trusted for the `main` branch only), so there are no AWS keys in GitHub secrets. Running `data-to-s3.yml` from another branch will fail to assume the role.
 

@@ -25,3 +25,8 @@ misconfigurations:
   - id: AWS-0011
     paths: [cloudfront.tf]
     statement: No WAF on the CloudFront distribution by design (cost); the static site has no sensitive endpoints.
+  # The alert topic carries only alarm names/states. The AWS-managed SNS key (alias/aws/sns) does not
+  # allow CloudWatch alarms to publish, and a customer-managed key adds a monthly cost for no benefit.
+  - id: AWS-0095
+    paths: [alarms.tf]
+    statement: Alarm notifications contain no sensitive data; encryption would need a paid customer-managed KMS key.

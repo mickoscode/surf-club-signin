@@ -95,7 +95,7 @@ jobs:
         run: tflint --format compact
 
   security-scan:
-    name: Terraform security scan (informational)
+    name: Terraform security scan
     needs: changes
     if: needs.changes.outputs.terraform == 'true'
     runs-on: ubuntu-latest
@@ -106,15 +106,16 @@ jobs:
         with:
           persist-credentials: false
 
-      # Report-only: existing findings (e.g. the intentionally public site bucket)
-      # are not blocking. Set exit-code to "1" once the baseline is addressed or ignored.
+      # Fails on any HIGH/CRITICAL finding that is not listed in terraform/.trivyignore.yaml
+      # (accepted findings, each with a reason).
       - name: Trivy config scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: config
           scan-ref: terraform
           severity: HIGH,CRITICAL
-          exit-code: "0"
+          trivyignores: terraform/.trivyignore.yaml
+          exit-code: "1"
           format: table
 
   plan:

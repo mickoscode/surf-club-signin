@@ -1,0 +1,21 @@
+# Accepted Trivy findings. Each entry needs a reason; remove it if the design changes.
+misconfigurations:
+  # The site is a public static website: CloudFront reaches the bucket through its S3
+  # *website* endpoint (http-only origin), which requires a publicly readable bucket.
+  # Moving to Origin Access Control would remove the need for all four of these.
+  - id: AWS-0086
+    paths: [s3_site_hosting.tf]
+    statement: Public bucket is intentional (public static website).
+  - id: AWS-0087
+    paths: [s3_site_hosting.tf]
+    statement: Public bucket policy is intentional (public static website).
+  - id: AWS-0091
+    paths: [s3_site_hosting.tf]
+    statement: Public bucket is intentional (public static website).
+  - id: AWS-0093
+    paths: [s3_site_hosting.tf]
+    statement: Public bucket is intentional (public static website).
+  # A customer-managed KMS key would block anonymous reads of the public website content.
+  - id: AWS-0132
+    paths: [s3_site_hosting.tf]
+    statement: Bucket content is public; SSE-S3 (AES256) is sufficient and a CMK would break anonymous reads.

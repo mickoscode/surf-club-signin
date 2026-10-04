@@ -10,7 +10,7 @@ data "archive_file" "write_bulk_zip" {
 resource "aws_lambda_function" "write_bulk" {
   function_name    = "WriteBulkLogsFunction"
   timeout          = 10
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda["WriteBulkLogsFunction"].arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
   filename         = data.archive_file.write_bulk_zip.output_path
@@ -29,7 +29,7 @@ data "archive_file" "edit_name_zip" {
 resource "aws_lambda_function" "edit_name" {
   function_name    = "EditNameFunction"
   timeout          = 5
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda["EditNameFunction"].arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
   filename         = data.archive_file.edit_name_zip.output_path
@@ -48,7 +48,7 @@ data "archive_file" "write_name_zip" {
 resource "aws_lambda_function" "write_name" {
   function_name    = "WriteNameFunction"
   timeout          = 5
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda["WriteNameFunction"].arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
   filename         = data.archive_file.write_name_zip.output_path
@@ -67,7 +67,7 @@ data "archive_file" "write_log_zip" {
 resource "aws_lambda_function" "write_log" {
   function_name    = "WriteLogFunction"
   timeout          = 5
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda["WriteLogFunction"].arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
   filename         = data.archive_file.write_log_zip.output_path
@@ -86,7 +86,7 @@ data "archive_file" "fetch_logs_zip" {
 resource "aws_lambda_function" "fetch_logs" {
   function_name    = "FetchLogsFunction"
   timeout          = 5
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda["FetchLogsFunction"].arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
   filename         = data.archive_file.fetch_logs_zip.output_path
@@ -105,7 +105,7 @@ data "archive_file" "fetch_user_logs_zip" {
 resource "aws_lambda_function" "fetch_user_logs" {
   function_name    = "FetchUserLogsFunction"
   timeout          = 5
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda["FetchUserLogsFunction"].arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
   filename         = data.archive_file.fetch_user_logs_zip.output_path
@@ -124,7 +124,7 @@ data "archive_file" "fetch_names_zip" {
 resource "aws_lambda_function" "fetch_names" {
   function_name    = "FetchNamesFunction"
   timeout          = 5
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda["FetchNamesFunction"].arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
   filename         = data.archive_file.fetch_names_zip.output_path
@@ -143,7 +143,7 @@ data "archive_file" "fetch_dates_zip" {
 resource "aws_lambda_function" "fetch_dates" {
   function_name    = "FetchDatesFunction"
   timeout          = 5
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda["FetchDatesFunction"].arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
   filename         = data.archive_file.fetch_dates_zip.output_path

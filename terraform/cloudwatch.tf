@@ -1,10 +1,5 @@
-variable "lambda_names" {
-  type    = list(string)
-  default = ["WriteBulkLogsFunction", "EditNameFunction", "WriteNameFunction", "WriteLogFunction", "FetchLogsFunction", "FetchNamesFunction", "FetchDatesFunction", "FetchUserLogsFunction"]
-}
-
 resource "aws_cloudwatch_log_group" "lambda_logs" {
-  for_each          = toset(var.lambda_names)
+  for_each          = toset(keys(local.lambdas))
   name              = "/aws/lambda/${each.value}"
   retention_in_days = 7
 }

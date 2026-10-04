@@ -1,0 +1,39 @@
+name: Delete merged branch
+
+# Deletes a pull request's branch once the PR has been merged, so merged branches don't pile up.
+# Only branches from this repository are touched (never forks), never the default branch, and nothing
+# happens for PRs that were closed without merging. The "Automatically delete head branches" repository
+# setting does the same job; if both are on, whichever runs second finds the branch already gone, which is fine.
+on:
+  pull_request:
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  delete-branch:
+    name: Delete merged branch
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref != github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # deleting a branch is a write to refs
+    steps:
+      # The branch name comes from the event, so it is passed through the environment, never into the script text.
+      - name: Delete branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          if out=$(gh api --method DELETE "repos/$REPO/git/refs/heads/$BRANCH" 2>&1); then
+            echo "Deleted branch: $BRANCH"
+          elif echo "$out" | grep -q "Reference does not exist"; then
+            echo "Branch $BRANCH was already deleted."
+          else
+            echo "::error::Could not delete branch $BRANCH: $out"
+            exit 1
+          fi

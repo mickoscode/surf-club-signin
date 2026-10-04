@@ -91,6 +91,7 @@ GitHub Actions workflows are in [./.github/workflows/](./.github/workflows/). Ac
 | `terraform-apply.yml` | push to `main` touching `terraform/` | plan, then an apply that waits for manual approval in the `terraform-production` environment |
 | `terraform-drift.yml` | weekly | fails if live AWS differs from the code (never applies) |
 | `data-to-s3.yml` | manual | pushes only `web/data` |
+| `delete-merged-branch.yml` | PR merged | deletes the PR's branch (same-repo branches only, never `main`) |
 
 `main` is protected by a ruleset: changes go through a PR with the checks above passing.
 

@@ -19,3 +19,9 @@ misconfigurations:
   - id: AWS-0132
     paths: [s3_site_hosting.tf]
     statement: Bucket content is public; SSE-S3 (AES256) is sufficient and a CMK would break anonymous reads.
+  # The WAF was removed deliberately: it cost about $6/month, only ever covered the static
+  # S3-backed pages (never the API), and the site has very little traffic. API abuse is limited
+  # by stage throttling in api-gateway.tf, and a monthly budget alert (budget.tf) flags cost spikes.
+  - id: AWS-0011
+    paths: [cloudfront.tf]
+    statement: No WAF on the CloudFront distribution by design (cost); the static site has no sensitive endpoints.

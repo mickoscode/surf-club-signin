@@ -1,7 +1,10 @@
 import json
+import logging
 import boto3
 from datetime import datetime
 from logger import log_event
+
+logger = logging.getLogger()
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("log")
@@ -12,6 +15,9 @@ def lambda_handler(event, context):
 
     if method == "OPTIONS":
         return build_response(200, {"message": "CORS preflight OK"})
+
+    written = 0
+    skipped = []
 
     try:
         # Parse input from API Gateway
@@ -28,6 +34,9 @@ def lambda_handler(event, context):
         if direction not in ["in", "out"]:
             return build_response(400, {"message": "Invalid direction. Must be 'in' or 'out'."})
 
+        if not isinstance(name_id_list, list):
+            return build_response(400, {"message": "name_id_list must be a list."})
+
         # Validate date format
         try:
             dt_obj = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
@@ -40,24 +49,36 @@ def lambda_handler(event, context):
             # Construct log_id
             log_id = f"{date_time}#{name_id}"
 
-            # Write to DynamoDB
-            table.put_item(
-                Item={
-                    "activity_id": activity_id,
-                    "log_id": log_id,
-                    "name_id": name_id,
-                    "direction": direction,
-                    "date_time": date_time
-                },
-                ConditionExpression="attribute_not_exists(log_id)"
-            )
-        return build_response(201, {"message": "Bulk log entries created successfully."})
+            # Write to DynamoDB. A name already recorded for this timestamp is skipped (not an
+            # error), so a retry of a partly-failed submission with the same date_time is safe.
+            try:
+                table.put_item(
+                    Item={
+                        "activity_id": activity_id,
+                        "log_id": log_id,
+                        "name_id": name_id,
+                        "direction": direction,
+                        "date_time": date_time
+                    },
+                    ConditionExpression="attribute_not_exists(log_id)"
+                )
+                written += 1
+            except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
+                skipped.append(name_id)
 
-    except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
-        return build_response(409, {"message": "Duplicate log entry."})
+        return build_response(201, {
+            "message": "Bulk log entries created successfully.",
+            "written": written,
+            "skipped": skipped
+        })
 
-    except Exception as e:
-        return build_response(500, {"message": "Internal server error", "error": str(e)})
+    except Exception:
+        # Log the details; don't return exception text to the browser
+        logger.exception("Bulk write failed after %d written", written)
+        return build_response(500, {
+            "message": "Internal server error. Some entries may have been written; retry to complete.",
+            "written": written
+        })
 
 # Add cors headers to the response
 def build_response(status_code, body):

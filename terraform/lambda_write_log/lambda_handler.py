@@ -1,7 +1,10 @@
 import json
+import logging
 import boto3
 from datetime import datetime
 from logger import log_event
+
+logger = logging.getLogger()
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("log")
@@ -53,8 +56,10 @@ def lambda_handler(event, context):
     except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
         return build_response(409, {"message": "Duplicate log entry."})
 
-    except Exception as e:
-        return build_response(500, {"message": "Internal server error", "error": str(e)})
+    except Exception:
+        # Log the details; don't return exception text to the browser
+        logger.exception("Write log failed")
+        return build_response(500, {"message": "Internal server error"})
 
 # Add cors headers to the response
 def build_response(status_code, body):

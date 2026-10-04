@@ -9,6 +9,7 @@ data "archive_file" "write_bulk_zip" {
 
 resource "aws_lambda_function" "write_bulk" {
   function_name    = "WriteBulkLogsFunction"
+  timeout          = 10
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
@@ -27,6 +28,7 @@ data "archive_file" "edit_name_zip" {
 
 resource "aws_lambda_function" "edit_name" {
   function_name    = "EditNameFunction"
+  timeout          = 5
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
@@ -45,6 +47,7 @@ data "archive_file" "write_name_zip" {
 
 resource "aws_lambda_function" "write_name" {
   function_name    = "WriteNameFunction"
+  timeout          = 5
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
@@ -63,6 +66,7 @@ data "archive_file" "write_log_zip" {
 
 resource "aws_lambda_function" "write_log" {
   function_name    = "WriteLogFunction"
+  timeout          = 5
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
@@ -81,6 +85,7 @@ data "archive_file" "fetch_logs_zip" {
 
 resource "aws_lambda_function" "fetch_logs" {
   function_name    = "FetchLogsFunction"
+  timeout          = 5
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
@@ -99,6 +104,7 @@ data "archive_file" "fetch_user_logs_zip" {
 
 resource "aws_lambda_function" "fetch_user_logs" {
   function_name    = "FetchUserLogsFunction"
+  timeout          = 5
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
@@ -117,6 +123,7 @@ data "archive_file" "fetch_names_zip" {
 
 resource "aws_lambda_function" "fetch_names" {
   function_name    = "FetchNamesFunction"
+  timeout          = 5
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"
@@ -135,6 +142,7 @@ data "archive_file" "fetch_dates_zip" {
 
 resource "aws_lambda_function" "fetch_dates" {
   function_name    = "FetchDatesFunction"
+  timeout          = 5
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda_handler.lambda_handler"
   runtime          = "python3.12"

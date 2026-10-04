@@ -42,3 +42,43 @@ variable "github_repo" {
     error_message = "GitHub repository must be in the form owner/name."
   }
 }
+
+variable "api_throttle_rate_limit" {
+  description = "Steady-state requests per second allowed across the whole API stage"
+  type        = number
+  default     = 50
+  validation {
+    condition     = var.api_throttle_rate_limit >= 1
+    error_message = "Rate limit must be at least 1 request per second."
+  }
+}
+
+variable "api_throttle_burst_limit" {
+  description = "Maximum burst of concurrent requests allowed across the whole API stage"
+  type        = number
+  default     = 100
+  validation {
+    condition     = var.api_throttle_burst_limit >= 1
+    error_message = "Burst limit must be at least 1."
+  }
+}
+
+variable "budget_alert_email" {
+  description = "Email address that receives AWS Budget alerts. Set as a sensitive HCP Terraform workspace variable, not in tfvars."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", var.budget_alert_email))
+    error_message = "Budget alert email must be a valid email address."
+  }
+}
+
+variable "monthly_budget_usd" {
+  description = "Monthly AWS cost budget in USD; alerts fire as spend approaches it"
+  type        = number
+  default     = 5
+  validation {
+    condition     = var.monthly_budget_usd > 0
+    error_message = "Monthly budget must be greater than zero."
+  }
+}

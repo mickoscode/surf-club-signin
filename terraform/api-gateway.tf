@@ -10,6 +10,13 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.api.id
   name        = "$default"
   auto_deploy = true
+
+  # Throttling applies to the whole stage (all clients together), not per IP. Requests over
+  # the limit get HTTP 429. Limits are set well above a busy sign-in window; see variables.tf.
+  default_route_settings {
+    throttling_rate_limit  = var.api_throttle_rate_limit
+    throttling_burst_limit = var.api_throttle_burst_limit
+  }
 }
 
 # -------------------------------

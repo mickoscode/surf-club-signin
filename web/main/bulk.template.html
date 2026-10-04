@@ -96,14 +96,14 @@
 
         // Fetch names from the backend and populate global array
         async function fetchNames() {
-            const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
+            const response = await fetch(`${API_BASE}/name?activity_id=${encodeURIComponent(ACTIVITY_ID)}`);
             const data = await response.json();
             names = data.names || [];
         }
 
         // Fetch logs from the backend
         async function fetchLogs() {
-            const response = await fetch(`${API_BASE}/log?activity_id=${ACTIVITY_ID}&date=${LOG_DATE_STRING}`);
+            const response = await fetch(`${API_BASE}/log?activity_id=${encodeURIComponent(ACTIVITY_ID)}&date=${encodeURIComponent(LOG_DATE_STRING)}`);
             const data = await response.json();
             logs = data.logs || [];
         }

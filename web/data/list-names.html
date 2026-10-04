@@ -64,18 +64,18 @@
     document.getElementById("activityName").textContent = activity_id;
 
     async function fetchNames() {
-      const response = await fetch(`${API_BASE}/name?activity_id=${activity_id}`);
+      const response = await fetch(`${API_BASE}/name?activity_id=${encodeURIComponent(activity_id)}`);
       const data = await response.json();
       const tableBody = document.querySelector("#namesTable tbody");
       tableBody.innerHTML = "";
 
       data.names.forEach(name => {
         const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${name.display}</td>
-          <td>${name.name_id}</td>
-          <td>${name.filter}</td>
-        `;
+        [name.display, name.name_id, name.filter].forEach(value => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
         tableBody.appendChild(row);
       });
     }

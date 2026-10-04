@@ -46,27 +46,27 @@
 
         // Fetch names from the backend
         async function fetchNames() {
-            const response = await fetch(`${API_BASE}/name?activity_id=${ACTIVITY_ID}`);
+            const response = await fetch(`${API_BASE}/name?activity_id=${encodeURIComponent(ACTIVITY_ID)}`);
             const data = await response.json();
             names = data.names || [];
         }
 
         // Fetch list of dates from the backend
         async function fetchDates() {
-            const response = await fetch(`${API_BASE}/date?activity_id=${ACTIVITY_ID}`);
+            const response = await fetch(`${API_BASE}/date?activity_id=${encodeURIComponent(ACTIVITY_ID)}`);
             const data = await response.json();
             dates = data.dates || [];
         }
 
         // Fetch logs from the backend
         async function fetchLogs(dateString) {
-            const response = await fetch(`${API_BASE}/log?activity_id=${ACTIVITY_ID}&date=${dateString}`);
+            const response = await fetch(`${API_BASE}/log?activity_id=${encodeURIComponent(ACTIVITY_ID)}&date=${encodeURIComponent(dateString)}`);
             const data = await response.json();
             logs = data.logs || [];
         }
         // Fetch logs for a specific user from the backend
         async function fetchUserLogs(name_id) {
-            const response = await fetch(`${API_BASE}/userlog?activity_id=${ACTIVITY_ID}&name_id=${name_id}`);
+            const response = await fetch(`${API_BASE}/userlog?activity_id=${encodeURIComponent(ACTIVITY_ID)}&name_id=${encodeURIComponent(name_id)}`);
             const data = await response.json();
             logs = data.logs || [];
         }
@@ -117,7 +117,7 @@
                 if (!tr[log.name_id]) {
                     tr[log.name_id] = {
                         name_id: log.name_id,
-                        d: "<a href=\"./history.html?source=user&name_id=" + log.name_id + "\">" + name.display + "</a>",
+                        d: name.display,
                         f: name.filter || "default",
                         in: "-",
                         out: "-"
@@ -205,8 +205,10 @@
                     tr.classList.add(`filter-${row.f}`);
 
                     const tdDisplay = document.createElement("td");
-                    //tdDisplay.textContent = row.d;
-                    tdDisplay.innerHTML = row.d;
+                    const link = document.createElement("a");
+                    link.href = `./history.html?source=user&name_id=${encodeURIComponent(row.name_id)}`;
+                    link.textContent = row.d;
+                    tdDisplay.appendChild(link);
                     tr.appendChild(tdDisplay);
 
                     const tdIn = document.createElement("td");
@@ -262,11 +264,17 @@
 
                 messageEl.textContent = "History Available";
                 await fetchDates(); // populates global 'dates'
-                const htmlString = dates
+                const dateList = document.getElementById('dateList');
+                dateList.textContent = "";
+                dates
                     .sort((a, b) => b.localeCompare(a)) // descending order
-                    .map(date => `<a href="./history.html?date=${date}">${date}</a><br />`)
-                    .join("");
-                document.getElementById('dateList').innerHTML = htmlString;
+                    .forEach(date => {
+                        const link = document.createElement("a");
+                        link.href = `./history.html?date=${encodeURIComponent(date)}`;
+                        link.textContent = date;
+                        dateList.appendChild(link);
+                        dateList.appendChild(document.createElement("br"));
+                    });
             }
         }
 

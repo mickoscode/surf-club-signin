@@ -3,11 +3,28 @@
 // The tests load the real generated pages (web/<site>/*.html) into jsdom, a pure-JavaScript
 // browser DOM, with a fake `fetch` standing in for the API. Nothing touches the network or prod data.
 // Run `./scripts/build-sites.sh` first so the generated pages exist (CI does this).
-const { JSDOM, VirtualConsole } = require("jsdom");
+const { JSDOM, VirtualConsole, requestInterceptor } = require("jsdom");
 const fs = require("node:fs");
 const path = require("node:path");
 
 const WEB_ROOT = path.resolve(__dirname, "..", "..", "web");
+
+const SITE_ORIGIN = "https://sign-in-out.com/";
+
+const CONTENT_TYPES = { ".js": "application/javascript", ".css": "text/css", ".html": "text/html", ".png": "image/png" };
+
+// Answers every request the page makes itself (never passing one through to the network): the page's own
+// <script src> / <link> files are served from web/, and anything else (e.g. unpkg's picnic CSS) is empty.
+const localResources = requestInterceptor((request) => {
+  if (!request.url.startsWith(SITE_ORIGIN)) {
+    return new Response("", { headers: { "Content-Type": "text/css" } });
+  }
+  const file = path.join(WEB_ROOT, decodeURIComponent(new URL(request.url).pathname));
+  if (!fs.existsSync(file)) return new Response("not found", { status: 404 });
+  return new Response(fs.readFileSync(file), {
+    headers: { "Content-Type": CONTENT_TYPES[path.extname(file)] || "application/octet-stream" },
+  });
+});
 
 // A display name that would run script if it were ever put into innerHTML.
 const XSS = '<img src=x onerror="window.__xss=1">';
@@ -35,7 +52,7 @@ const reply = (status, body = {}) => ({ __reply: true, status, body });
  *   api:   (url, { method, body }) => object | reply(status, body)
  *   now:   optional Date; the page's clock is frozen at that instant (use local-time constructors,
  *          e.g. new Date(2025, 7, 10, 8, 30) = Sunday 10 Aug 2025, 08:30, so tests don't depend on timezone)
- * Returns { window, document, errors, alerts, calls, close }.
+ * Returns { window, document, errors, alerts, calls, get, close }.
  *   errors: uncaught page errors   alerts: alert() messages   calls: every API request made
  */
 async function loadPage(file, { query = "", api = () => ({}), now = null } = {}) {
@@ -55,6 +72,7 @@ async function loadPage(file, { query = "", api = () => ({}), now = null } = {})
   const dom = await JSDOM.fromFile(full, {
     url: `https://sign-in-out.com/${dir}/${path.basename(file)}${query}`,
     runScripts: "dangerously",
+    resources: { interceptors: [localResources] },
     pretendToBeVisual: true,
     virtualConsole,
     beforeParse(window) {
@@ -93,7 +111,13 @@ async function loadPage(file, { query = "", api = () => ({}), now = null } = {})
   });
 
   const { window } = dom;
-  return { window, document: window.document, errors, alerts, calls, close: () => window.close() };
+  // External scripts load asynchronously; wait until they have run before handing the page to the test.
+  if (window.document.readyState !== "complete") {
+    await new Promise((resolve) => window.addEventListener("load", resolve));
+  }
+  // get(name): read a top-level const/let from the page (those are not properties of window).
+  const get = (name) => window.eval(name);
+  return { window, document: window.document, errors, alerts, calls, get, close: () => window.close() };
 }
 
 // Type into an input and fire the "input" event, then wait out the page's 300ms debounce.

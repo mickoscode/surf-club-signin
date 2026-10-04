@@ -15,6 +15,12 @@ resource "aws_dynamodb_table" "names" {
   hash_key     = "activity_id"
   range_key    = "name_id"
 
+  deletion_protection_enabled = true
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
   # partition key - because it is listed 1st
   attribute {
     name = "activity_id"
@@ -76,6 +82,12 @@ resource "aws_dynamodb_table" "log" {
   hash_key     = "activity_id"
   range_key    = "log_id"
 
+  deletion_protection_enabled = true
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
   # partition key - because it is listed 1st
   attribute {
     name = "activity_id"
@@ -129,6 +141,12 @@ resource "aws_dynamodb_table" "activity" {
   name         = "activity"
   billing_mode = local.billing_mode
   hash_key     = "name_id"
+
+  deletion_protection_enabled = true
+
+  point_in_time_recovery {
+    enabled = true
+  }
 
   attribute {
     name = "name_id"

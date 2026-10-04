@@ -1,6 +1,6 @@
 variable "lambda_names" {
   type    = list(string)
-  default = ["WriteBulkLogsFunction", "EditNameFunction", "WriteNameFunction", "WriteLogFunction", "FetchLogsFunction", "FetchNamesFunction", "FetchDatesFunction"]
+  default = ["WriteBulkLogsFunction", "EditNameFunction", "WriteNameFunction", "WriteLogFunction", "FetchLogsFunction", "FetchNamesFunction", "FetchDatesFunction", "FetchUserLogsFunction"]
 }
 
 resource "aws_cloudwatch_log_group" "lambda_logs" {
@@ -47,3 +47,10 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
 #to = aws_cloudwatch_log_group.lambda_logs["FetchDatesFunction"]
 #id = "/aws/lambda/FetchDatesFunction"
 #}
+
+# FetchUserLogsFunction was added to the list later; its log group already exists (auto-created
+# on first invocation), so it must be imported once. The block can be removed after the first apply.
+import {
+  to = aws_cloudwatch_log_group.lambda_logs["FetchUserLogsFunction"]
+  id = "/aws/lambda/FetchUserLogsFunction"
+}

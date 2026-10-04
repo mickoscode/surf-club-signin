@@ -86,5 +86,5 @@ variable "monthly_budget_usd" {
 variable "csp_enforce" {
   description = "true = send the Content-Security-Policy header (blocks violations); false = send it as Report-Only (browsers only log violations to the console)."
   type        = bool
-  default     = false
+  default     = true
 }

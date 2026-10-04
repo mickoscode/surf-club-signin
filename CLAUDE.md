@@ -8,7 +8,9 @@ Paperless sign-in/out web app for surf club activities, live at sign-in-out.com.
 
 ## Commands
 
-Generate HTML from templates (must run from inside the site folder — `inject-config.js` resolves paths from `process.cwd()` so symlinked copies work):
+Build and validate every site at once (what CI runs; needs Node): `./scripts/build-sites.sh`. It fails on broken symlinks, missing `config.json` keys, or unreplaced `{{INJECT_*}}` placeholders. Note it regenerates the HTML in every site folder.
+
+Generate HTML for a single site from templates (must run from inside the site folder — `inject-config.js` resolves paths from `process.cwd()` so symlinked copies work):
 
 ```bash
 cd web/main && node ./inject-config.js          # index.html
@@ -36,13 +38,14 @@ Data admin scripts in `scripts/` shell out to the AWS CLI, e.g. `python3 scripts
 - `INJECT_ENABLE_TEST_MODE: "true"` (demo) enables the test/demo behaviour (e.g. bypassing the activity time window).
 - `web/data/` (name admin pages) and `web/age-manager/` are standalone pages, not templated.
 
-Adding a new activity site: populate the `names` table for the new `activity_id`, create `web/<x>/` with `config.json` + snippets + symlinks to `../main/*`, add `<x>` to the `caps` arrays in `.github/workflows/sync-sio.yml` (three places), and to `VALID_ACTIVITY_IDS` in `scripts/import_names_csv.py`.
+Adding a new activity site: populate the `names` table for the new `activity_id`, create `web/<x>/` with `config.json` + snippets + symlinks to `../main/*`, and add `<x>` to `VALID_ACTIVITY_IDS` in `scripts/import_names_csv.py`. CI discovers sites automatically (any `web/<folder>/` with a `config.json`), so no workflow edits are needed.
 
 ### Deployment
 
 All workflows live in `.github/workflows/`; third-party actions are pinned to commit SHAs (Dependabot updates them weekly).
 
-- `sync-sio.yml` (frontend) runs on push to `main`: runs `inject-config.js` for every site, `aws s3 sync`s `web/main` to the bucket root and each other folder to `/<folder>`, then invalidates CloudFront. Merging to main deploys to prod.
+- `sync-sio.yml` (frontend) runs on push to `main`: runs `scripts/build-sites.sh`, `aws s3 sync`s `web/main` to the bucket root and each other folder to `/<folder>`, then invalidates CloudFront (one `/*` invalidation). Merging to main deploys to prod.
+- `web-pr.yml` runs on PRs that touch the frontend and runs the same `scripts/build-sites.sh`; `Validate sites` can be a required check (skipped, not absent, when `web/` is unchanged).
 - `data-to-s3.yml` is a manual sync of `web/data`.
 - `terraform-pr.yml` runs on PRs that touch `terraform/`: `terraform fmt -check`, `validate`, `tflint`, an informational Trivy scan, and a speculative `terraform plan` posted as a PR comment with a link to the full plan in HCP Terraform. Jobs are skipped (not absent) when `terraform/` is unchanged, so `Terraform validate` and `Terraform plan` are required checks on `main`.
 - `terraform-apply.yml` runs on push to `main` when `terraform/` changes (or by manual dispatch): checks, a plan, then an `apply` job gated by the `terraform-production` GitHub Environment, which needs a manual approval. It is skipped when the plan has no changes. Terraform runs remotely in HCP Terraform; GitHub only needs the `TF_API_TOKEN` secret.

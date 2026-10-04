@@ -16,88 +16,58 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     env:
-      bucket-name: sign-in-out.com
-      region: ap-southeast-2
-      cf-distribution-id: E2DY5SRXBRDW31
+      BUCKET: sign-in-out.com
+      AWS_REGION: ap-southeast-2
+      CF_DISTRIBUTION_ID: E2DY5SRXBRDW31
 
     steps:
-      # Step 1: Check out your repository code.
-      # This action makes your code available to the workflow.
       - name: Checkout repository code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # Step 2: Configure AWS credentials.
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      # Generates index/live/history/bulk.html for web/main and every web/<site>/ that has a
+      # config.json, and fails on broken symlinks, missing config keys or unreplaced placeholders.
+      # inject-config.js uses only built-in modules, so no npm install is needed.
+      - name: Build and validate all sites
+        run: ./scripts/build-sites.sh
+
       # Assumes the deploy IAM role via GitHub OIDC (role defined in terraform/iam.tf);
       # no long-lived keys are stored in GitHub secrets.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: arn:aws:iam::722937635825:role/github-deploy-role
-          aws-region: ${{ env.region }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # Step 3: Setup Node.js and inject config into index.html
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '24'
-
-      # Step 4: Install dependencies
-      # not currently needed, as inject-config.js uses nly standard packages.
-      # if more advanced features are needed, a package.json file will be needed to 
-      # list out dependencies. Otherwise, npm install will fail!
-      #- name: Install dependencies
-      #  run: npm install
-
-      # Step 5 - inject config into index.html
-      - name: Inject config into index.html
+      # web/main goes to the bucket root; every other web/ folder (data, age-manager and each
+      # site with a config.json) goes to its own prefix. The root sync excludes those prefixes
+      # so --delete cannot remove them while they are being re-synced.
+      - name: Sync web content to S3
         run: |
-          echo "Injecting config into app: index.html | live.html | history.html | bulk.html"
-          cd ./web/main
-          node ./inject-config.js
-          node ./inject-config.js live
-          node ./inject-config.js history
-          node ./inject-config.js bulk
-
-          caps=("demo" "pink" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
-          for c in "${caps[@]}"; do
-            echo "Injecting config for $c" 
-            cd ../$c
-            node ./inject-config.js
-            node ./inject-config.js live
-            node ./inject-config.js history
-            node ./inject-config.js bulk
+          subdirs=(data age-manager)
+          for cfg in web/*/config.json; do
+            site=$(basename "$(dirname "$cfg")")
+            [ "$site" = main ] || subdirs+=("$site")
           done
 
-      # Step 6: Upload the site content to s3
-      # The 'sync' command only uploads new or changed files.
-      - name: Sync web-content to S3
-        run: |
-          echo "Syncing 'main' folder to s3://${{ env.bucket-name }}"
-          aws s3 sync ./web/main/ s3://${{ env.bucket-name }} --delete
+          excludes=()
+          for d in "${subdirs[@]}"; do excludes+=(--exclude "$d/*"); done
 
-          echo "Syncing 'data' folder to s3://${{ env.bucket-name }}/data"
-          aws s3 sync ./web/data/ s3://${{ env.bucket-name }}/data --delete
+          echo "Syncing web/main to s3://$BUCKET"
+          aws s3 sync ./web/main/ "s3://$BUCKET" --delete "${excludes[@]}"
 
-          echo "Syncing 'age-manger' folder to s3://${{ env.bucket-name }}/age-manager"
-          aws s3 sync ./web/age-manager/ s3://${{ env.bucket-name }}/age-manager --delete
-
-          caps=("demo" "pink" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
-          for c in "${caps[@]}"; do
-            echo "Syncing '$c' folder to s3://${{ env.bucket-name }}/$c"
-            aws s3 sync ./web/$c/ s3://${{ env.bucket-name }}/$c --delete
+          for d in "${subdirs[@]}"; do
+            echo "Syncing web/$d to s3://$BUCKET/$d"
+            aws s3 sync "./web/$d/" "s3://$BUCKET/$d" --delete
           done
 
-      # Step 7: Invalidate CloudFront cache (optional)
+      # "/*" already covers every prefix, so one invalidation is enough.
       - name: Invalidate CloudFront cache
-        run: |
-          echo "Invalidating CloudFront cache"
-          aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/*"
-          aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/data/*"
-          aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/age-manager/*"
-          caps=("demo" "pink" "white" "yellow" "green" "lblue" "purple" "dblue" "red")
-          for c in "${caps[@]}"; do
-            aws cloudfront create-invalidation --distribution-id ${{ env.cf-distribution-id }} --paths "/$c/*"
-          done
-          echo "CloudFront cache invalidated"
+        run: aws cloudfront create-invalidation --distribution-id "$CF_DISTRIBUTION_ID" --paths "/*"

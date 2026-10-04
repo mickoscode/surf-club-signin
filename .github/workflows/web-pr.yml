@@ -1,0 +1,63 @@
+name: Web PR checks
+
+# Builds every site on pull requests that touch the frontend, so a missing config key,
+# broken symlink or unreplaced placeholder is caught before merge (merging to main deploys to prod).
+# Jobs are skipped (not absent) when the frontend is unchanged, so "Validate sites" can be a required check.
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: web-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Detect web changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      web: ${{ steps.diff.outputs.web }}
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check for web changes
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(web/|scripts/build-sites\.sh$|\.github/workflows/(web-pr|sync-sio)\.yml$)'; then
+            echo "web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "web=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  validate-sites:
+    name: Validate sites
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      # inject-config.js uses only built-in modules, so no npm install is needed.
+      - name: Build and validate all sites
+        run: ./scripts/build-sites.sh

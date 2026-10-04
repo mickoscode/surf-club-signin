@@ -12,6 +12,8 @@ Build and validate every site at once (what CI runs; needs Node): `./scripts/bui
 
 Frontend tests (Node 24; loads the generated pages into jsdom against a fake API, no network): run `./scripts/build-sites.sh` first, then `npm ci --ignore-scripts && npm test`. Tests live in `tests/web/` (`helpers.js` has `loadPage`, which fakes `fetch` and can freeze the clock; `fixtures.js` has sample data). CI runs them in `Validate sites`.
 
+Browser tests (`npm run test:browser`, needs `npx playwright install chromium` once): `tests/browser/` loads every page type and the main user flows in real Chromium via Playwright, served by a small local server (`server.js`) that sends the **exact CSP parsed from `terraform/cloudfront.tf`**, with the API and Auth0 faked at the network layer. Every test fails on any CSP violation, script error, failed request or 4xx asset; `policy.test.js` has positive controls (an injected inline script, handler, style and a request to another host must be blocked). Chromium runs with its own sandbox off (it cannot start inside Claude Code's sandbox) and reads the policy from the .tf file, so changing the CSP there is tested automatically; `upgrade-insecure-requests` is the one directive the plain-http test server drops. CI runs these in `Validate sites` too.
+
 Generate HTML for a single site from templates (must run from inside the site folder — `inject-config.js` resolves paths from `process.cwd()` so symlinked copies work):
 
 ```bash

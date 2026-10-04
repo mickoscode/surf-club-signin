@@ -66,6 +66,8 @@ Pages call the real API, so use [./web/demo/](./web/demo/) for manual testing.
 
 npm ci --ignore-scripts           # one-off: installs jsdom, used only by the tests
 npm test                          # frontend tests: real pages in jsdom against a fake API
+npx playwright install chromium   # one-off: the browser for the next command (on Linux add --with-deps)
+npm run test:browser              # real Chromium, with the site's enforced Content-Security-Policy
 ```
 
 Edit the `*.template.html` files and the `.js` files in `web/main/`, never the generated `index.html`, `live.html`, `history.html` or `bulk.html`.
@@ -83,7 +85,7 @@ GitHub Actions workflows are in [./.github/workflows/](./.github/workflows/). Ac
 
 | Workflow | When | What |
 |---|---|---|
-| `web-pr.yml` | PRs touching the frontend | builds all sites and runs the frontend tests |
+| `web-pr.yml` | PRs touching the frontend (or the CSP in `terraform/cloudfront.tf`) | builds all sites, then runs the jsdom tests and the real-browser (Playwright) tests |
 | `sync-sio.yml` | push to `main` | builds the sites, syncs them to S3 and invalidates CloudFront. **Merging to main deploys the website.** |
 | `terraform-pr.yml` | PRs touching `terraform/` | fmt, validate, tflint, Trivy security scan and a plan posted as a PR comment |
 | `terraform-apply.yml` | push to `main` touching `terraform/` | plan, then an apply that waits for manual approval in the `terraform-production` environment |

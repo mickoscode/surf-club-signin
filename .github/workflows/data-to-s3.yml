@@ -1,23 +1,10 @@
-# This workflow is named "Deploy to S3" and will be displayed in the Actions tab.
 name: Data to S3
 
-# This is the trigger that allows you to run the workflow manually from the GitHub UI.
+# Manual "push only web/data" button. sync-sio.yml also syncs web/data on every merge to main;
+# use this when the data pages need redeploying without a full site deploy.
+# Run it from main: the deploy role (terraform/iam.tf) only trusts the main branch.
 on:
   workflow_dispatch:
-    inputs:
-      # You can add a description here that will show up in the GitHub UI
-      bucket-name:
-        description: 'The S3 bucket name to deploy to'
-        required: true
-        default: 'sign-in-out.com'
-      region:
-        description: 'The AWS region of the S3 bucket'
-        required: true
-        default: 'ap-southeast-2'
-      cf-distribution-id:
-        description: 'The ID of the CloudFront distribution to invalidate'
-        required: true
-        default: 'E2DY5SRXBRDW31'
 
 concurrency:
   group: deploy-prod
@@ -27,38 +14,29 @@ permissions:
   id-token: write # request the OIDC token to assume the AWS role
   contents: read
 
-# The 'jobs' section defines the tasks the workflow will perform.
 jobs:
-  # The 'deploy' job will handle the upload to S3.
   deploy:
-    # We use a recent version of the Ubuntu Linux runner.
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
-    # The 'steps' section contains a sequence of tasks to be executed.
+    env:
+      BUCKET: sign-in-out.com
+      AWS_REGION: ap-southeast-2
+      CF_DISTRIBUTION_ID: E2DY5SRXBRDW31
+
     steps:
-      # Check out your repository code so it's available to the workflow.
       - name: Checkout repository code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # Configure AWS credentials.
-      # Assumes the deploy IAM role via GitHub OIDC (role defined in terraform/iam.tf); no stored keys.
+      # Assumes the deploy IAM role via GitHub OIDC; no long-lived keys are stored in GitHub secrets.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: arn:aws:iam::722937635825:role/github-deploy-role
-          aws-region: ${{ github.event.inputs.region }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # Upload content to the S3 bucket.
-      # We use the AWS CLI to perform the synchronization. The 'sync' command
-      # is great for this as it only uploads new or changed files.
-      - name: Sync content to S3/data folder
-        run: |
-          echo "Syncing 'data' folder to s3://${{ github.event.inputs.bucket-name }}/data"
-          aws s3 sync ./web/data/ s3://${{ github.event.inputs.bucket-name }}/data --delete
+      - name: Sync web/data to S3
+        run: aws s3 sync ./web/data/ "s3://$BUCKET/data" --delete
 
-      # Invalidate CloudFront cache (optional)
       - name: Invalidate CloudFront cache
-        run: |
-          echo "Invalidating CloudFront cache"
-          aws cloudfront create-invalidation --distribution-id ${{ github.event.inputs.cf-distribution-id }} --paths "/data/*"
-          echo "CloudFront cache invalidated"
+        run: aws cloudfront create-invalidation --distribution-id "$CF_DISTRIBUTION_ID" --paths "/data/*"

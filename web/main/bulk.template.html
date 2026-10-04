@@ -117,7 +117,20 @@
                 body: JSON.stringify(payload)
             });
 
-            return response.json();
+            // Surface API errors (4xx/5xx, including HTTP 429 when throttled) instead of treating them as success
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (_) {
+                // non-JSON error body
+            }
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error("Too many requests right now, please wait a moment and try again.");
+                }
+                throw new Error(data.message || `Request failed (HTTP ${response.status})`);
+            }
+            return data;
         }
 
         // Initialize the page
@@ -273,6 +286,9 @@
             });
         }
 
+        // Timestamp for the current bulk submission; kept across retries after a failure
+        let bulkDateTime = null;
+
         // Handle form submission
         formEl.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -296,17 +312,25 @@
               return;
             }
 
+            // Reuse the same timestamp when retrying a failed submission, so names that were already
+            // written are recognised as duplicates (log_id includes the timestamp) and skipped, not logged twice.
+            bulkDateTime = bulkDateTime || new Date().toISOString();
+
             try {
-              await addBulkLogs({
+              const result = await addBulkLogs({
                 activity_id: activity_id,
                 direction: direction,
                 name_id_list: listOfNameId,
-                date_time: new Date().toISOString()
+                date_time: bulkDateTime
               });
 
-              messageEl.textContent = "Bulk Submission Completed";
+              const skipped = (result.skipped || []).length;
+              messageEl.textContent = "Bulk Submission Completed" +
+                (skipped ? ` (${skipped} already recorded)` : "");
               submitButton.disabled = true;
             } catch (error) {
+              // button stays enabled so the manager can retry (same timestamp, so already-written names are skipped)
+              messageEl.textContent = "Bulk submission failed: " + error.message;
               alert("Error: " + error.message);
             } finally {
               spinnerEl.classList.add("hidden");

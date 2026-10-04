@@ -8,3 +8,14 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  # Provider and module updates (also refreshes terraform/.terraform.lock.hcl).
+  # The PR gets the usual plan check; review the plan comment before merging.
+  - package-ecosystem: "terraform"
+    directory: "/terraform"
+    schedule:
+      interval: "weekly"
+    groups:
+      terraform:
+        patterns:
+          - "*"

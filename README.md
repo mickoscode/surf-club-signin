@@ -3,16 +3,15 @@ Simple website to enable paperless sign-in-out for surf club activities.
 
 This website is hosted in aws s3 + cloudfront, using API Gateway for serverless backend (lambda & dynamodb).
 
-Currently (mvp release v0.1.0), much of the terraform and website config is hard coded.
-The intention is to clean this up and enable others to re-use this repo.
-
-See [requirements.md](./docs/requirements.md) and [release_plan.md](./docs/release_plan.md) for more context on how this website can be used.
-
 ## Project Context
 
 The aims of this repo/project are:
 1. Build a useful web app that will reduce paper waste when I facilitate surf club activities that require sign in/out.
-1. Practice AI assisted coding - see [ai prompts](./.github/co-pilot/)
+2. Practice AI assisted coding - see [ai prompts](./.github/co-pilot/)
+   - These prompts were used initiatlly in building pre releases via free-tier AI chats, but are effectively relics of 2025.
+   - Claude sonnet was used for all PRs included in v1.0.0
+
+See [requirements.md](./docs/requirements.md) and [release_plan.md](./docs/release_plan.md) for more context on how this website project was initially planned out.
 
 ## How it works
 

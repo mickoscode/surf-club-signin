@@ -1,43 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Log Viewer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logs - data admin</title>
+  <link rel="stylesheet" href="vendor/picnic.min.css">
+  <link rel="stylesheet" href="sign-in-out.css">
   <link rel="stylesheet" href="admin.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-data.png">
 </head>
 <body>
-  <h1>Log Entries for Sorrento Youth Sunday</h1>
-  <button id="fetchLogsButton">Fetch Logs</button>
-  <table id="logTable">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Direction</th>
-        <th>Date/Time</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="menu-header" role="navigation" aria-label="Data admin menu">
+    <div class="menu-left">DATA</div>
+    <div class="menu-cell"><a href="./index.html">home</a></div>
+    <div class="menu-cell"><a href="./names.html">add / edit</a></div>
+    <div class="menu-cell"><a href="./list-names.html">names</a></div>
+    <div class="menu-cell"><a href="./logs.html" aria-current="page">logs</a></div>
+  </div>
+  <main class="container admin-page">
+    <h1>Logs: Sorrento Youth Sunday</h1>
 
-  <hr>
+    <section class="admin-section">
+      <h2>View logs</h2>
+      <p class="admin-lead">Showing <strong id="logDate"></strong>. To look at another day, add <code>?date=YYYY-MM-DD</code> to the address.</p>
+      <div class="admin-toolbar">
+        <button id="fetchLogsButton">Fetch Logs</button>
+        <span id="logsStatus" class="admin-status" role="status">Press Fetch Logs to load the log.</span>
+      </div>
+      <div class="table-scroll">
+        <table id="logTable" class="admin-table">
+          <thead>
+            <tr>
+              <th>Name ID</th>
+              <th>Direction</th>
+              <th>Date / time</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-  <h2>Add Log Entry</h2>
-  <form id="addLogForm">
-    <label for="name_id">Name ID (sanitized)</label>
-    <input type="text" id="name_id" name="name_id" required>
+    <section class="admin-section">
+      <h2>Add log entry</h2>
+      <form id="addLogForm" class="admin-form">
+        <div class="field">
+          <label for="name_id">Name ID (sanitized)</label>
+          <input type="text" id="name_id" name="name_id" required>
+        </div>
 
-    <label for="direction">Direction</label>
-    <select id="direction" name="direction" required>
-      <option value="in">In</option>
-      <option value="out">Out</option>
-    </select>
+        <div class="field">
+          <label for="direction">Direction</label>
+          <select id="direction" name="direction" required>
+            <option value="in">In</option>
+            <option value="out">Out</option>
+          </select>
+        </div>
 
-    <label for="date_time">Date/Time (ISO format)</label>
-    <input type="text" id="date_time" name="date_time" placeholder="2025-08-12T11:15:00Z" required>
+        <div class="field">
+          <label for="date_time">Date / time (ISO format)</label>
+          <input type="text" id="date_time" name="date_time" placeholder="2025-08-12T11:15:00Z" required>
+        </div>
 
-    <button type="submit">Add Log</button>
-  </form>
-
-  <div id="message"></div>
+        <button type="submit">Add Log</button>
+      </form>
+      <p id="message" class="admin-message" role="status"></p>
+    </section>
+  </main>
 
   <script src="logs.js"></script>
 </body>

@@ -1,26 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Names Viewer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Names - data admin</title>
+  <link rel="stylesheet" href="vendor/picnic.min.css">
+  <link rel="stylesheet" href="sign-in-out.css">
   <link rel="stylesheet" href="admin.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-data.png">
 </head>
 <body>
-  <h1>Names for Activity: <span id="activityName"></span></h1>
-  <button id="fetchNamesButton">Fetch Names</button>
-  <div>
-    <a href="./list-names.html?activity_id=sorrento_youth_sunday">youth</a> -
-    <a href="./list-names.html?activity_id=demo">demo</a>
+  <div class="menu-header" role="navigation" aria-label="Data admin menu">
+    <div class="menu-left">DATA</div>
+    <div class="menu-cell"><a href="./index.html">home</a></div>
+    <div class="menu-cell"><a href="./names.html">add / edit</a></div>
+    <div class="menu-cell"><a href="./list-names.html" aria-current="page">names</a></div>
+    <div class="menu-cell"><a href="./logs.html">logs</a></div>
   </div>
-  <table id="namesTable">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Filter</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <main class="container admin-page">
+    <h1>Names for activity: <span id="activityName"></span></h1>
+    <div class="admin-tabs" role="group" aria-label="Choose an activity">
+      <a href="./list-names.html?activity_id=sorrento_youth_sunday">youth</a>
+      <a href="./list-names.html?activity_id=demo">demo</a>
+    </div>
 
+    <div class="admin-toolbar">
+      <button id="fetchNamesButton">Fetch Names</button>
+      <span id="namesStatus" class="admin-status" role="status">Press Fetch Names to load the list.</span>
+    </div>
+    <div class="table-scroll">
+      <table id="namesTable" class="admin-table">
+        <thead>
+          <tr>
+            <th>Display name</th>
+            <th>Name ID</th>
+            <th>Filter</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
 
   <script src="list-names.js"></script>
 </body>

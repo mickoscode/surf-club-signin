@@ -7,11 +7,18 @@ function getUrlParameter(name) {
   return params.get(name);
 }
 
-async function fetchLogs() {
+// The day being shown: ?date=YYYY-MM-DD if given and valid, otherwise the default above.
+function resolveLogDate() {
   const urlDate = getUrlParameter("date");
   if (urlDate && /^\d{4}-\d{2}-\d{2}$/.test(urlDate)) {
     LOG_DATE_STRING = urlDate;
   }
+  return LOG_DATE_STRING;
+}
+document.getElementById("logDate").textContent = resolveLogDate();
+
+async function fetchLogs() {
+  resolveLogDate();
   const response = await fetch(`${API_BASE}/log?activity_id=sorrento_youth_sunday&date=${encodeURIComponent(LOG_DATE_STRING)}`);
   const data = await response.json();
   const tableBody = document.querySelector("#logTable tbody");
@@ -26,6 +33,7 @@ async function fetchLogs() {
     });
     tableBody.appendChild(row);
   });
+  document.getElementById("logsStatus").textContent = `${data.logs.length} entries for ${LOG_DATE_STRING}.`;
 }
 
 async function submitLog(event) {

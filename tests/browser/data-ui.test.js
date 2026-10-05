@@ -159,4 +159,65 @@ describe("data admin pages in a real browser", () => {
       });
     }
   });
+  describe("the three defaults and refreshes", () => {
+    it("adding a name refreshes the Existing names list: the new name appears, once, and again after a second add", async () => {
+      const stored = manyNames.slice(0, 3).map((n) => ({ ...n }));
+      const stateful = (url, { method, body }) => {
+        if (method === "POST") {
+          stored.push({ activity_id: body.activity_id, name_id: body.display.toLowerCase().replace(/ /g, "_"), display: body.display, filter: body.filter });
+          return { message: "ok" };
+        }
+        return url.includes("/name?") ? { names: stored } : {};
+      };
+      const t = await open(browser, site, "/data/names.html", { api: stateful });
+      await t.page.waitForSelector(".name-list li");
+      assert.equal(await t.page.locator(".name-list li").count(), 3);
+
+      await t.page.fill("#addForm [name=display]", "First Newcomer");
+      await t.page.click("#addForm button");
+      await t.page.waitForSelector(".name-list li:nth-child(4)");
+      assert.ok((await t.page.locator(".name-list .name-main").allTextContents()).includes("First Newcomer"));
+      assert.equal(await t.page.locator("#nameListSection").count(), 1);
+      assert.equal(await t.page.locator("#message").textContent(), "name added successfully");
+      assert.match(await t.page.locator("#nameListSection h2").textContent(), /\(4\)$/);
+
+      await t.page.fill("#addForm [name=display]", "Second Newcomer");
+      await t.page.click("#addForm button");
+      await t.page.waitForSelector(".name-list li:nth-child(5)");
+      assert.equal(await t.page.locator("#nameListSection").count(), 1);
+      // the new rows are links to the edit form, like the others
+      await t.page.click(".name-list li:nth-child(5) a");
+      await t.page.waitForSelector("#editForm");
+      assert.match(t.page.url(), /name_id=second_newcomer/);
+      assert.equal(await t.page.inputValue("#editForm [name=name_id]"), "second_newcomer");
+      await expectClean(t);
+      await t.close();
+    });
+
+    it("the names list page defaults to youth, and the tab says so", async () => {
+      const t = await open(browser, site, "/data/list-names.html", { api });
+      assert.equal(await t.page.textContent("#activityName"), "sorrento_youth_sunday");
+      assert.equal(await t.page.locator('.admin-tabs a[aria-current="true"]').textContent(), "youth");
+      await t.page.click("#fetchNamesButton");
+      await t.page.waitForSelector("#namesTable tbody tr");
+      assert.ok(t.calls.some((c) => c.url.includes("activity_id=sorrento_youth_sunday")));
+      assert.ok(t.calls.every((c) => !c.url.includes("activity_id=demo")));
+      await t.close();
+    });
+
+    it("the logs page defaults to today (UTC), shows the day, and fetches that day", async () => {
+      const now = new Date(Date.UTC(2025, 8, 3, 12, 0));
+      const t = await open(browser, site, "/data/logs.html", { api, now });
+      assert.equal(await t.page.textContent("#logDate"), "2025-09-03");
+      await t.page.click("#fetchLogsButton");
+      await t.page.waitForSelector("#logTable tbody tr");
+      assert.ok(t.calls.some((c) => c.url.includes("date=2025-09-03")), JSON.stringify(t.calls.map((c) => c.url)));
+      assert.match(await t.page.textContent("#logsStatus"), /entries for 2025-09-03\.$/);
+      await t.close();
+
+      const explicit = await open(browser, site, "/data/logs.html?date=2025-08-12", { api, now });
+      assert.equal(await explicit.page.textContent("#logDate"), "2025-08-12");
+      await explicit.close();
+    });
+  });
 });

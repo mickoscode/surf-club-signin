@@ -3,8 +3,7 @@ const VALID_ACTIVITY_ID = [
   "sorrento_youth_sunday",
   "demo"
 ];
-//const DEFAULT_ACTIVITY_ID = "sorrento_youth_sunday";
-const DEFAULT_ACTIVITY_ID = "demo";
+const DEFAULT_ACTIVITY_ID = "sorrento_youth_sunday";
 
 const params = new URLSearchParams(window.location.search);
 activity_id = params.get("activity_id");

@@ -132,7 +132,9 @@ function renderAddForm(messageEl) {
       messageEl.textContent = "name added successfully";
     } catch (error) {
       alert("Error: " + error.message);
+      return;
     }
+    await refreshNameList(); // so the new name appears in the list below
   };
 
   container.appendChild(form);
@@ -209,8 +211,18 @@ async function editName(payload) {
   return response.json();
 }
 
+// Fetch the names again and redraw the list. A failure here must not hide the "name added" message.
+async function refreshNameList() {
+  try {
+    renderNameList((await fetchNames(DEFAULT_ACTIVITY_ID)).names || []);
+  } catch (error) {
+    console.error("Could not refresh the list of names:", error);
+  }
+}
+
 function renderNameList(names) {
   const section = document.createElement("section");
+  section.id = "nameListSection";
   section.className = "admin-section";
 
   const heading = document.createElement("h2");
@@ -240,5 +252,9 @@ function renderNameList(names) {
     list.appendChild(item);
   });
   section.appendChild(list);
+
+  // redrawing replaces the list that is already on the page
+  const previous = document.getElementById("nameListSection");
+  if (previous) previous.remove();
   addToPage(section);
 }

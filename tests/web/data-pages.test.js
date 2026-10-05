@@ -110,6 +110,51 @@ describe("data admin pages: status and structure", () => {
     page.close();
   });
 
+  it("names: the Existing names list is refreshed after a name is added (replaced, not duplicated)", async () => {
+    const stored = [...names];
+    const api = (url, init) => {
+      if (init.method === "POST") {
+        stored.push({ activity_id: "sorrento_youth_sunday", name_id: "new_kid", display: init.body.display, filter: init.body.filter });
+        return reply(201, { message: "ok" });
+      }
+      return url.includes("/name?") ? { names: stored } : {};
+    };
+    const page = await loadPage("data/names.html", { api });
+    const form = await until(() => page.document.getElementById("addForm"), "add form");
+    await until(() => page.document.querySelectorAll(".name-list li").length === 3, "initial list");
+    addFormFieldShortcuts(form);
+    form.elements.display.value = "New Kid";
+    submit(page, form);
+
+    await until(() => page.document.querySelectorAll(".name-list li").length === 4, "refreshed list");
+    assert.equal(page.document.querySelectorAll("#nameListSection").length, 1, "the old list must be replaced");
+    assert.ok([...page.document.querySelectorAll(".name-list .name-main")].some((n) => n.textContent === "New Kid"));
+    assert.ok([...page.document.querySelectorAll("h2")].some((h) => h.textContent === "Existing names: sorrento_youth_sunday (4)"));
+    assert.equal(page.document.getElementById("message").textContent, "name added successfully");
+    // one list fetch on load, one after adding
+    assert.equal(page.calls.filter((c) => c.method === "GET" && c.url.includes("/name?")).length, 2);
+    page.close();
+  });
+
+  it("names: if the refresh fails, the success message stays and the old list is kept", async () => {
+    let failRefresh = false;
+    const api = (url, init) => {
+      if (init.method === "POST") { failRefresh = true; return reply(201, { message: "ok" }); }
+      if (failRefresh) throw new Error("network down");
+      return readApi(url);
+    };
+    const page = await loadPage("data/names.html", { api });
+    const form = await until(() => page.document.getElementById("addForm"), "add form");
+    await until(() => page.document.querySelectorAll(".name-list li").length === 3, "initial list");
+    addFormFieldShortcuts(form);
+    submit(page, form);
+    await until(() => page.document.getElementById("message").textContent === "name added successfully", "message");
+    await new Promise((r) => setTimeout(r, 100));
+    assert.equal(page.document.querySelectorAll(".name-list li").length, 3);
+    assert.equal(page.document.querySelectorAll("#nameListSection").length, 1);
+    page.close();
+  });
+
   it("list-names: the table headings match the three columns it fills, and the current activity is marked", async () => {
     const page = await loadPage("data/list-names.html", { query: "?activity_id=sorrento_youth_sunday", api: readApi });
     const headings = [...page.document.querySelectorAll("#namesTable th")].map((th) => th.textContent);
@@ -125,20 +170,41 @@ describe("data admin pages: status and structure", () => {
     page.close();
   });
 
-  it("list-names: the demo tab is current for ?activity_id=demo, and an unknown activity falls back as before", async () => {
+  it("list-names: defaults to youth; the demo tab is current for ?activity_id=demo; an unknown activity falls back to youth", async () => {
+    const current = (page) => [...page.document.querySelectorAll('.admin-tabs a[aria-current="true"]')].map((a) => a.textContent);
+
+    const none = await loadPage("data/list-names.html", { api: readApi });
+    assert.equal(none.document.getElementById("activityName").textContent, "sorrento_youth_sunday");
+    assert.deepEqual(current(none), ["youth"]);
+    none.document.getElementById("fetchNamesButton").click();
+    await until(() => none.calls.length > 0, "request");
+    assert.ok(none.calls[0].url.includes("activity_id=sorrento_youth_sunday"), none.calls[0].url);
+    none.close();
+
     const demo = await loadPage("data/list-names.html", { query: "?activity_id=demo", api: readApi });
-    assert.deepEqual([...demo.document.querySelectorAll('.admin-tabs a[aria-current="true"]')].map((a) => a.textContent), ["demo"]);
+    assert.equal(demo.document.getElementById("activityName").textContent, "demo");
+    assert.deepEqual(current(demo), ["demo"]);
     demo.close();
+
     const unknown = await loadPage("data/list-names.html", { query: "?activity_id=nope", api: readApi });
-    assert.equal(unknown.document.getElementById("activityName").textContent, "demo"); // existing default
-    assert.deepEqual([...unknown.document.querySelectorAll('.admin-tabs a[aria-current="true"]')].map((a) => a.textContent), ["demo"]);
+    assert.equal(unknown.document.getElementById("activityName").textContent, "sorrento_youth_sunday");
+    assert.deepEqual(current(unknown), ["youth"]);
     unknown.close();
   });
 
-  it("logs: shows which day is being shown (the default, or ?date=), and how many entries were loaded", async () => {
-    const dflt = await loadPage("data/logs.html", { api: readApi });
-    assert.equal(dflt.document.getElementById("logDate").textContent, "2025-08-12"); // existing default
+  it("logs: shows which day is being shown (today by default, or ?date=), and how many entries were loaded", async () => {
+    // Today is the UTC date, as on the live and bulk pages (log ids are UTC timestamps).
+    const NOW = new Date(Date.UTC(2025, 8, 3, 12, 0)); // 3 Sep 2025 12:00 UTC
+    const dflt = await loadPage("data/logs.html", { api: readApi, now: NOW });
+    assert.equal(dflt.document.getElementById("logDate").textContent, "2025-09-03");
+    dflt.document.getElementById("fetchLogsButton").click();
+    await until(() => dflt.calls.length > 0, "request");
+    assert.ok(dflt.calls[0].url.includes("date=2025-09-03"), dflt.calls[0].url);
     dflt.close();
+
+    const lateNight = await loadPage("data/logs.html", { api: readApi, now: new Date(Date.UTC(2025, 8, 3, 23, 59)) });
+    assert.equal(lateNight.document.getElementById("logDate").textContent, "2025-09-03"); // still the UTC day
+    lateNight.close();
 
     const page = await loadPage("data/logs.html", { query: "?date=2025-09-01", api: readApi });
     assert.equal(page.document.getElementById("logDate").textContent, "2025-09-01");
@@ -148,8 +214,8 @@ describe("data admin pages: status and structure", () => {
     assert.ok(page.calls.some((c) => c.url.includes("date=2025-09-01")));
     page.close();
 
-    const bad = await loadPage("data/logs.html", { query: "?date=not-a-date", api: readApi });
-    assert.equal(bad.document.getElementById("logDate").textContent, "2025-08-12"); // invalid dates are ignored, as before
+    const bad = await loadPage("data/logs.html", { query: "?date=not-a-date", api: readApi, now: NOW });
+    assert.equal(bad.document.getElementById("logDate").textContent, "2025-09-03"); // invalid dates are ignored: today
     bad.close();
   });
 

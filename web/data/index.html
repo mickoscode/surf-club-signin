@@ -1,26 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>data - sign-in-out</title>
-    <link rel="stylesheet" href="vendor/picnic.min.css">
-    <link rel="stylesheet" href="index.css">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-data.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data admin - data admin</title>
+  <link rel="stylesheet" href="vendor/picnic.min.css">
+  <link rel="stylesheet" href="sign-in-out.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-data.png">
 </head>
 <body>
-<p>
-    <button id="login">Log In</button>
-    <button id="logout">Log Out</button>
-    <span id="user-info"></span>
+  <div class="menu-header" role="navigation" aria-label="Data admin menu">
+    <div class="menu-left">DATA</div>
+    <div class="menu-cell"><a href="./index.html" aria-current="page">home</a></div>
+    <div class="menu-cell"><a href="./names.html">add / edit</a></div>
+    <div class="menu-cell"><a href="./list-names.html">names</a></div>
+    <div class="menu-cell"><a href="./logs.html">logs</a></div>
+  </div>
+  <main class="container admin-page">
+    <h1>Data admin</h1>
+    <p class="admin-lead">Manage the names that are allowed to sign in, and look at the sign-in and sign-out logs.</p>
 
-    <br />
-    <a href="./names.html">add / edit name</a><br />
-    <a href="./list-names.html">list all names</a><br />
-    <a href="./logs.html">list all logs</a><br />
-</p> 
+    <div class="admin-account">
+      <button id="login">Log In</button>
+      <button id="logout">Log Out</button>
+      <span id="user-info"></span>
+    </div>
+
+    <ul class="admin-cards">
+      <li><a href="./names.html"><strong>Add / edit names</strong>Add a name, or choose a name from the list to change it.</a></li>
+      <li><a href="./list-names.html"><strong>Names</strong>See every name for an activity (youth or demo).</a></li>
+      <li><a href="./logs.html"><strong>Logs</strong>View the sign-in and sign-out log for a day, or add a missing entry.</a></li>
+    </ul>
+
+    <h2>Other pages</h2>
+    <ul class="admin-links">
+      <li><a href="../index.html">Youth sign-in site</a></li>
+      <li><a href="../age-manager/">Age manager links</a></li>
+      <li><a href="../demo/">Demo site</a></li>
+    </ul>
+  </main>
   <script src="vendor/auth0-spa-js.production.js"></script>
   <script src="index.js"></script>
-
 </body>
 </html>

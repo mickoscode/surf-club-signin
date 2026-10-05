@@ -1,5 +1,5 @@
 const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
-let LOG_DATE_STRING = "2025-08-12"; // Example date, can be dynamic
+let LOG_DATE_STRING = new Date().toISOString().split("T")[0]; // Default to today (the UTC date, as on the live and bulk pages)
 
 // Utility to parse URL parameters
 function getUrlParameter(name) {
@@ -7,11 +7,18 @@ function getUrlParameter(name) {
   return params.get(name);
 }
 
-async function fetchLogs() {
+// The day being shown: ?date=YYYY-MM-DD if given and valid, otherwise today.
+function resolveLogDate() {
   const urlDate = getUrlParameter("date");
   if (urlDate && /^\d{4}-\d{2}-\d{2}$/.test(urlDate)) {
     LOG_DATE_STRING = urlDate;
   }
+  return LOG_DATE_STRING;
+}
+document.getElementById("logDate").textContent = resolveLogDate();
+
+async function fetchLogs() {
+  resolveLogDate();
   const response = await fetch(`${API_BASE}/log?activity_id=sorrento_youth_sunday&date=${encodeURIComponent(LOG_DATE_STRING)}`);
   const data = await response.json();
   const tableBody = document.querySelector("#logTable tbody");
@@ -26,6 +33,7 @@ async function fetchLogs() {
     });
     tableBody.appendChild(row);
   });
+  document.getElementById("logsStatus").textContent = `${data.logs.length} entries for ${LOG_DATE_STRING}.`;
 }
 
 async function submitLog(event) {

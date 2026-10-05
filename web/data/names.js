@@ -22,11 +22,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+// Everything this page builds goes into #content (below the menu and the status message).
+function addToPage(element) {
+  document.getElementById("content").appendChild(element);
+}
+
 // Form-building helpers. Controls are created with DOM APIs (not innerHTML) because the edit form is
 // populated from URL query parameters and API data, which must never be interpreted as HTML.
 function createSelect(name, options, selected) {
   const select = document.createElement("select");
   select.name = name;
+  select.id = `field-${name}`;
   options.forEach(optionValue => {
     const option = document.createElement("option");
     option.value = optionValue;
@@ -41,20 +47,36 @@ function createTextInput(name, value) {
   const input = document.createElement("input");
   input.type = "text";
   input.name = name;
+  input.id = `field-${name}`;
   input.value = value;
   input.maxLength = 50;
   return input;
 }
 
-// label + control + line break, as in the original markup
-function appendField(form, labelText, control) {
+// A labelled field: the label is tied to the control (so clicking it focuses the control, and screen readers
+// announce it), with optional help text underneath.
+function appendField(form, labelText, control, hintText) {
+  const field = document.createElement("div");
+  field.className = "field";
+
   const label = document.createElement("label");
+  label.htmlFor = control.id;
   label.textContent = labelText;
-  form.appendChild(label);
-  form.appendChild(document.createTextNode(" "));
-  form.appendChild(control);
-  form.appendChild(document.createElement("br"));
+  field.appendChild(label);
+  field.appendChild(control);
+
+  if (hintText) {
+    const hint = document.createElement("p");
+    hint.className = "hint";
+    hint.id = `${control.id}-hint`;
+    hint.textContent = hintText;
+    control.setAttribute("aria-describedby", hint.id);
+    field.appendChild(hint);
+  }
+  form.appendChild(field);
 }
+
+const DISPLAY_HINT = "Letters, numbers and spaces only (anything else is removed). 50 characters at most.";
 
 function createButton(text) {
   const button = document.createElement("button");
@@ -79,18 +101,20 @@ async function fetchName(activity_id, name_id, filter) {
 }
 
 function renderAddForm(messageEl) {
-  const container = document.createElement("div");
+  const container = document.createElement("section");
+  container.className = "admin-section";
 
   const heading = document.createElement("h2");
-  heading.textContent = "Add Name";
+  heading.textContent = "Add a name";
   container.appendChild(heading);
 
   const form = document.createElement("form");
   form.id = "addForm";
+  form.className = "admin-form";
 
-  appendField(form, "Activity ID:", createSelect("activity_id", VALID_ACTIVITY_ID));
-  appendField(form, "Filter:", createSelect("filter", VALID_FILTER));
-  appendField(form, "Display Name:", createTextInput("display", ""));
+  appendField(form, "Activity ID", createSelect("activity_id", VALID_ACTIVITY_ID));
+  appendField(form, "Filter (age group)", createSelect("filter", VALID_FILTER));
+  appendField(form, "Display name", createTextInput("display", ""), DISPLAY_HINT);
   form.appendChild(createButton("Add"));
 
   form.onsubmit = async (e) => {
@@ -108,11 +132,13 @@ function renderAddForm(messageEl) {
       messageEl.textContent = "name added successfully";
     } catch (error) {
       alert("Error: " + error.message);
+      return;
     }
+    await refreshNameList(); // so the new name appears in the list below
   };
 
   container.appendChild(form);
-  document.body.appendChild(container);
+  addToPage(container);
 }
 
 async function addName(payload) {
@@ -126,23 +152,31 @@ async function addName(payload) {
 
 async function renderEditForm(activity_id, name_id, filter) {
   const display = await fetchName(activity_id, name_id, filter);
-  const container = document.createElement("div");
+  const container = document.createElement("section");
+  container.className = "admin-section";
+
+  const back = document.createElement("a");
+  back.className = "back-link";
+  back.href = "./names.html";
+  back.textContent = "\u2190 Back to all names";
+  container.appendChild(back);
 
   const heading = document.createElement("h2");
-  heading.textContent = "Edit Name";
+  heading.textContent = "Edit name";
   container.appendChild(heading);
 
   const form = document.createElement("form");
   form.id = "editForm";
+  form.className = "admin-form";
 
   const nameIdInput = document.createElement("input");
   nameIdInput.type = "hidden";
   nameIdInput.name = "name_id";
   nameIdInput.value = name_id;
   form.appendChild(nameIdInput);
-  appendField(form, "Activity ID:", createSelect("activity_id", VALID_ACTIVITY_ID, activity_id));
-  appendField(form, "Filter:", createSelect("filter", VALID_FILTER, filter));
-  appendField(form, "Display Name:", createTextInput("display", display));
+  appendField(form, "Activity ID", createSelect("activity_id", VALID_ACTIVITY_ID, activity_id));
+  appendField(form, "Filter (age group)", createSelect("filter", VALID_FILTER, filter));
+  appendField(form, "Display name", createTextInput("display", display), `${DISPLAY_HINT} Name ID: ${name_id}.`);
   form.appendChild(createButton("Update"));
 
   form.onsubmit = async (e) => {
@@ -165,7 +199,7 @@ async function renderEditForm(activity_id, name_id, filter) {
   };
 
   container.appendChild(form);
-  document.body.appendChild(container);
+  addToPage(container);
 }
 
 async function editName(payload) {
@@ -177,19 +211,50 @@ async function editName(payload) {
   return response.json();
 }
 
+// Fetch the names again and redraw the list. A failure here must not hide the "name added" message.
+async function refreshNameList() {
+  try {
+    renderNameList((await fetchNames(DEFAULT_ACTIVITY_ID)).names || []);
+  } catch (error) {
+    console.error("Could not refresh the list of names:", error);
+  }
+}
+
 function renderNameList(names) {
+  const section = document.createElement("section");
+  section.id = "nameListSection";
+  section.className = "admin-section";
+
   const heading = document.createElement("h2");
-  heading.textContent = "Existing Names";
-  document.body.appendChild(heading);
+  heading.textContent = `Existing names: ${DEFAULT_ACTIVITY_ID} (${names.length})`;
+  section.appendChild(heading);
+
+  const hint = document.createElement("p");
+  hint.className = "hint";
+  hint.textContent = "Choose a name to edit it.";
+  section.appendChild(hint);
 
   const list = document.createElement("ul");
+  list.className = "name-list";
   names.forEach(n => {
     const item = document.createElement("li");
     const link = document.createElement("a");
     link.href = `./names.html?activity_id=${encodeURIComponent(n.activity_id)}&name_id=${encodeURIComponent(n.name_id)}&filter=${encodeURIComponent(n.filter)}`;
-    link.textContent = `${n.activity_id} | ${n.display} | ${n.filter}`;
+
+    // display name, then the activity it belongs to, then its filter
+    [["name-main", n.display], ["name-sub", n.activity_id], ["chip", n.filter]].forEach(([className, text]) => {
+      const part = document.createElement("span");
+      part.className = className;
+      part.textContent = text;
+      link.appendChild(part);
+    });
     item.appendChild(link);
     list.appendChild(item);
   });
-  document.body.appendChild(list);
+  section.appendChild(list);
+
+  // redrawing replaces the list that is already on the page
+  const previous = document.getElementById("nameListSection");
+  if (previous) previous.remove();
+  addToPage(section);
 }

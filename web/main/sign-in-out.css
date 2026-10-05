@@ -12,12 +12,20 @@
     --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* picnic sets html and body to height: 100% (exactly one screen). On a page taller than the screen that stopped the
+   background gradient after the first screen and started it again below (a visible seam), so let them grow. */
+html {
+    height: auto;
+}
+
 body {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    height: auto;
     min-height: 100vh;
-    background: var(--background-gradient);
+    background: var(--background-gradient) no-repeat;
+    background-color: var(--secondary-color);
     color: var(--menu-text-color);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;

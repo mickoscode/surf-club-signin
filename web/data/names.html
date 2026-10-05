@@ -1,15 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>names - sign-in-out</title>
+  <title>Add / edit names - data admin</title>
   <link rel="stylesheet" href="vendor/picnic.min.css">
+  <link rel="stylesheet" href="sign-in-out.css">
+  <link rel="stylesheet" href="admin.css">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-data.png">
   <script src="names.js"></script>
 </head>
 <body>
-  <h1 id="message"></h1>
-  <h1>Manage <a href="./names.html">Names</a></h1>
+  <div class="menu-header" role="navigation" aria-label="Data admin menu">
+    <div class="menu-left">DATA</div>
+    <div class="menu-cell"><a href="./index.html">home</a></div>
+    <div class="menu-cell"><a href="./names.html" aria-current="page">add / edit</a></div>
+    <div class="menu-cell"><a href="./list-names.html">names</a></div>
+    <div class="menu-cell"><a href="./logs.html">logs</a></div>
+  </div>
+  <main class="container admin-page">
+    <h1>Add / edit names</h1>
+    <p id="message" class="admin-message" role="status"></p>
+    <div id="content"></div>
+  </main>
 </body>
 </html>

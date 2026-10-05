@@ -3,8 +3,7 @@ const VALID_ACTIVITY_ID = [
   "sorrento_youth_sunday",
   "demo"
 ];
-//const DEFAULT_ACTIVITY_ID = "sorrento_youth_sunday";
-const DEFAULT_ACTIVITY_ID = "demo";
+const DEFAULT_ACTIVITY_ID = "sorrento_youth_sunday";
 
 const params = new URLSearchParams(window.location.search);
 activity_id = params.get("activity_id");
@@ -12,6 +11,9 @@ if (!VALID_ACTIVITY_ID.includes(activity_id)) {
   activity_id = DEFAULT_ACTIVITY_ID;
 }
 document.getElementById("activityName").textContent = activity_id;
+document.querySelectorAll(".admin-tabs a").forEach(tab => {
+  if (new URL(tab.href).searchParams.get("activity_id") === activity_id) tab.setAttribute("aria-current", "true");
+});
 
 async function fetchNames() {
   const response = await fetch(`${API_BASE}/name?activity_id=${encodeURIComponent(activity_id)}`);
@@ -28,6 +30,7 @@ async function fetchNames() {
     });
     tableBody.appendChild(row);
   });
+  document.getElementById("namesStatus").textContent = `${data.names.length} names loaded for ${activity_id}.`;
 }
 
 document.getElementById("fetchNamesButton").addEventListener("click", fetchNames);

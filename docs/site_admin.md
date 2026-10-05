@@ -10,6 +10,8 @@ Some features can be accessed/tested outside the window via:
 
 Full data deletion & import (needed at the start of each season) - See helper scripts in scripts folder :)
 
+Data admin home (menu to all of the pages below) - [sign-in-out.com/data/](https://sign-in-out.com/data/)
+
 Ad-hoc data admin (e.g. adding a missing name, correcting an existing name) - [sign-in-out.com/data/names.html](https://sign-in-out.com/data/names.html)
 
 Viewing all names via front end - [sign-in-out.com/data/list-names.html](https://sign-in-out.com/data/list-names.html)

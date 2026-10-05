@@ -25,11 +25,13 @@ web/main/index.html
 web/main/live.html
 web/main/history.html
 web/main/bulk.html
+web/main/about.html
 
 web/demo/index.html
 web/demo/live.html
 web/demo/history.html
 web/demo/bulk.html
+web/demo/about.html
 
 
 # frontend test dependencies

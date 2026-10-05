@@ -11,7 +11,7 @@
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-pages=(index live history bulk)
+pages=(index live history bulk about)
 required_keys=(INJECT_PAGE_TITLE INJECT_API_URL INJECT_FAVICON INJECT_ACTIVITY_ID INJECT_ENABLE_TEST_MODE)
 failed=0
 

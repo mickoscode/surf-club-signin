@@ -21,23 +21,24 @@ browser ──> CloudFront ──> S3 (static html/js/css)
    └──────> API Gateway (HTTP API, throttled) ──> Python Lambdas ──> DynamoDB (names, log, activity)
 ```
 
-- Each activity (e.g. a surf club age group) is a "site": a folder under [./web/](./web/) with its own `config.json` and menu, sharing one set of page templates.
+- Youth Sunday sessions (`sorrento_youth_sunday`) are the only active team and are served from the top level of the domain. A **demo** site (`/demo/`, with its own demo data) is used for testing and for showing age managers how the site works.
+- Each of these is a "site": a folder under [./web/](./web/) with its own `config.json` and menu, sharing one set of page templates. Adding another team later is a folder copy (see [site_admin.md](./docs/site_admin.md)).
 - People sign in/out on `index.html` during the activity window. Leaders use `bulk.html` (sign in/out a whole group at once), `live.html` (a live count of who has signed in) and `history.html`.
 - The sign-in times are currently hard coded in the pages (08:00 in, 09:30 out, 11:00 end, Sundays only); the demo site ignores them in test mode.
 
 ## Repo Overview
 
-[./web/main/](./web/main/) - the shared templates for every site:
+[./web/main/](./web/main/) - the Youth site (served at the root) and the shared templates for every site:
 - [config.json](./web/main/config.json) - values injected into the html templates (page title, API URL, favicon, activity id, test mode)
 - [header.snippet](./web/main/header.snippet) / [header_leader.snippet](./web/main/header_leader.snippet) - the menu for users and for leaders; each site can have its own copy
 - `index.template.html`, `bulk.template.html`, `live.template.html`, `history.template.html` - [inject-config.js](./web/main/inject-config.js) turns these into the `.html` pages (the generated pages are not committed). The templates contain markup only; the page logic is in [common.js](./web/main/common.js) (shared helpers) and one script per page (`index.js`, `bulk.js`, `live.js`, `history.js`)
 - [about.html](./web/main/about.html), [sign-in-out.css](./web/main/sign-in-out.css) - shared as-is
 
-Other site folders: [./web/demo/](./web/demo/) plus the age groups `pink`, `white`, `yellow`, `green`, `lblue`, `purple`, `dblue` and `red`:
+[./web/demo/](./web/demo/) - the demo site:
 - Everything except `config.json` and the two `.snippet` files (templates, scripts, CSS) is a symbolic link back to [./web/main/](./web/main/)
 - `"INJECT_ENABLE_TEST_MODE": "true"` in config.json (demo only) enables the test/demo functionality, e.g. `index.html?test=in` or `?test=out`. Use the demo site so you don't touch real data.
 
-Standalone pages (not templated): [./web/data/](./web/data/) (manage names and view logs) and [./web/age-manager/](./web/age-manager/) (one page linking to each age group's bulk and single sign-in).
+Standalone pages (not templated): [./web/data/](./web/data/) (manage names and view logs) and [./web/age-manager/](./web/age-manager/) (a links page for age managers: the Youth and demo bulk and single sign-in pages).
 
 > **Security note:** the API has no authentication, so the admin pages in `web/data/` are only hidden, not protected. This is a known, accepted risk for now.
 

@@ -13,10 +13,10 @@ So hopefully this simple trust model can provide a useful service.
 
 ## Website Primary Functionality - User POV
 
-Nippers/Youth need to sign in and out each Sunday morning. 
+Youth need to sign in and out each Sunday morning. 
 A parent may want to do this on their child's behalf (e.g. child has no phone).
 
-Nippers/Youth should only sign 1 person in/out (i.e. themself).
+Youth should only sign 1 person in/out (i.e. themself).
 A parent may have more than 1 child they need to sign in/out (not supported currently, see age manager/leader for multi-sign in/out)
 
 Site should automatically display sign in / out form, based on the time, otherwise display "no activity found" / "sign in starts at hh:mm" / "sign out ended at hh:mm"

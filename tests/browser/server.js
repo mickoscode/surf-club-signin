@@ -2,7 +2,7 @@
 //
 // The Content-Security-Policy is read from terraform/cloudfront.tf (not copied here), so these tests always
 // run against the policy that production sends. Layout mirrors the deployed bucket: web/main is the site root,
-// and every other folder under web/ (demo, pink, data, age-manager, ...) is served at /<folder>/.
+// and every other folder under web/ (demo, data, age-manager) is served at /<folder>/.
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");

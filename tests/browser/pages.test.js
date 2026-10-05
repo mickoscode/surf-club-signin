@@ -22,7 +22,7 @@ describe("every page loads cleanly under the enforced policy", () => {
     ["history: person", "/demo/history.html?source=user&name_id=alice", "#message:has-text('History for Alice Smith')"],
     ["about", "/demo/about.html", "body"],
     ["age-manager", "/age-manager/", "a[href*='bulk.html']"],
-    ["root site (web/main)", "/index.html", "body"],
+    ["youth site (root)", "/index.html", "body"],
     ["data: login stub", "/data/index.html", "#login"],
     ["data: names", "/data/names.html", "#addForm"],
     ["data: list names", "/data/list-names.html", "#fetchNamesButton"],
@@ -38,15 +38,15 @@ describe("every page loads cleanly under the enforced policy", () => {
     });
   }
 
-  it("a real age-group site (pink) on a Sunday morning shows Sign In", async () => {
-    const t = await open(browser, site, "/pink/index.html", { now: SUNDAY_0830 });
+  it("the youth site (root) on a Sunday morning shows Sign In", async () => {
+    const t = await open(browser, site, "/index.html", { now: SUNDAY_0830 });
     await t.page.waitForSelector("#submitButton:has-text('Sign In')", { timeout: 5000 });
     await expectClean(t);
     await t.close();
   });
 
-  it("a real age-group site on a weekday says when the next session is", async () => {
-    const t = await open(browser, site, "/pink/index.html", { now: new Date(2025, 7, 13, 9, 0) });
+  it("the youth site on a weekday says when the next session is", async () => {
+    const t = await open(browser, site, "/index.html", { now: new Date(2025, 7, 13, 9, 0) });
     await t.page.waitForSelector("#message:has-text('The next session is 17 Aug 2025')", { timeout: 5000 });
     await expectClean(t);
     await t.close();

@@ -14,15 +14,7 @@ from typing import List
 
 # Constants
 VALID_ACTIVITY_IDS = [
-    "sorrento_pink_sunday", 
-    "sorrento_white_sunday", 
-    "sorrento_yellow_sunday", 
-    "sorrento_green_sunday", 
-    "sorrento_lblue_sunday", 
-    "sorrento_purple_sunday",
-    "sorrento_dblue_sunday", 
-    "sorrento_red_sunday", 
-    "sorrento_youth_sunday", 
+    "sorrento_youth_sunday",
     "demo"
 ]
 TABLE_NAME = "names"

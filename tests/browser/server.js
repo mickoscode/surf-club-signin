@@ -35,6 +35,11 @@ function readPolicy() {
 
 const policy = readPolicy();
 
+// The page CloudFront serves, with status 404, for any address that does not exist. Read from the same file.
+const errorPagePath = fs.readFileSync(path.join(ROOT, "terraform", "cloudfront.tf"), "utf8")
+  .match(/custom_error_response\s*\{[^}]*?error_code\s*=\s*404[^}]*?response_page_path\s*=\s*"([^"]+)"/)?.[1];
+if (!errorPagePath) throw new Error("Could not find the 404 custom_error_response in terraform/cloudfront.tf");
+
 // upgrade-insecure-requests only matters for https transport; this server is plain http on 127.0.0.1, where
 // it would rewrite every request to https and break the page, so it is the one directive left out here.
 const cspHeader = policy.directives.filter((d) => d !== "upgrade-insecure-requests").join("; ");
@@ -52,12 +57,15 @@ function resolveFile(urlPath) {
 // Returns { url, close } for a server on a free port.
 async function startServer() {
   const server = http.createServer((req, res) => {
-    const file = resolveFile(req.url);
+    let status = 200;
+    let file = resolveFile(req.url);
     if (!file) {
-      res.writeHead(404, { "Content-Type": "text/plain" }).end("not found");
-      return;
+      // like CloudFront's custom error response: the error page's content, with the 404 status
+      status = 404;
+      file = resolveFile(errorPagePath);
+      if (!file) { res.writeHead(404, { "Content-Type": "text/plain" }).end("not found"); return; }
     }
-    res.writeHead(200, {
+    res.writeHead(status, {
       "Content-Type": TYPES[path.extname(file)] || "application/octet-stream",
       "Content-Security-Policy": cspHeader,
       "X-Content-Type-Options": "nosniff",
@@ -74,4 +82,4 @@ async function startServer() {
   };
 }
 
-module.exports = { startServer, policy, cspHeader };
+module.exports = { startServer, policy, cspHeader, errorPagePath };

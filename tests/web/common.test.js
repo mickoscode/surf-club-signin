@@ -166,3 +166,21 @@ describe("common.js: names, logs and filters", () => {
     page.close();
   });
 });
+
+describe("common.js: choosing the menu", () => {
+  it("getMenuSource accepts user and leader, and otherwise uses the page's default", async () => {
+    for (const [query, defaultSource, expected] of [
+      ["", "user", "user"],
+      ["", "leader", "leader"],
+      ["?source=user", "leader", "user"],
+      ["?source=leader", "user", "leader"],
+      ["?source=admin", "user", "user"],
+      ["?source=", "leader", "leader"],
+      ["?source=USER", "leader", "leader"], // exact match only
+    ]) {
+      const page = await open("main/index.html", { query });
+      assert.equal(page.window.getMenuSource(defaultSource), expected, `${query || "(none)"} with default ${defaultSource}`);
+      page.close();
+    }
+  });
+});

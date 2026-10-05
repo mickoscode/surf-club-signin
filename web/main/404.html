@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>page not found - sign-in-out</title>
+    <!--
+        This is the page CloudFront shows for any address that does not exist (see custom_error_response in
+        terraform/cloudfront.tf), with HTTP status 404. It can be requested at ANY depth (/a/b/c), so every
+        relative URL on it (CSS, favicon, scripts, the menu and its links) would resolve against the missing
+        address and fail. <base href="/"> makes them all resolve from the site root instead.
+        (When opened straight from disk, e.g. with Live Server, the root is the wrong place: use the deployed site.)
+    -->
+    <base href="/">
+    <link rel="stylesheet" href="vendor/picnic.min.css">
+    <link rel="stylesheet" href="sign-in-out.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="faviconV2.png">
+</head>
+<body>
+    <div id="header-container"></div>
+    <div class="container">
+    <div class="aboutpage">
+        <h1>Page not found</h1>
+        <p>
+            Sorry, there is nothing at this address.<br />
+            Please use the menu above, or go to the <a href="index.html">sign-in page</a>.<br />
+            <br />
+            If you followed a link or QR code to get here, the page may have moved. Please speak with an Age Manager.<br />
+        </p>
+    </div>
+    </div>
+    <script src="common.js"></script>
+    <script src="static-page.js"></script>
+</body>
+</html>

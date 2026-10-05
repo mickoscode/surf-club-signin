@@ -152,7 +152,7 @@ resource "aws_cloudfront_distribution" "sio" {
     error_caching_min_ttl = 10
     error_code            = 404
     response_code         = 404
-    response_page_path    = "/about.html"
+    response_page_path    = "/404.html"
   }
 
   restrictions {

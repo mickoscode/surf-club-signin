@@ -21,10 +21,14 @@ const launch = () => chromium.launch({ chromiumSandbox: false });
  *   urlPath: e.g. "/demo/index.html?test=in"
  *   api:     (url, { method, body }) => object | { status, body }  (default: the read-only fixtures; POSTs return 201)
  *   now:     optional Date to freeze the page's clock at (local-time constructors, as in the jsdom tests)
+ *   expectNavigationStatus: HTTP status the page itself is expected to have (e.g. 404 for the error page); other
+ *            4xx/5xx responses still count as problems
+ *   setup:   optional async (page) => void, run just before navigation (to add routes, e.g. delay a response)
+ *   viewport: { width, height } for the browser window (default: Playwright's desktop size)
  * Returns { page, watch, calls, close }. watch collects every sign of trouble; use expectClean(watch).
  */
-async function open(browser, site, urlPath, { api = defaultApi, now = null } = {}) {
-  const context = await browser.newContext();
+async function open(browser, site, urlPath, { api = defaultApi, now = null, expectNavigationStatus = null, viewport = null, setup = null } = {}) {
+  const context = await browser.newContext(viewport ? { viewport } : {});
   const page = await context.newPage();
   const watch = { violations: [], cspConsole: [], pageErrors: [], failedRequests: [], badResponses: [], dialogs: [] };
   const calls = [];
@@ -41,7 +45,8 @@ async function open(browser, site, urlPath, { api = defaultApi, now = null } = {
   page.on("pageerror", (e) => watch.pageErrors.push(String(e)));
   page.on("requestfailed", (r) => watch.failedRequests.push(`${r.url()} ${r.failure()?.errorText}`));
   page.on("response", (r) => {
-    if (r.status() >= 400 && r.url().startsWith(site.url) && !r.url().endsWith("/favicon.ico")) {
+    const expected = expectNavigationStatus && r.request().isNavigationRequest() && r.status() === expectNavigationStatus;
+    if (r.status() >= 400 && !expected && r.url().startsWith(site.url) && !r.url().endsWith("/favicon.ico")) {
       watch.badResponses.push(`${r.status()} ${r.url()}`);
     }
   });
@@ -63,6 +68,7 @@ async function open(browser, site, urlPath, { api = defaultApi, now = null } = {
     return route.fulfill({ status: 200, contentType: "text/html", body: "<title>Auth0 stub</title>" });
   });
 
+  if (setup) await setup(page);
   if (now) await page.clock.setFixedTime(now);
   await page.goto(`${site.url}${urlPath}`);
   return { page, watch, calls, close: () => context.close() };

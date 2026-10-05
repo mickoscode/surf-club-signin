@@ -177,8 +177,14 @@ button#clearName:hover {
 }
 
 /* Header Styles */
+/* The menu is fetched after the page renders. Reserve its height (48px) so the page does not jump down when it arrives. */
+#header-container {
+    min-height: 48px;
+}
+
 .menu-header {
     display: flex;
+    flex-wrap: wrap; /* if the menu is ever too wide for the screen, wrap instead of scrolling the page sideways */
     justify-content: space-between;
     align-items: center;
     background-color: var(--menu-bg-color);
@@ -203,7 +209,8 @@ button#clearName:hover {
 
 .menu-left,
 .menu-cell {
-    flex: 1;
+    flex: 1 1 0; /* equal widths when there is room... */
+    min-width: min-content; /* ...but never narrower than the text, which wraps the row instead of overflowing */
     padding: 0 0.5rem;
     white-space: nowrap; /* Prevents wrapping for short strings */
 }
@@ -214,6 +221,17 @@ button#clearName:hover {
 }
 .menu-cell {
     text-align: center;
+}
+
+/* Small phones: tighter spacing so the longest menu (5 items) still fits on one row at 320px */
+@media (max-width: 400px) {
+    .menu-header {
+        padding: 12px 0.5rem;
+    }
+    .menu-left,
+    .menu-cell {
+        padding: 0 0.25rem;
+    }
 }
 
 /* Filter Buttons */

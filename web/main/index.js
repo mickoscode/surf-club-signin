@@ -1,6 +1,6 @@
 // Sign-in / sign-out page. Shared helpers and per-site settings are in common.js.
 
-loadHeader("./header.snippet");
+loadMenu("user");
 
 // Fetch valid names from the backend
 async function fetchNames() {

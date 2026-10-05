@@ -17,8 +17,8 @@ describe("history page", () => {
     const page = await loadPage("demo/history.html", { api: readApi });
     await until(() => page.document.querySelectorAll("#dateList a").length === 2, "date links");
     const hrefs = [...page.document.querySelectorAll("#dateList a")].map((a) => a.getAttribute("href"));
-    assert.ok(hrefs.includes("./history.html?date=2025-08-12"));
-    assert.ok(hrefs.includes(`./history.html?date=${encodeURIComponent(XSS)}`));
+    assert.ok(hrefs.includes("./history.html?source=leader&date=2025-08-12")); // leader menu is the default
+    assert.ok(hrefs.includes(`./history.html?source=leader&date=${encodeURIComponent(XSS)}`));
     assert.equal(page.document.querySelectorAll("#dateList img").length, 0);
     assert.equal(page.document.querySelectorAll("#dateList br").length, 2);
     assert.deepEqual(page.errors, []);
@@ -32,7 +32,7 @@ describe("history page", () => {
       return found.length === 2 && found;
     }, "name links");
     assert.equal(anchors[0].textContent, "Alice Smith");
-    assert.equal(anchors[0].getAttribute("href"), "./history.html?source=user&name_id=alice");
+    assert.equal(anchors[0].getAttribute("href"), "./history.html?source=leader&name_id=alice");
     assert.equal(page.document.getElementById("message").textContent, "2025-08-12");
     page.close();
   });
@@ -90,5 +90,41 @@ describe("history page", () => {
     await until(() => page.document.getElementById("message").textContent, "message");
     assert.ok(page.calls.every((c) => !c.url.includes("a&b")));
     page.close();
+  });
+  describe("the menu choice (?source=) is kept by every link the page builds", () => {
+    const menuLinks = (page) => [...page.document.querySelectorAll(".menu-header a")].map((a) => a.textContent);
+
+    it("default (leader menu): date and person links say source=leader", async () => {
+      const dates = await loadPage("demo/history.html", { api: readApi });
+      await until(() => dates.document.querySelectorAll("#dateList a").length === 2, "date links");
+      assert.ok([...dates.document.querySelectorAll("#dateList a")].every((a) => a.getAttribute("href").startsWith("./history.html?source=leader&date=")));
+      await until(() => dates.document.querySelector(".menu-header"), "menu");
+      assert.deepEqual(menuLinks(dates), ["S-in", "S-out", "live", "history", "about"]);
+      dates.close();
+    });
+
+    it("?source=user: the user menu is shown and date and person links say source=user", async () => {
+      const dates = await loadPage("demo/history.html", { query: "?source=user", api: readApi });
+      await until(() => dates.document.querySelectorAll("#dateList a").length === 2, "date links");
+      assert.ok([...dates.document.querySelectorAll("#dateList a")].every((a) => a.getAttribute("href").startsWith("./history.html?source=user&date=")));
+      await until(() => dates.document.querySelector(".menu-header"), "menu");
+      assert.deepEqual(menuLinks(dates), ["in", "out", "about"]);
+      dates.close();
+
+      const day = await loadPage("demo/history.html", { query: "?source=user&date=2025-08-12", api: readApi });
+      const anchors = await until(() => {
+        const found = day.document.querySelectorAll("#recordsTable a");
+        return found.length === 2 && found;
+      }, "name links");
+      assert.equal(anchors[0].getAttribute("href"), "./history.html?source=user&name_id=alice");
+      day.close();
+    });
+
+    it("an unknown ?source= value falls back to the leader menu", async () => {
+      const page = await loadPage("demo/history.html", { query: "?source=whatever", api: readApi });
+      await until(() => page.document.querySelector(".menu-header"), "menu");
+      assert.deepEqual(menuLinks(page), ["S-in", "S-out", "live", "history", "about"]);
+      page.close();
+    });
   });
 });

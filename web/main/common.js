@@ -15,14 +15,30 @@ const SESSION_TIMES = { inStart: "08:00", outStart: "09:30", end: "11:00" };
 // Page chrome
 // ---------------------------------------------------------------------------
 
-// Load a menu snippet (./header.snippet or ./header_leader.snippet) into #header-container.
+// Load a menu snippet into #header-container. A snippet that fails to load is not inserted: CloudFront answers a
+// missing file with the 404 page (a whole HTML document, status 404), which would otherwise end up inside the menu bar.
 function loadHeader(snippetPath) {
     fetch(snippetPath)
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) throw new Error(`${snippetPath} returned HTTP ${response.status}`);
+            return response.text();
+        })
         .then(data => {
             document.getElementById("header-container").innerHTML = data;
         })
         .catch(error => console.error("Header load error:", error));
+}
+
+// Which menu a page shows: "user" (people signing in/out: header.snippet) or "leader" (age managers:
+// header_leader.snippet). The links in the menus carry ?source=user / ?source=leader so the choice survives
+// moving between pages; anything else falls back to the page's own default.
+function getMenuSource(defaultSource) {
+    const source = getUrlParameter("source");
+    return source === "user" || source === "leader" ? source : defaultSource;
+}
+
+function loadMenu(source) {
+    loadHeader(source === "user" ? "./header.snippet" : "./header_leader.snippet");
 }
 
 // Utility to parse URL parameters

@@ -4,11 +4,11 @@ const { XSS, until, reply, loadPage, submit, addFormFieldShortcuts } = require("
 const { names, logs, readApi } = require("./fixtures");
 
 describe("data/names.html (manage names)", () => {
-  it("add form has every activity and filter, a 50 character limit and an Add button", async () => {
+  it("add form offers youth and demo and the four youth filters, a 50 character limit and an Add button", async () => {
     const page = await loadPage("data/names.html", { api: readApi });
     const form = await until(() => page.document.getElementById("addForm"), "add form");
-    assert.equal(form.elements.activity_id.options.length, 10);
-    assert.equal(form.elements.filter.options.length, 8);
+    assert.equal(form.elements.activity_id.options.length, 2); // youth + demo
+    assert.equal(form.elements.filter.options.length, 4); // u14 u15 u17 u19
     assert.equal(form.elements.display.maxLength, 50);
     assert.equal(form.querySelector("button").textContent, "Add");
     page.close();

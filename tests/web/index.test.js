@@ -138,9 +138,9 @@ describe("sign-in page: submitting", () => {
 });
 
 describe("sign-in page: session window (real site rules, frozen clock)", () => {
-  // The pink site has test mode off, so it enforces Sundays only, in 08:00 / 09:30 / 11:00 windows.
+  // The youth site (web/main) has test mode off, so it enforces Sundays only, in 08:00 / 09:30 / 11:00 windows.
   const SUNDAY = (h, m) => new Date(2025, 7, 10, h, m); // Sunday 10 Aug 2025
-  const open = async (now) => loadPage("pink/index.html", { api: readApi, now });
+  const open = async (now) => loadPage("main/index.html", { api: readApi, now });
 
   it("on a weekday, says when the next session is and shows no form", async () => {
     const page = await open(new Date(2025, 7, 13, 9, 0)); // Wednesday

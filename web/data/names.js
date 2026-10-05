@@ -1,18 +1,10 @@
 const API_BASE = "https://5eifrv56p8.execute-api.ap-southeast-2.amazonaws.com";
 const VALID_ACTIVITY_ID = [
-  "sorrento_pink_sunday", 
-  "sorrento_white_sunday", 
-  "sorrento_yellow_sunday", 
-  "sorrento_green_sunday", 
-  "sorrento_lblue_sunday", 
-  "sorrento_purple_sunday",
-  "sorrento_dblue_sunday", 
-  "sorrento_red_sunday", 
-  "sorrento_youth_sunday", 
+  "sorrento_youth_sunday",
   "demo"
 ];
 const DEFAULT_ACTIVITY_ID = "sorrento_youth_sunday";
-const VALID_FILTER = ["u14", "u15", "u17", "u19", "swordfish", "marlin", "stinger", "narwhal"];
+const VALID_FILTER = ["u14", "u15", "u17", "u19"];
 
 document.addEventListener("DOMContentLoaded", async () => {
   const messageEl = document.getElementById("message");

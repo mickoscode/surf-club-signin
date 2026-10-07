@@ -115,7 +115,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
   it("before 8:00am the bulk page says when sign in starts; it is not available on other days or after 11:00am", async () => {
     const early = await open("main/bulk.html", { now: SUNDAY(7, 0) });
     await until(() => message(early), "message");
-    assert.match(message(early), /^Sign in starts at/);
+    assert.equal(message(early), "Sign in starts at 8:00am");
     early.close();
 
     const late = await open("main/bulk.html", { now: SUNDAY(11, 30) });

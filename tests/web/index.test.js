@@ -153,7 +153,7 @@ describe("sign-in page: session window (real site rules, frozen clock)", () => {
   it("before 08:00 on Sunday, says sign in has not started", async () => {
     const page = await open(SUNDAY(7, 0));
     await until(() => page.document.getElementById("message").textContent, "message");
-    assert.match(page.document.getElementById("message").textContent, /^Sign in starts at/);
+    assert.equal(page.document.getElementById("message").textContent, "Sign in starts at 8:00am");
     assert.ok(page.document.getElementById("signForm").classList.contains("hidden"));
     page.close();
   });

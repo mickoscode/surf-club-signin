@@ -15,9 +15,9 @@ describe("menus, the about page and the 404 page", () => {
 
   describe("about page has the same menu as the other pages, for youth and demo", () => {
     const cases = [
-      ["youth, default (public) menu", "/about.html", ["YOUTH", "sign", "history", "about"], "/faviconV2.png"],
+      ["youth, default (public) menu", "/about.html", ["YOUTH", "sign", "live", "history", "about"], "/faviconV2.png"],
       ["youth, from the leader menu", "/about.html?source=leader", ["YOUTH", "sign", "live", "history", "about"], "/faviconV2.png"],
-      ["demo, default (public) menu", "/demo/about.html", ["DEMO", "in/out", "about"], "/demo/favicon-test.png"],
+      ["demo, default (public) menu", "/demo/about.html", ["DEMO", "in/out", "live", "about"], "/demo/favicon-test.png"],
       ["demo, from the leader menu", "/demo/about.html?source=leader", ["DEMO", "S-in/S-out", "live", "history", "about"], "/demo/favicon-test.png"],
     ];
     for (const [name, url, expected, favicon] of cases) {
@@ -53,7 +53,7 @@ describe("menus, the about page and the 404 page", () => {
       await about.page.click(".menu-header a:has-text('about')");
       await about.page.waitForURL(`${site.url}/demo/about.html?source=user`);
       await about.page.waitForSelector(".menu-header"); // and the about page it lands on has the menu
-      assert.deepEqual(await menuTexts(about), ["DEMO", "in/out", "about"]);
+      assert.deepEqual(await menuTexts(about), ["DEMO", "in/out", "live", "about"]);
       await about.close();
     });
   });
@@ -62,13 +62,13 @@ describe("menus, the about page and the 404 page", () => {
     it("youth (user menu): dates -> a day -> a person all keep the user menu", async () => {
       const t = await open(browser, site, "/history.html?source=user");
       await t.page.waitForSelector("#dateList a");
-      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "history", "about"]);
+      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
       await t.page.click("#dateList a:has-text('2025-08-12')");
       await t.page.waitForSelector("#recordsTable a:has-text('Alice Smith')");
-      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "history", "about"]);
+      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
       await t.page.click("#recordsTable a:has-text('Alice Smith')");
       await t.page.waitForSelector("#message:has-text('History for Alice Smith')");
-      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "history", "about"]);
+      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
       await expectClean(t);
       await t.close();
     });
@@ -100,7 +100,7 @@ describe("menus, the about page and the 404 page", () => {
         assert.deepEqual(sheets, ["/vendor/picnic.min.css", "/sign-in-out.css"]);
         assert.equal(new URL(await t.page.locator("link[rel=icon]").evaluate((l) => l.href)).pathname, "/faviconV2.png");
         assert.equal(await t.page.evaluate(() => getComputedStyle(document.body).display), "flex"); // sign-in-out.css applied
-        assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "history", "about"]);
+        assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
         await expectClean(t); // no CSP violation, and no 404 for any asset
         await t.page.click(".menu-header a:has-text('about')");
         await t.page.waitForURL(`${site.url}/about.html?source=user`);

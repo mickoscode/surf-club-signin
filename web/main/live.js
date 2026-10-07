@@ -1,6 +1,7 @@
 // Live counter page (leaders). Shared helpers and per-site settings are in common.js.
 
-loadMenu("leader");
+// Reached from the youth menu (?source=user) or the age manager menu (?source=leader, the default): show that menu.
+loadMenu(getMenuSource("leader"));
 
 let LOG_DATE_STRING = new Date().toISOString().split('T')[0]; // Default to today
 let uniqueTotalCount = 0;

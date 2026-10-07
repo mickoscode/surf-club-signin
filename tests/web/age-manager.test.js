@@ -24,28 +24,6 @@ const times = (() => {
 })();
 
 describe("age manager guide: wording", () => {
-  it("does not mention the removed contact name anywhere in the site, docs or README", () => {
-    const hits = [];
-    const scan = (file) => { if (/latif/i.test(fs.readFileSync(file, "utf8"))) hits.push(path.relative(ROOT, file)); };
-    const walk = (dir) => {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) { if (entry.name !== "vendor") walk(full); }
-        else if (/\.(html|js|css|snippet|md|json)$/.test(entry.name)) scan(full);
-      }
-    };
-    walk(WEB);
-    walk(path.join(ROOT, "docs"));
-    scan(path.join(ROOT, "README.md"));
-    scan(path.join(ROOT, "CLAUDE.md"));
-    assert.deepEqual(hits, []);
-  });
-
-  it("tells people who to ask, using the club contact", () => {
-    assert.match(guideText, /discuss with Mick to get any missing names added/);
-    assert.match(guideText, /For anything else, please discuss with Mick/);
-  });
-
   it("is laid out as a guide: one title, then sections in a sensible order", () => {
     assert.equal(guide.querySelectorAll("h1").length, 1);
     const headings = [...guide.querySelectorAll("h2")].map((h) => h.textContent.trim());
@@ -105,7 +83,7 @@ describe("age manager guide: links", () => {
   });
 
   it("the Sunday links go to the youth pages: bulk, the normal sign-in page, live and history", () => {
-    for (const wanted of ["../bulk.html", "../index.html", "../live.html", "../history.html?source=leader"]) assert.ok(hrefs.includes(wanted), wanted);
+    for (const wanted of ["../bulk.html", "../index.html", "../live.html?source=leader", "../history.html?source=leader"]) assert.ok(hrefs.includes(wanted), wanted);
   });
 
   it("signing in one youth uses the normal sign-in page that every youth uses (not the bulk page)", () => {

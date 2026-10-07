@@ -82,7 +82,7 @@ describe("age manager guide in a real browser", () => {
     it("the Sunday links to live count and history work, and the about link keeps the leader menu", async () => {
       const live = await open(browser, site, "/age-manager/", { now: new Date(2025, 7, 10, 8, 30) });
       await live.page.click("a:has-text('Live count') >> nth=0");
-      await live.page.waitForURL(`${site.url}/live.html`);
+      await live.page.waitForURL(`${site.url}/live.html?source=leader`);
       await live.page.waitForSelector("#liveTotal");
       await live.close();
 

@@ -23,7 +23,7 @@ browser ──> CloudFront ──> S3 (static html/js/css)
 
 - Youth Sunday sessions (`sorrento_youth_sunday`) are the only active team and are served from the top level of the domain. A **demo** site (`/demo/`, with its own demo data) is used for testing and for showing age managers how the site works.
 - Each of these is a "site": a folder under [./web/](./web/) with its own `config.json` and menu, sharing one set of page templates. Adding another team later is a folder copy (see [site_admin.md](./docs/site_admin.md)).
-- People sign in/out on `index.html` during the activity window. Leaders use `bulk.html` (sign in/out a whole group at once), `live.html` (a live count of who has signed in) and `history.html`.
+- People sign in/out on `index.html` during the activity window. Everyone can see `live.html` (a live count of who has signed in) and `history.html` from the menu. Age managers also use `bulk.html` (sign in/out a whole group at once).
 - The sign-in times are currently hard coded in the pages (08:00 in, 09:30 out, 11:00 end, Sundays only); the demo site ignores them in test mode.
 
 ## Repo Overview

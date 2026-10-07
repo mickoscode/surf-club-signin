@@ -57,7 +57,7 @@ describe("data admin pages in a real browser", () => {
       await t.page.click(".admin-cards a:has-text('Logs')");
       await t.page.waitForURL(`${site.url}/data/logs.html`);
       await t.page.goBack();
-      await t.page.click("a:has-text('Age manager links')");
+      await t.page.click("a:has-text('Age manager guide')");
       await t.page.waitForURL(`${site.url}/age-manager/`);
       await t.close();
     });

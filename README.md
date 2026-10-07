@@ -39,7 +39,7 @@ browser ──> CloudFront ──> S3 (static html/js/css)
 - Everything except `config.json` and the two `.snippet` files (templates, scripts, CSS) is a symbolic link back to [./web/main/](./web/main/)
 - `"INJECT_ENABLE_TEST_MODE": "true"` in config.json (demo only) enables the test/demo functionality, e.g. `index.html?test=in` or `?test=out`. Use the demo site so you don't touch real data.
 
-Standalone pages (not templated): [./web/data/](./web/data/) (manage names and view logs) and [./web/age-manager/](./web/age-manager/) (a links page for age managers: the Youth and demo bulk and single sign-in pages).
+Standalone pages (not templated): [./web/data/](./web/data/) (manage names and view logs) and [./web/age-manager/](./web/age-manager/) (a plain-language guide for age managers: how bulk sign in works, how to sign in one youth, and how to practise on the demo).
 
 > **Security note:** the API has no authentication, so the admin pages in `web/data/` are only hidden, not protected. This is a known, accepted risk for now.
 

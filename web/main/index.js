@@ -172,7 +172,7 @@ formEl.addEventListener("submit", async (e) => {
     e.preventDefault();
     const nameId = name_idHiddenField.value;
     if (!nameId) {
-        messageEl.textContent = "type and select an allowed name!";
+        messageEl.textContent = "Please type and select an allowed name";
         return;
     }
 

@@ -58,7 +58,7 @@ describe("history page", () => {
   it("ignores a malformed date parameter and shows the date list instead", async () => {
     const page = await loadPage("demo/history.html", { query: "?date=<script>", api: readApi });
     await until(() => page.document.querySelectorAll("#dateList a").length === 2, "date links");
-    assert.equal(page.document.getElementById("message").textContent, "History Available");
+    assert.equal(page.document.getElementById("message").textContent, "History available");
     page.close();
   });
 
@@ -81,7 +81,7 @@ describe("history page", () => {
     unknown.close();
 
     const bad = await loadPage("demo/history.html", { query: "?name_id=../etc", api: readApi });
-    await until(() => bad.document.getElementById("message").textContent === "History Available", "date list fallback");
+    await until(() => bad.document.getElementById("message").textContent === "History available", "date list fallback");
     bad.close();
   });
 

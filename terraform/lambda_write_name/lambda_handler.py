@@ -33,7 +33,7 @@ def lambda_handler(event, context):
         }
     )
     #return {"statusCode": 200, "body": json.dumps({"message": "Name added"})}
-    return build_response(201, {"message": "Name added successfully."})
+    return build_response(201, {"message": "Name added successfully"})
 
 
 # Add cors headers to the response

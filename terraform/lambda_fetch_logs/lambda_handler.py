@@ -35,7 +35,7 @@ def lambda_handler(event, context):
         date_prefix = params.get("date")  # e.g., "2025-08-12"
 
         if not activity_id or not date_prefix:
-            return build_response(400, {"message": "Missing activity_id or date."})
+            return build_response(400, {"message": "Missing activity_id or date"})
 
         # Query DynamoDB
         response = table.query(

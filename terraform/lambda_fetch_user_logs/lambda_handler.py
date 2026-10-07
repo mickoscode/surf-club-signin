@@ -35,7 +35,7 @@ def lambda_handler(event, context):
         name_id = params.get("name_id")
 
         if not activity_id or not name_id:
-            return build_response(400, {"message": "Missing activity_id or name_id."})
+            return build_response(400, {"message": "Missing activity_id or name_id"})
 
         # Query DynamoDB
         response = table.query(

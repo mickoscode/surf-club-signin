@@ -29,19 +29,19 @@ def lambda_handler(event, context):
 
         # Validate inputs
         if not all([activity_id, direction, name_id_list, date_time]):
-            return build_response(400, {"message": "Missing required fields."})
+            return build_response(400, {"message": "Missing required fields"})
 
         if direction not in ["in", "out"]:
-            return build_response(400, {"message": "Invalid direction. Must be 'in' or 'out'."})
+            return build_response(400, {"message": "Invalid direction: must be 'in' or 'out'"})
 
         if not isinstance(name_id_list, list):
-            return build_response(400, {"message": "name_id_list must be a list."})
+            return build_response(400, {"message": "name_id_list must be a list"})
 
         # Validate date format
         try:
             dt_obj = datetime.fromisoformat(date_time.replace("Z", "+00:00"))
         except ValueError:
-            return build_response(400, {"message": "Invalid date_time format. Use ISO 8601."})
+            return build_response(400, {"message": "Invalid date_time format: use ISO 8601"})
 
         for name_id in name_id_list:
             if not name_id:
@@ -67,7 +67,7 @@ def lambda_handler(event, context):
                 skipped.append(name_id)
 
         return build_response(201, {
-            "message": "Bulk log entries created successfully.",
+            "message": "Bulk log entries created successfully",
             "written": written,
             "skipped": skipped
         })
@@ -76,7 +76,7 @@ def lambda_handler(event, context):
         # Log the details; don't return exception text to the browser
         logger.exception("Bulk write failed after %d written", written)
         return build_response(500, {
-            "message": "Internal server error. Some entries may have been written; retry to complete.",
+            "message": "Internal server error: some entries may have been written, retry to complete",
             "written": written
         })
 

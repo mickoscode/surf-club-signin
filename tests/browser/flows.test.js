@@ -102,7 +102,7 @@ describe("user flows under the enforced policy", () => {
       await t.page.click("#filterButtons button:has-text('u14')");
       await t.page.check(".name-toggle");
       await t.page.click("#bulkSubmitButton");
-      await t.page.waitForSelector("#message:has-text('Bulk Submission Completed')");
+      await t.page.waitForSelector("#message:has-text('Bulk submission completed')");
       const [post] = posts(t);
       assert.equal(post.url, `${policy.apiUrl}/bulk`);
       assert.deepEqual([post.body.activity_id, post.body.direction, post.body.name_id_list], ["demo", "in", ["bob"]]);
@@ -121,7 +121,7 @@ describe("user flows under the enforced policy", () => {
       await t.page.waitForSelector("#message:has-text('Bulk submission failed: Internal server error')");
       assert.equal(await t.page.isDisabled("#bulkSubmitButton"), false);
       await t.page.click("#bulkSubmitButton");
-      await t.page.waitForSelector("#message:has-text('Bulk Submission Completed')");
+      await t.page.waitForSelector("#message:has-text('Bulk submission completed')");
       const [first, second] = posts(t);
       assert.equal(first.body.date_time, second.body.date_time);
       assert.match(t.watch.dialogs.join("|"), /Internal server error/);
@@ -167,7 +167,7 @@ describe("user flows under the enforced policy", () => {
       await t.page.waitForSelector("#addForm");
       await t.page.fill("#addForm [name=display]", "Test Person");
       await t.page.click("#addForm button");
-      await t.page.waitForSelector("#message:has-text('name added successfully')");
+      await t.page.waitForSelector("#message:has-text('Name added successfully')");
       const [post] = posts(t);
       assert.equal(post.url, `${policy.apiUrl}/addname`);
       assert.equal(post.body.display, "Test Person");

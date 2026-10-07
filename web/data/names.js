@@ -97,7 +97,7 @@ async function fetchNames(activity_id) {
 async function fetchName(activity_id, name_id, filter) {
   const response = await fetch(`${API_BASE}/name?activity_id=${encodeURIComponent(activity_id)}&name_id=${encodeURIComponent(name_id)}&filter=${encodeURIComponent(filter)}`);
   const data = await response.json();
-  return data.names[0].display || "no name found for name_id";
+  return data.names[0].display || "No name found for that name ID";
 }
 
 function renderAddForm(messageEl) {
@@ -129,7 +129,7 @@ function renderAddForm(messageEl) {
 
     try {
       await addName(payload);
-      messageEl.textContent = "name added successfully";
+      messageEl.textContent = "Name added successfully";
     } catch (error) {
       alert("Error: " + error.message);
       return;

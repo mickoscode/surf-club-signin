@@ -242,6 +242,26 @@ button#clearName:hover {
     }
 }
 
+/* Tables (live, history, bulk). picnic gives every cell 2.4em of right padding (room for sort arrows these tables do not
+   have), which made them wider than the card on a phone, so the whole page scrolled sideways. Normal padding, and a scroll
+   box as a safety net so a very long name can only ever scroll the table, never the page. */
+.table-scroll {
+    overflow-x: auto;
+}
+.records-table {
+    width: 100%;
+}
+.records-table th,
+.records-table td {
+    padding: 0.45em 0.6em;
+}
+@media (max-width: 400px) {
+    .records-table th,
+    .records-table td {
+        padding: 0.4em 0.35em;
+    }
+}
+
 /* Filter Buttons */
 .buttons {
     display: flex;

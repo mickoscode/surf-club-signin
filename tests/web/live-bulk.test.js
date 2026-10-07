@@ -74,13 +74,13 @@ describe("bulk page", () => {
     const page = await openBulk(() => reply(201, { written: 1, skipped: [] }));
     toggles(page)[0].checked = true;
     submit(page, page.document.getElementById("bulkForm"));
-    await until(() => message(page).startsWith("Bulk Submission Completed"), "success message");
+    await until(() => message(page).startsWith("Bulk submission completed"), "success message");
     const [call] = post(page);
     assert.equal(call.body.activity_id, "demo");
     assert.equal(call.body.direction, "in");
     assert.deepEqual(call.body.name_id_list, ["bob"]);
     assert.match(call.body.date_time, /^\d{4}-\d{2}-\d{2}T/);
-    assert.equal(message(page), "Bulk Submission Completed");
+    assert.equal(message(page), "Bulk submission completed");
     assert.equal(page.document.getElementById("bulkSubmitButton").disabled, true);
     page.close();
   });
@@ -89,8 +89,8 @@ describe("bulk page", () => {
     const page = await openBulk(() => reply(201, { written: 0, skipped: ["bob"] }));
     toggles(page)[0].checked = true;
     submit(page, page.document.getElementById("bulkForm"));
-    await until(() => message(page).startsWith("Bulk Submission Completed"), "success message");
-    assert.equal(message(page), "Bulk Submission Completed (1 already recorded)");
+    await until(() => message(page).startsWith("Bulk submission completed"), "success message");
+    assert.equal(message(page), "Bulk submission completed (1 already recorded)");
     page.close();
   });
 
@@ -104,7 +104,7 @@ describe("bulk page", () => {
     assert.equal(page.document.getElementById("bulkSubmitButton").disabled, false);
 
     submit(page, page.document.getElementById("bulkForm"));
-    await until(() => message(page).startsWith("Bulk Submission Completed"), "success after retry");
+    await until(() => message(page).startsWith("Bulk submission completed"), "success after retry");
     const [first, second] = post(page);
     assert.equal(first.body.date_time, second.body.date_time);
     page.close();

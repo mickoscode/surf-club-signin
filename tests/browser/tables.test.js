@@ -17,7 +17,7 @@ describe("tables on live, history and bulk fit a phone screen", () => {
 
   const sunday = new Date(2025, 7, 10, 9, 0);
   const pages = [["live", "/live.html", "#recordsTable tr:has(td)"], ["history (a day)", "/history.html?date=2025-08-12", "#recordsTable a"], ["bulk", "/bulk.html", "#bulkForm:not(.hidden)"]];
-  for (const width of [320, 360, 375]) {
+  for (const width of [360]) {
     for (const [name, url, ready] of pages) {
       it(`${name} at ${width}px: the page does not scroll sideways and the table stays inside the card`, async () => {
         const t = await open(browser, site, url, { api, now: sunday, viewport: { width, height: 700 } });

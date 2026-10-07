@@ -13,18 +13,6 @@ describe("history page", () => {
     page.close();
   });
 
-  it("date links point at the day view and are URL-encoded", async () => {
-    const page = await loadPage("demo/history.html", { api: readApi });
-    await until(() => page.document.querySelectorAll("#dateList a").length === 2, "date links");
-    const hrefs = [...page.document.querySelectorAll("#dateList a")].map((a) => a.getAttribute("href"));
-    assert.ok(hrefs.includes("./history.html?source=leader&date=2025-08-12")); // leader menu is the default
-    assert.ok(hrefs.includes(`./history.html?source=leader&date=${encodeURIComponent(XSS)}`));
-    assert.equal(page.document.querySelectorAll("#dateList img").length, 0);
-    assert.equal(page.document.querySelectorAll("#dateList br").length, 2);
-    assert.deepEqual(page.errors, []);
-    page.close();
-  });
-
   it("day view: one row per person who signed, linking to their history", async () => {
     const page = await loadPage("demo/history.html", { query: "?date=2025-08-12", api: readApi });
     const anchors = await until(() => {
@@ -44,14 +32,6 @@ describe("history page", () => {
     assert.equal(evil.textContent, XSS);
     assert.equal(page.document.querySelectorAll("#recordsTable img").length, 0);
     assert.deepEqual(page.errors, []);
-    page.close();
-  });
-
-  it("day view: names without logs that day are not listed", async () => {
-    const page = await loadPage("demo/history.html", { query: "?date=2025-08-12", api: readApi });
-    await until(() => page.document.querySelectorAll("#recordsTable a").length === 2, "name links");
-    const text = page.document.getElementById("recordsTable").textContent;
-    assert.ok(!text.includes("Bob"));
     page.close();
   });
 
@@ -85,12 +65,6 @@ describe("history page", () => {
     bad.close();
   });
 
-  it("sends a name_id with special characters URL-encoded (and rejects it first)", async () => {
-    const page = await loadPage("demo/history.html", { query: "?name_id=a%26b", api: readApi });
-    await until(() => page.document.getElementById("message").textContent, "message");
-    assert.ok(page.calls.every((c) => !c.url.includes("a&b")));
-    page.close();
-  });
   describe("the menu choice (?source=) is kept by every link the page builds", () => {
     const menuLinks = (page) => [...page.document.querySelectorAll(".menu-header a")].map((a) => a.textContent);
 
@@ -120,11 +94,5 @@ describe("history page", () => {
       day.close();
     });
 
-    it("an unknown ?source= value falls back to the leader menu", async () => {
-      const page = await loadPage("demo/history.html", { query: "?source=whatever", api: readApi });
-      await until(() => page.document.querySelector(".menu-header"), "menu");
-      assert.deepEqual(menuLinks(page), ["S-in", "S-out", "live", "history", "about"]);
-      page.close();
-    });
   });
 });

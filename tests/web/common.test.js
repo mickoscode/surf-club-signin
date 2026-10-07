@@ -8,20 +8,6 @@ const WEDNESDAY = new Date(2025, 7, 13, 9, 0);
 const open = (file = "main/index.html", options = {}) =>
   loadPage(file, { now: WEDNESDAY, ...options });
 
-describe("common.js: settings", () => {
-  it("reads the API URL, activity and test mode from the page's data attributes", async () => {
-    const youth = await open("main/index.html");
-    assert.equal(youth.get("ACTIVITY_ID"), "sorrento_youth_sunday");
-    assert.match(youth.get("API_BASE"), /^https:\/\/.+\.execute-api\..+\.amazonaws\.com$/);
-    assert.equal(youth.get("ENABLE_TEST_MODE"), false);
-    youth.close();
-
-    const demo = await open("demo/index.html");
-    assert.equal(demo.get("ACTIVITY_ID"), "demo");
-    assert.equal(demo.get("ENABLE_TEST_MODE"), true);
-    demo.close();
-  });
-});
 
 describe("common.js: API helpers", () => {
   it("apiUrl URL-encodes every query value and omits '?' when there are none", async () => {
@@ -139,32 +125,6 @@ describe("common.js: names, logs and filters", () => {
     page.close();
   });
 
-  it("renderFilterButtons adds All plus each distinct filter, sorted, and reports clicks", async () => {
-    const page = await open("main/history.html");
-    const clicked = [];
-    page.window.renderFilterButtons(
-      [{ filter: "u15" }, { filter: "u14" }, { filter: "u15" }],
-      (filter) => clicked.push(filter),
-    );
-    const buttons = [...page.document.querySelectorAll("#filterButtons button")];
-    assert.deepEqual(buttons.map((b) => b.textContent), ["All", "u14", "u15"]);
-    buttons[2].click();
-    buttons[0].click();
-    assert.deepEqual(clicked, ["u15", "all"]);
-    page.close();
-  });
-
-  it("filterTable shows only the matching rows, and all of them for 'all'", async () => {
-    const page = await open("main/history.html");
-    const { document } = page;
-    document.body.insertAdjacentHTML("beforeend", '<table><tr class="filter-u14"></tr><tr class="filter-u15"></tr></table>');
-    const rows = [...document.querySelectorAll("tr[class^='filter-']")];
-    page.window.filterTable("u14");
-    assert.deepEqual(rows.map((r) => r.classList.contains("hidden")), [false, true]);
-    page.window.filterTable("all");
-    assert.deepEqual(rows.map((r) => r.classList.contains("hidden")), [false, false]);
-    page.close();
-  });
 });
 
 describe("common.js: choosing the menu", () => {

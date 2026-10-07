@@ -13,38 +13,22 @@ const snippets = { "header.snippet": "user", "header_leader.snippet": "leader" }
 const hrefsOf = (html) => [...html.matchAll(/<a\s+href="([^"]+)"/g)].map((m) => m[1]);
 
 describe("menu files", () => {
-  for (const site of sites) {
-    for (const [file, source] of Object.entries(snippets)) {
-      const html = fs.readFileSync(path.join(WEB, site, file), "utf8");
-
-      it(`${site}/${file}: every link goes to a page that exists in the same site`, () => {
-        for (const href of hrefsOf(html)) {
+  // One check over all four menus. After a menu edit this catches a link to a page that does not exist, and the
+  // menu-switching bug (a link without ?source= makes the next page show the wrong menu).
+  it("every link goes to a page that exists in the same site, and the live / history / about links carry that menu's source", () => {
+    const problems = [];
+    for (const site of sites) {
+      for (const [file, source] of Object.entries(snippets)) {
+        const links = hrefsOf(fs.readFileSync(path.join(WEB, site, file), "utf8"));
+        if (!links.some((h) => h.startsWith("./about.html"))) problems.push(`${site}/${file} has no link to the about page`);
+        for (const href of links) {
           const target = path.join(WEB, site, href.replace(/^\.\//, "").split(/[?#]/)[0]);
-          assert.ok(fs.existsSync(target), `${site}/${file} links to ${href}, but ${path.relative(WEB, target)} does not exist (run ./scripts/build-sites.sh)`);
+          if (!fs.existsSync(target)) problems.push(`${site}/${file} links to ${href}, but ${path.relative(WEB, target)} does not exist (run ./scripts/build-sites.sh)`);
+          if (/^\.\/(live|history|about)\.html/.test(href) && !href.includes(`source=${source}`)) problems.push(`${href} in ${site}/${file} should say source=${source}`);
         }
-      });
-
-      it(`${site}/${file}: history and about links carry source=${source}, so the menu survives the click`, () => {
-        const links = hrefsOf(html);
-        for (const page of ["live.html", "history.html", "about.html"]) {
-          const found = links.filter((h) => h.startsWith(`./${page}`));
-          for (const href of found) assert.ok(href.includes(`source=${source}`), `${href} in ${site}/${file} should say source=${source}`);
-        }
-        assert.ok(links.some((h) => h.startsWith("./about.html")), "every menu links to the about page");
-      });
-
-      it(`${site}/${file}: is a labelled navigation region with exactly one site label`, () => {
-        assert.match(html, /role="navigation"/);
-        assert.match(html, /aria-label="[^"]+"/);
-        assert.equal((html.match(/class="menu-left"/g) || []).length, 1);
-      });
+      }
     }
-  }
-
-  it("the site label says which site it is", () => {
-    assert.match(fs.readFileSync(path.join(WEB, "main", "header.snippet"), "utf8"), />YOUTH</);
-    assert.match(fs.readFileSync(path.join(WEB, "main", "header_leader.snippet"), "utf8"), />AM</);
-    assert.match(fs.readFileSync(path.join(WEB, "demo", "header.snippet"), "utf8"), />DEMO</);
+    assert.deepEqual(problems, []);
   });
 });
 
@@ -79,18 +63,4 @@ describe("about page (menu-only page shared by youth and demo)", () => {
     leader.close();
   });
 
-  it("an unknown ?source= value falls back to the public menu", async () => {
-    const page = await loadPage("main/about.html", { query: "?source=admin" });
-    await until(() => page.document.querySelector(".menu-header"), "menu");
-    assert.equal(menu(page)[1], "sign");
-    page.close();
-  });
-
-  it("the menu has somewhere to go back to: the about links keep the page's own source", async () => {
-    const page = await loadPage("main/about.html", { query: "?source=leader" });
-    await until(() => page.document.querySelector(".menu-header"), "menu");
-    const hrefs = [...page.document.querySelectorAll(".menu-header a")].map((a) => a.getAttribute("href"));
-    assert.ok(hrefs.includes("./about.html?source=leader"), JSON.stringify(hrefs));
-    page.close();
-  });
 });

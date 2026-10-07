@@ -26,7 +26,7 @@ describe("menu files", () => {
 
       it(`${site}/${file}: history and about links carry source=${source}, so the menu survives the click`, () => {
         const links = hrefsOf(html);
-        for (const page of ["history.html", "about.html"]) {
+        for (const page of ["live.html", "history.html", "about.html"]) {
           const found = links.filter((h) => h.startsWith(`./${page}`));
           for (const href of found) assert.ok(href.includes(`source=${source}`), `${href} in ${site}/${file} should say source=${source}`);
         }
@@ -53,7 +53,7 @@ describe("about page (menu-only page shared by youth and demo)", () => {
   it("youth: public menu by default", async () => {
     const page = await loadPage("main/about.html");
     await until(() => page.document.querySelector(".menu-header"), "menu");
-    assert.deepEqual(menu(page), ["YOUTH", "sign", "history", "about"]);
+    assert.deepEqual(menu(page), ["YOUTH", "sign", "live", "history", "about"]);
     assert.deepEqual(page.errors, []);
     page.close();
   });
@@ -68,7 +68,7 @@ describe("about page (menu-only page shared by youth and demo)", () => {
   it("demo: the demo menus, and the demo favicon (the page is generated per site)", async () => {
     const user = await loadPage("demo/about.html");
     await until(() => user.document.querySelector(".menu-header"), "menu");
-    assert.deepEqual(menu(user), ["DEMO", "in/out", "about"]);
+    assert.deepEqual(menu(user), ["DEMO", "in/out", "live", "about"]);
     assert.equal(user.document.querySelector("link[rel=icon]").getAttribute("href"), "favicon-test.png");
     user.close();
 

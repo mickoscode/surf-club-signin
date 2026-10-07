@@ -108,7 +108,7 @@ describe("history page", () => {
       await until(() => dates.document.querySelectorAll("#dateList a").length === 2, "date links");
       assert.ok([...dates.document.querySelectorAll("#dateList a")].every((a) => a.getAttribute("href").startsWith("./history.html?source=user&date=")));
       await until(() => dates.document.querySelector(".menu-header"), "menu");
-      assert.deepEqual(menuLinks(dates), ["in", "out", "about"]);
+      assert.deepEqual(menuLinks(dates), ["in", "out", "live", "about"]);
       dates.close();
 
       const day = await loadPage("demo/history.html", { query: "?source=user&date=2025-08-12", api: readApi });

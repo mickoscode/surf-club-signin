@@ -38,7 +38,7 @@ function init() {
     }
 
     if (now < IN_START_TIME) {
-        messageEl.textContent = `Sign in starts at ${IN_START_TIME}`;
+        messageEl.textContent = `Sign in starts at ${formatClock(IN_START_TIME)}`;
         return;
     }
 

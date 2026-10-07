@@ -50,8 +50,12 @@ async function init() {
     }
 
     if (!isSunday()) {
-        document.getElementById("liveTotal").textContent = "";
-        document.getElementById("liveMessage").textContent = `The next session is ${getNextSunday()}`;
+        // same message, in the same style, as on the sign-in and bulk pages; there is no count to show
+        document.getElementById("liveTotal").classList.add("hidden");
+        document.getElementById("liveMessage").classList.add("hidden");
+        const messageEl = document.getElementById("message");
+        messageEl.textContent = `The next session is ${getNextSunday()}`;
+        messageEl.classList.remove("hidden");
         return;
     }
 

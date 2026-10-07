@@ -129,6 +129,12 @@ function convertTs2Time(timestamp) {
     return `${hours}:${minutes}`;
 }
 
+// A clock time as people say it: 8:00am, 9:30am, 12:15pm (used in messages such as "Sign in starts at 8:00am")
+function formatClock(date) {
+    const hours = date.getHours();
+    return `${hours % 12 || 12}:${String(date.getMinutes()).padStart(2, "0")}${hours < 12 ? "am" : "pm"}`;
+}
+
 // convert timestamp string to yyyy-mm-dd format
 function convertTs2YMD(timestamp) {
     if (!timestamp || timestamp === "-") return "-";

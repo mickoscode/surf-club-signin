@@ -153,7 +153,7 @@ describe("user flows under the enforced policy", () => {
     it("the age-manager guide links to the youth pages and to the demo pages", async () => {
       const t = await open(browser, site, "/age-manager/");
       const links = await t.page.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-      for (const wanted of ["../bulk.html", "../index.html", "../live.html?source=leader", "../demo/bulk.html?test=in", "../demo/bulk.html?test=out", "../demo/index.html?test=in", "../demo/index.html?test=out"]) {
+      for (const wanted of ["../bulk.html", "../index.html?source=leader", "../live.html?source=leader", "../demo/bulk.html?test=in", "../demo/bulk.html?test=out", "../demo/index.html?test=in", "../demo/index.html?test=out"]) {
         assert.ok(links.includes(wanted), `missing ${wanted} in ${JSON.stringify(links)}`);
       }
       await expectClean(t);

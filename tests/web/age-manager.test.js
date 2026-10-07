@@ -83,12 +83,12 @@ describe("age manager guide: links", () => {
   });
 
   it("the Sunday links go to the youth pages: bulk, the normal sign-in page, live and history", () => {
-    for (const wanted of ["../bulk.html", "../index.html", "../live.html?source=leader", "../history.html?source=leader"]) assert.ok(hrefs.includes(wanted), wanted);
+    for (const wanted of ["../bulk.html", "../index.html?source=leader", "../live.html?source=leader", "../history.html?source=leader"]) assert.ok(hrefs.includes(wanted), wanted);
   });
 
   it("signing in one youth uses the normal sign-in page that every youth uses (not the bulk page)", () => {
     const section = [...guide.querySelectorAll("h2")].find((h) => h.textContent.startsWith("Signing one youth")).nextElementSibling;
-    assert.equal(section.querySelector("a").getAttribute("href"), "../index.html");
+    assert.equal(section.querySelector("a").getAttribute("href"), "../index.html?source=leader");
   });
 
   it("the practice links are all demo pages, and the sign in / sign out ones force sign in / sign out time", () => {

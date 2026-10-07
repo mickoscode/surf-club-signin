@@ -43,6 +43,7 @@ describe("menu files", () => {
 
   it("the site label says which site it is", () => {
     assert.match(fs.readFileSync(path.join(WEB, "main", "header.snippet"), "utf8"), />YOUTH</);
+    assert.match(fs.readFileSync(path.join(WEB, "main", "header_leader.snippet"), "utf8"), />AM</);
     assert.match(fs.readFileSync(path.join(WEB, "demo", "header.snippet"), "utf8"), />DEMO</);
   });
 });
@@ -61,7 +62,7 @@ describe("about page (menu-only page shared by youth and demo)", () => {
   it("youth: leader menu with ?source=leader", async () => {
     const page = await loadPage("main/about.html", { query: "?source=leader" });
     await until(() => page.document.querySelector(".menu-header"), "menu");
-    assert.deepEqual(menu(page), ["YOUTH", "sign", "live", "history", "about"]);
+    assert.deepEqual(menu(page), ["AM", "sign", "live", "history", "about"]);
     page.close();
   });
 
@@ -69,7 +70,7 @@ describe("about page (menu-only page shared by youth and demo)", () => {
     const user = await loadPage("demo/about.html");
     await until(() => user.document.querySelector(".menu-header"), "menu");
     assert.deepEqual(menu(user), ["DEMO", "in/out", "live", "about"]);
-    assert.equal(user.document.querySelector("link[rel=icon]").getAttribute("href"), "favicon-test.png");
+    assert.equal(user.document.querySelector("link[rel=icon]").getAttribute("href"), "favicon-demo.png");
     user.close();
 
     const leader = await loadPage("demo/about.html", { query: "?source=leader" });

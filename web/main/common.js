@@ -25,6 +25,7 @@ function loadHeader(snippetPath) {
         })
         .then(data => {
             document.getElementById("header-container").innerHTML = data;
+            useMenuFavicon();
         })
         .catch(error => console.error("Header load error:", error));
 }
@@ -39,6 +40,15 @@ function getMenuSource(defaultSource) {
 
 function loadMenu(source) {
     loadHeader(source === "user" ? "./header.snippet" : "./header_leader.snippet");
+}
+
+// A menu file can name its own tab icon with data-favicon on its top element. The youth site's age manager menu does
+// (favicon-am.png), so age manager tabs look different from youth tabs, whichever page they are on. A menu without it
+// leaves the page's own icon (the site's INJECT_FAVICON) alone.
+function useMenuFavicon() {
+    const menu = document.querySelector("#header-container [data-favicon]");
+    const link = document.querySelector('link[rel="icon"]');
+    if (menu && link) link.setAttribute("href", menu.dataset.favicon);
 }
 
 // Utility to parse URL parameters

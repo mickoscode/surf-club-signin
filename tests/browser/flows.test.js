@@ -150,13 +150,12 @@ describe("user flows under the enforced policy", () => {
       await t.close();
     });
 
-    it("the age-manager page links to the youth and demo pages", async () => {
+    it("the age-manager guide links to the youth pages and to the demo pages", async () => {
       const t = await open(browser, site, "/age-manager/");
-      const links = await t.page.locator("a[href$='.html'], a[href*='.html?']").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-      for (const wanted of ["../bulk.html", "../index.html", "../demo/bulk.html?test=in", "../demo/index.html?test=in"]) {
+      const links = await t.page.locator("a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
+      for (const wanted of ["../bulk.html", "../index.html", "../live.html", "../demo/bulk.html?test=in", "../demo/bulk.html?test=out", "../demo/index.html?test=in", "../demo/index.html?test=out"]) {
         assert.ok(links.includes(wanted), `missing ${wanted} in ${JSON.stringify(links)}`);
       }
-      assert.deepEqual(await t.page.locator("table tr td:first-child").allTextContents(), ["Youth", "Demo!"]);
       await expectClean(t);
       await t.close();
     });

@@ -1,0 +1,97 @@
+/* Age manager guide (web/age-manager). Loaded after picnic and sign-in-out.css, which supply the page background and
+   the white card (.container); this file only adds what the guide needs. */
+
+.am-page {
+    max-width: 640px;
+    box-sizing: border-box;
+    text-align: left;
+}
+.am-page h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.7rem;
+    color: var(--primary-color);
+}
+.am-page h2 {
+    margin: 1.75rem 0 0.5rem;
+    font-size: 1.25rem;
+    color: var(--text-color);
+}
+.am-lead {
+    margin: 0.25rem 0 1rem;
+    color: #555;
+    font-size: 1.05rem;
+}
+
+/* Big, tappable link cards */
+.am-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.75rem;
+    margin: 0.75rem 0;
+    padding: 0;
+    list-style: none;
+}
+.am-links a {
+    display: block;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 0.85rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    background: #fff;
+    color: var(--text-color);
+    text-decoration: none;
+}
+.am-links a:hover,
+.am-links a:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 2px 10px rgba(37, 117, 252, 0.2);
+}
+.am-links strong {
+    display: block;
+    margin-bottom: 0.15rem;
+    color: var(--primary-color);
+}
+.am-links span {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+/* Numbered steps */
+.am-steps {
+    margin: 0.75rem 0;
+    padding-left: 1.4rem;
+}
+.am-steps li {
+    margin: 0.65rem 0;
+    line-height: 1.5;
+}
+
+.am-note {
+    margin: 0.75rem 0;
+    padding: 0.7rem 0.9rem;
+    border-left: 4px solid var(--secondary-color);
+    border-radius: 4px;
+    background: #eaf2ff;
+}
+
+/* The practice area stands out so it is easy to find, and clearly not the real thing */
+.am-practice {
+    margin-top: 1.75rem;
+    padding: 1rem;
+    border: 2px dashed var(--primary-color);
+    border-radius: var(--border-radius);
+    background: #faf6ff;
+}
+.am-practice h2 {
+    margin-top: 0;
+}
+
+@media (max-width: 480px) {
+    .am-page {
+        padding: 0.75rem;
+    }
+    .am-practice {
+        padding: 0.75rem;
+    }
+}

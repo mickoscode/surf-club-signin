@@ -33,7 +33,7 @@ async function fetchLogs() {
     });
     tableBody.appendChild(row);
   });
-  document.getElementById("logsStatus").textContent = `${data.logs.length} entries for ${LOG_DATE_STRING}.`;
+  document.getElementById("logsStatus").textContent = `${data.logs.length} entries for ${LOG_DATE_STRING}`;
 }
 
 async function submitLog(event) {
@@ -58,12 +58,12 @@ async function submitLog(event) {
     });
 
     const result = await response.json();
-    document.getElementById("message").textContent = result.message || "Log added.";
+    document.getElementById("message").textContent = result.message || "Log added";
     if (response.status === 201) {
       fetchLogs(); // Refresh table
     }
   } catch (err) {
-    document.getElementById("message").textContent = "Error submitting log.";
+    document.getElementById("message").textContent = "Error submitting log";
     console.error(err);
   }
 }

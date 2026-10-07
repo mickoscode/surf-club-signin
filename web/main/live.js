@@ -37,7 +37,7 @@ function calculateLiveTotal() {
 function updateLiveTotalDisplay() {
     const timeString = convertTs2Time(new Date());
     document.getElementById("liveTotal").textContent = liveTotal;
-    document.getElementById("liveMessage").textContent = `live count as of ${timeString}`;
+    document.getElementById("liveMessage").textContent = `Live count as of ${timeString}`;
 }
 
 // Initialize the page

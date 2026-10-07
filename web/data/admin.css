@@ -156,9 +156,6 @@
 }
 
 /* Tables: scroll sideways inside their box on a narrow screen instead of stretching the page */
-.table-scroll {
-    overflow-x: auto;
-}
 .admin-table {
     width: 100%;
     margin: 0.5rem 0;

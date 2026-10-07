@@ -144,7 +144,7 @@ async function init() {
 
     } else {
 
-        messageEl.textContent = "History Available";
+        messageEl.textContent = "History available";
         await fetchDates(); // populates global 'dates'
         const dateList = document.getElementById('dateList');
         dateList.textContent = "";

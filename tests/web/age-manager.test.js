@@ -45,7 +45,7 @@ describe("age manager guide: wording", () => {
   });
 
   it("quotes the buttons and messages exactly as the bulk page shows them", () => {
-    for (const quoted of ["Bulk Sign In", "Bulk Sign Out", "Bulk Submission Completed", "Bulk submission failed", "already recorded"]) {
+    for (const quoted of ["Bulk Sign In", "Bulk Sign Out", "Bulk submission completed", "Bulk submission failed", "already recorded"]) {
       assert.ok(guideText.includes(quoted), `the guide should mention "${quoted}"`);
       assert.ok(bulkSource.includes(quoted), `bulk.js no longer contains "${quoted}", so the guide is out of date`);
     }
@@ -185,7 +185,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
     tick("a2");
 
     submit(page, page.document.getElementById("bulkForm"));
-    await until(() => message(page).startsWith("Bulk Submission Completed"), "success");
+    await until(() => message(page).startsWith("Bulk submission completed"), "success");
     const post = page.calls.find((c) => c.method === "POST");
     assert.deepEqual(post.body.name_id_list.sort(), ["a1", "a2"]);
     assert.equal(page.calls.filter((c) => c.method === "POST").length, 1);
@@ -228,7 +228,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
     await until(() => message(page).startsWith("Bulk submission failed"), "failure");
     assert.equal(page.document.getElementById("bulkSubmitButton").disabled, false);
     submit(page, page.document.getElementById("bulkForm"));
-    await until(() => message(page) === "Bulk Submission Completed (1 already recorded)", "success after retry");
+    await until(() => message(page) === "Bulk submission completed (1 already recorded)", "success after retry");
     page.close();
   });
 });

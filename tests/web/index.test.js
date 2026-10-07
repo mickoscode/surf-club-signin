@@ -79,7 +79,7 @@ describe("sign-in page: submitting", () => {
   it("asks for a name when none is selected, and sends nothing", async () => {
     const page = await openSignIn();
     submit(page, page.document.getElementById("signForm"));
-    assert.equal(page.document.getElementById("message").textContent, "type and select an allowed name!");
+    assert.equal(page.document.getElementById("message").textContent, "Please type and select an allowed name");
     assert.equal(page.calls.filter((c) => c.method === "POST").length, 0);
     page.close();
   });

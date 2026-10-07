@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     
         # Validate inputs
         if not all([activity_id, name_id, display, filter_val]):
-            return build_response(400, {"message": "Missing required fields."})
+            return build_response(400, {"message": "Missing required fields"})
 
         print("Attempting update for:", name_id, activity_id)
         dynamodb = boto3.client("dynamodb")
@@ -36,7 +36,7 @@ def lambda_handler(event, context):
             ConditionExpression="attribute_exists(name_id) AND attribute_exists(activity_id)"
         )
         #return {"statusCode": 200, "body": json.dumps({"message": "Name updated"})}
-        return build_response(201, {"message": "Name updated successfully."})
+        return build_response(201, {"message": "Name updated successfully"})
 
     except dynamodb.exceptions.ConditionalCheckFailedException:
         print("Conditional check failed for:", name_id, activity_id)

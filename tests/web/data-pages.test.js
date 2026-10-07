@@ -99,7 +99,7 @@ describe("data admin pages: status and structure", () => {
     await until(() => page.document.querySelector(".name-list li"), "name list");
     addFormFieldShortcuts(form); // the page reads form.display etc., as browsers allow
     submit(page, form);
-    await until(() => page.document.getElementById("message").textContent === "name added successfully", "message");
+    await until(() => page.document.getElementById("message").textContent === "Name added successfully", "message");
     const rows = [...page.document.querySelectorAll(".name-list li a")];
     assert.equal(rows.length, names.length);
     assert.deepEqual([...rows[0].children].map((c) => c.className), ["name-main", "name-sub", "chip"]);
@@ -130,7 +130,7 @@ describe("data admin pages: status and structure", () => {
     assert.equal(page.document.querySelectorAll("#nameListSection").length, 1, "the old list must be replaced");
     assert.ok([...page.document.querySelectorAll(".name-list .name-main")].some((n) => n.textContent === "New Kid"));
     assert.ok([...page.document.querySelectorAll("h2")].some((h) => h.textContent === "Existing names: sorrento_youth_sunday (4)"));
-    assert.equal(page.document.getElementById("message").textContent, "name added successfully");
+    assert.equal(page.document.getElementById("message").textContent, "Name added successfully");
     // one list fetch on load, one after adding
     assert.equal(page.calls.filter((c) => c.method === "GET" && c.url.includes("/name?")).length, 2);
     page.close();
@@ -148,7 +148,7 @@ describe("data admin pages: status and structure", () => {
     await until(() => page.document.querySelectorAll(".name-list li").length === 3, "initial list");
     addFormFieldShortcuts(form);
     submit(page, form);
-    await until(() => page.document.getElementById("message").textContent === "name added successfully", "message");
+    await until(() => page.document.getElementById("message").textContent === "Name added successfully", "message");
     await new Promise((r) => setTimeout(r, 100));
     assert.equal(page.document.querySelectorAll(".name-list li").length, 3);
     assert.equal(page.document.querySelectorAll("#nameListSection").length, 1);
@@ -166,7 +166,7 @@ describe("data admin pages: status and structure", () => {
     page.document.getElementById("fetchNamesButton").click();
     await until(() => page.document.querySelectorAll("#namesTable tbody tr").length === names.length, "rows");
     assert.ok([...page.document.querySelectorAll("#namesTable tbody tr")].every((r) => r.children.length === headings.length));
-    assert.equal(page.document.getElementById("namesStatus").textContent, `${names.length} names loaded for sorrento_youth_sunday.`);
+    assert.equal(page.document.getElementById("namesStatus").textContent, `${names.length} names loaded for sorrento_youth_sunday`);
     page.close();
   });
 
@@ -210,7 +210,7 @@ describe("data admin pages: status and structure", () => {
     assert.equal(page.document.getElementById("logDate").textContent, "2025-09-01");
     page.document.getElementById("fetchLogsButton").click();
     await until(() => page.document.querySelectorAll("#logTable tbody tr").length === logs.length, "rows");
-    assert.equal(page.document.getElementById("logsStatus").textContent, `${logs.length} entries for 2025-09-01.`);
+    assert.equal(page.document.getElementById("logsStatus").textContent, `${logs.length} entries for 2025-09-01`);
     assert.ok(page.calls.some((c) => c.url.includes("date=2025-09-01")));
     page.close();
 

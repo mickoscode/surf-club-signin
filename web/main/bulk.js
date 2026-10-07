@@ -34,7 +34,7 @@ async function addBulkLogs(payload) {
 
 // Show the chosen group's rows (and its name in the message line)
 function selectGroup(filter) {
-    messageEl.textContent = filter;
+    messageEl.textContent = filter === "all" ? "All" : filter; // the button says "All", so the heading does too
     filterTable(filter);
 }
 
@@ -179,7 +179,7 @@ formEl.addEventListener("submit", async (e) => {
       });
 
       const skipped = (result.skipped || []).length;
-      messageEl.textContent = "Bulk Submission Completed" +
+      messageEl.textContent = "Bulk submission completed" +
         (skipped ? ` (${skipped} already recorded)` : "");
       submitButton.disabled = true;
     } catch (error) {

@@ -178,7 +178,7 @@ describe("data admin pages in a real browser", () => {
       await t.page.waitForSelector(".name-list li:nth-child(4)");
       assert.ok((await t.page.locator(".name-list .name-main").allTextContents()).includes("First Newcomer"));
       assert.equal(await t.page.locator("#nameListSection").count(), 1);
-      assert.equal(await t.page.locator("#message").textContent(), "name added successfully");
+      assert.equal(await t.page.locator("#message").textContent(), "Name added successfully");
       assert.match(await t.page.locator("#nameListSection h2").textContent(), /\(4\)$/);
 
       await t.page.fill("#addForm [name=display]", "Second Newcomer");
@@ -212,7 +212,7 @@ describe("data admin pages in a real browser", () => {
       await t.page.click("#fetchLogsButton");
       await t.page.waitForSelector("#logTable tbody tr");
       assert.ok(t.calls.some((c) => c.url.includes("date=2025-09-03")), JSON.stringify(t.calls.map((c) => c.url)));
-      assert.match(await t.page.textContent("#logsStatus"), /entries for 2025-09-03\.$/);
+      assert.match(await t.page.textContent("#logsStatus"), /entries for 2025-09-03$/);
       await t.close();
 
       const explicit = await open(browser, site, "/data/logs.html?date=2025-08-12", { api, now });

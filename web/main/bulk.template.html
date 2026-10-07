@@ -16,10 +16,12 @@
         <form id="bulkForm" class="hidden">
             <input type="hidden" id="direction">
             <input type="hidden" id="activity_id" value="{{INJECT_ACTIVITY_ID}}">
-            <table id="namesTable">
-                <thead> <tr> <th>name</th> <th>in</th> <th>out</th> </tr> </thead>
-                <tbody></tbody>
-            </table>
+            <div class="table-scroll">
+                <table id="namesTable" class="records-table">
+                    <thead> <tr> <th>name</th> <th>in</th> <th>out</th> </tr> </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
             <button type="submit" id="bulkSubmitButton"></button>
         </form>
         <div id="spinner" class="spinner hidden"></div>

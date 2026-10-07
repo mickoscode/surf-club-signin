@@ -30,7 +30,7 @@ async function fetchNames() {
     });
     tableBody.appendChild(row);
   });
-  document.getElementById("namesStatus").textContent = `${data.names.length} names loaded for ${activity_id}.`;
+  document.getElementById("namesStatus").textContent = `${data.names.length} names loaded for ${activity_id}`;
 }
 
 document.getElementById("fetchNamesButton").addEventListener("click", fetchNames);

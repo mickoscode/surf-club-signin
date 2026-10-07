@@ -180,7 +180,7 @@ async function postJson(path, payload) {
     }
     if (!response.ok) {
         if (response.status === 429) {
-            throw new Error("Too many requests right now, please wait a moment and try again.");
+            throw new Error("Too many requests right now, please wait a moment and try again");
         }
         throw new Error(data.message || `Request failed (HTTP ${response.status})`);
     }

@@ -1,6 +1,7 @@
 // Sign-in / sign-out page. Shared helpers and per-site settings are in common.js.
 
-loadMenu("user");
+// Youth see their own menu; the age manager guide links here with ?source=leader to keep the age manager menu.
+loadMenu(getMenuSource("user"));
 
 // Fetch valid names from the backend
 async function fetchNames() {

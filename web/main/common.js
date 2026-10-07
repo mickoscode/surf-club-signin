@@ -17,14 +17,21 @@ const SESSION_TIMES = { inStart: "08:00", outStart: "09:30", end: "11:00" };
 
 // Load a menu snippet into #header-container. A snippet that fails to load is not inserted: CloudFront answers a
 // missing file with the 404 page (a whole HTML document, status 404), which would otherwise end up inside the menu bar.
-function loadHeader(snippetPath) {
+//
+// linkPrefix is for a page that is not in the site root (the age manager guide is in /age-manager/): the menu's links are
+// written as ./page.html, so linkPrefix "../" turns them into ../page.html.
+function loadHeader(snippetPath, linkPrefix) {
     fetch(snippetPath)
         .then(response => {
             if (!response.ok) throw new Error(`${snippetPath} returned HTTP ${response.status}`);
             return response.text();
         })
         .then(data => {
-            document.getElementById("header-container").innerHTML = data;
+            const container = document.getElementById("header-container");
+            container.innerHTML = data;
+            if (linkPrefix) {
+                container.querySelectorAll('a[href^="./"]').forEach(link => link.setAttribute("href", linkPrefix + link.getAttribute("href").slice(2)));
+            }
             useMenuFavicon();
         })
         .catch(error => console.error("Header load error:", error));

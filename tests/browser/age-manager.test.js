@@ -15,8 +15,14 @@ describe("age manager guide in a real browser", () => {
     const sheets = await t.page.evaluate(() => [...document.styleSheets].map((s) => new URL(s.href).pathname));
     assert.deepEqual(sheets, ["/age-manager/vendor/picnic.min.css", "/age-manager/sign-in-out.css", "/age-manager/age-manager.css"]);
     assert.equal(await t.page.locator(".am-steps li").count(), 8);
-    assert.equal(await t.page.evaluate(() => /latif/i.test(document.body.textContent)), false);
+    // the same menu as the other age manager pages, with its links pointed up a folder so they work from /age-manager/
+    await t.page.waitForSelector(".menu-header");
+    assert.deepEqual(await t.page.locator(".menu-header > div").allTextContents(), ["AM", "sign", "live", "history", "about"]);
+    const menuLinks = await t.page.locator(".menu-header a").evaluateAll((as) => as.map((a) => a.getAttribute("href")));
+    assert.ok(menuLinks.every((href) => href.startsWith("../")), JSON.stringify(menuLinks));
     await expectClean(t);
+    await t.page.click(".menu-header a:has-text('sign')");
+    await t.page.waitForURL(`${site.url}/bulk.html`);
     await t.close();
   });
 
@@ -72,9 +78,9 @@ describe("age manager guide in a real browser", () => {
       for (const label of ["Sign one youth in / out", "sign-in page"]) {
         const t = await open(browser, site, "/age-manager/", { now: new Date(2025, 7, 10, 8, 30) });
         await t.page.click(`a:has-text("${label}")`);
-        await t.page.waitForURL(`${site.url}/index.html`);
+        await t.page.waitForURL(`${site.url}/index.html?source=leader`);
         await t.page.waitForSelector("#submitButton:has-text('Sign In')");
-        assert.deepEqual(await t.page.locator(".menu-header .menu-left").allTextContents(), ["YOUTH"]);
+        assert.deepEqual(await t.page.locator(".menu-header .menu-left").allTextContents(), ["AM"]); // still the age manager context
         await t.close();
       }
     });

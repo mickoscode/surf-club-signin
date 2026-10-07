@@ -38,7 +38,16 @@ function getMenuSource(defaultSource) {
 }
 
 function loadMenu(source) {
+    if (source === "leader") useLeaderFavicon();
     loadHeader(source === "user" ? "./header.snippet" : "./header_leader.snippet");
+}
+
+// Pages shown in the age manager menu get that context's tab icon (INJECT_FAVICON_LEADER in the site's config.json),
+// so age manager tabs can be told apart from the youth ones; the same page opened from the youth menu keeps the site icon.
+function useLeaderFavicon() {
+    const href = document.body.dataset.faviconLeader;
+    const link = document.querySelector('link[rel="icon"]');
+    if (href && link) link.setAttribute("href", href);
 }
 
 // Utility to parse URL parameters

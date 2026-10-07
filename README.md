@@ -29,7 +29,7 @@ browser ──> CloudFront ──> S3 (static html/js/css)
 ## Repo Overview
 
 [./web/main/](./web/main/) - the Youth site (served at the root) and the shared templates for every site:
-- [config.json](./web/main/config.json) - values injected into the html templates (page title, API URL, favicon, activity id, test mode)
+- [config.json](./web/main/config.json) - values injected into the html templates (page title, API URL, tab icons, activity id, test mode). Youth, demo and age manager each have their own tab icon
 - [header.snippet](./web/main/header.snippet) / [header_leader.snippet](./web/main/header_leader.snippet) - the menu for users and for leaders; each site can have its own copy
 - `index.template.html`, `bulk.template.html`, `live.template.html`, `history.template.html`, `about.template.html` - [inject-config.js](./web/main/inject-config.js) turns these into the `.html` pages (the generated pages are not committed). The templates contain markup only; the page logic is in [common.js](./web/main/common.js) (shared helpers) and one script per page (`index.js`, `bulk.js`, `live.js`, `history.js`; `static-page.js` for the about page)
 - [404.html](./web/main/404.html) - the page CloudFront shows for any address that doesn't exist (a plain page with `<base href="/">`, so its styles and menu load at any depth)

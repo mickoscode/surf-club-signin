@@ -16,9 +16,9 @@ describe("menus, the about page and the 404 page", () => {
   describe("about page has the same menu as the other pages, for youth and demo", () => {
     const cases = [
       ["youth, default (public) menu", "/about.html", ["YOUTH", "sign", "live", "history", "about"], "/faviconV2.png"],
-      ["youth, from the leader menu", "/about.html?source=leader", ["YOUTH", "sign", "live", "history", "about"], "/faviconV2.png"],
-      ["demo, default (public) menu", "/demo/about.html", ["DEMO", "in/out", "live", "about"], "/demo/favicon-test.png"],
-      ["demo, from the leader menu", "/demo/about.html?source=leader", ["DEMO", "S-in/S-out", "live", "history", "about"], "/demo/favicon-test.png"],
+      ["youth, from the leader menu", "/about.html?source=leader", ["AM", "sign", "live", "history", "about"], "/favicon-am.png"],
+      ["demo, default (public) menu", "/demo/about.html", ["DEMO", "in/out", "live", "about"], "/demo/favicon-demo.png"],
+      ["demo, from the leader menu", "/demo/about.html?source=leader", ["DEMO", "S-in/S-out", "live", "history", "about"], "/demo/favicon-demo.png"],
     ];
     for (const [name, url, expected, favicon] of cases) {
       it(name, async () => {
@@ -76,7 +76,7 @@ describe("menus, the about page and the 404 page", () => {
     it("youth (leader menu, the default): dates -> a day -> a person all keep the leader menu", async () => {
       const t = await open(browser, site, "/history.html");
       await t.page.waitForSelector("#dateList a");
-      const leader = ["YOUTH", "sign", "live", "history", "about"];
+      const leader = ["AM", "sign", "live", "history", "about"];
       assert.deepEqual(await menuTexts(t), leader);
       await t.page.click("#dateList a:has-text('2025-08-12')");
       await t.page.waitForSelector("#recordsTable a:has-text('Alice Smith')");

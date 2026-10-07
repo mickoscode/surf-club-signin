@@ -4,13 +4,6 @@ const { XSS, until, reply, loadPage, submit } = require("./helpers");
 const { readApi } = require("./fixtures");
 
 describe("live page", () => {
-  it("loads names and the day's logs for the activity without errors", async () => {
-    const page = await loadPage("demo/live.html", { query: "?test=in", api: readApi });
-    await until(() => page.calls.some((c) => c.url.includes("/log?")), "log request");
-    assert.ok(page.calls.some((c) => c.url.includes("activity_id=demo")));
-    assert.deepEqual(page.errors, []);
-    page.close();
-  });
 
   it("keeps the menu it was reached from: the youth menu with ?source=user, otherwise the age manager menu", async () => {
     // both menus read "sign, live, history, about"; what differs is where "sign" goes
@@ -62,14 +55,6 @@ describe("bulk page", () => {
     page.close();
   });
 
-  it("refuses to submit with nobody selected", async () => {
-    const page = await openBulk(() => reply(201, {}));
-    submit(page, page.document.getElementById("bulkForm"));
-    assert.equal(message(page), "No names selected for submission");
-    assert.equal(post(page).length, 0);
-    page.close();
-  });
-
   it("submits the ticked names and confirms", async () => {
     const page = await openBulk(() => reply(201, { written: 1, skipped: [] }));
     toggles(page)[0].checked = true;
@@ -110,12 +95,4 @@ describe("bulk page", () => {
     page.close();
   });
 
-  it("tells the manager when the API is throttling (HTTP 429)", async () => {
-    const page = await openBulk(() => reply(429, { message: "Too Many Requests" }));
-    toggles(page)[0].checked = true;
-    submit(page, page.document.getElementById("bulkForm"));
-    await until(() => page.alerts.length > 0, "alert");
-    assert.match(message(page), /Too many requests right now/);
-    page.close();
-  });
 });

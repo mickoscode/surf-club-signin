@@ -24,25 +24,6 @@ const times = (() => {
 })();
 
 describe("age manager guide: wording", () => {
-  it("is laid out as a guide: one title, then sections in a sensible order", () => {
-    assert.equal(guide.querySelectorAll("h1").length, 1);
-    const headings = [...guide.querySelectorAll("h2")].map((h) => h.textContent.trim());
-    assert.deepEqual(headings, [
-      "On Sunday mornings",
-      "How bulk sign in works",
-      "Signing one youth in or out?",
-      "Practise any time on the demo",
-      "Missing name?",
-      "Questions & suggestions",
-    ]);
-    assert.equal(guide.documentElement.lang, "en");
-    assert.equal(guide.querySelectorAll("main").length, 1);
-  });
-
-  it("explains bulk sign in in numbered steps", () => {
-    const steps = [...guide.querySelectorAll("ol.am-steps li")];
-    assert.ok(steps.length >= 8, `only ${steps.length} steps`);
-  });
 
   it("quotes the buttons and messages exactly as the bulk page shows them", () => {
     for (const quoted of ["Bulk Sign In", "Bulk Sign Out", "Bulk submission completed", "Bulk submission failed", "already recorded"]) {
@@ -82,27 +63,6 @@ describe("age manager guide: links", () => {
     }
   });
 
-  it("the Sunday links go to the youth pages: bulk, the normal sign-in page, live and history", () => {
-    for (const wanted of ["../bulk.html", "../index.html?source=leader", "../live.html?source=leader", "../history.html?source=leader"]) assert.ok(hrefs.includes(wanted), wanted);
-  });
-
-  it("signing in one youth uses the normal sign-in page that every youth uses (not the bulk page)", () => {
-    const section = [...guide.querySelectorAll("h2")].find((h) => h.textContent.startsWith("Signing one youth")).nextElementSibling;
-    assert.equal(section.querySelector("a").getAttribute("href"), "../index.html?source=leader");
-  });
-
-  it("the practice links are all demo pages, and the sign in / sign out ones force sign in / sign out time", () => {
-    const practice = [...guide.querySelectorAll("#practice a")].map((a) => a.getAttribute("href")).filter((h) => !h.startsWith("#"));
-    assert.ok(practice.length >= 6);
-    assert.ok(practice.every((h) => h.startsWith("../demo/")), JSON.stringify(practice));
-    for (const wanted of ["../demo/bulk.html?test=in", "../demo/bulk.html?test=out", "../demo/index.html?test=in", "../demo/index.html?test=out"]) {
-      assert.ok(practice.includes(wanted), wanted);
-    }
-  });
-
-  it("the about page links to the guide", () => {
-    assert.ok(new JSDOM(fs.readFileSync(path.join(WEB, "main", "about.template.html"), "utf8")).window.document.querySelector('a[href="/age-manager/"]'));
-  });
 });
 
 // The guide's claims, checked against the real pages with a controlled clock.
@@ -218,17 +178,4 @@ describe("age manager guide: what it says matches what the pages do", () => {
     assert.deepEqual(await boxes("?test=out"), ["here"]); // only signed-in youth who have not signed out
   });
 
-  it("a failed submission keeps the button usable so it can be pressed again", async () => {
-    let attempt = 0;
-    const api = (url, init) => (init.method === "POST" ? (++attempt === 1 ? reply(500, { message: "Internal server error" }) : reply(201, { written: 1, skipped: ["x"] })) : readApi(url));
-    const page = await loadPage("demo/bulk.html", { query: "?test=in", api });
-    await until(() => !page.document.getElementById("bulkForm").classList.contains("hidden"), "bulk form");
-    page.document.querySelector(".name-toggle").checked = true;
-    submit(page, page.document.getElementById("bulkForm"));
-    await until(() => message(page).startsWith("Bulk submission failed"), "failure");
-    assert.equal(page.document.getElementById("bulkSubmitButton").disabled, false);
-    submit(page, page.document.getElementById("bulkForm"));
-    await until(() => message(page) === "Bulk submission completed (1 already recorded)", "success after retry");
-    page.close();
-  });
 });

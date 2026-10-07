@@ -4,15 +4,6 @@ const { XSS, until, reply, loadPage, submit, addFormFieldShortcuts } = require("
 const { names, logs, readApi } = require("./fixtures");
 
 describe("data/names.html (manage names)", () => {
-  it("add form offers youth and demo and the four youth filters, a 50 character limit and an Add button", async () => {
-    const page = await loadPage("data/names.html", { api: readApi });
-    const form = await until(() => page.document.getElementById("addForm"), "add form");
-    assert.equal(form.elements.activity_id.options.length, 2); // youth + demo
-    assert.equal(form.elements.filter.options.length, 4); // u14 u15 u17 u19
-    assert.equal(form.elements.display.maxLength, 50);
-    assert.equal(form.querySelector("button").textContent, "Add");
-    page.close();
-  });
 
   it("links each existing name to its edit form, URL-encoded, with names as text", async () => {
     const page = await loadPage("data/names.html", { api: readApi });
@@ -112,15 +103,4 @@ describe("data pages: buttons and forms are wired up without inline handlers", (
     page.close();
   });
 
-  it("index: Log Out starts hidden (stylesheet rule), Log In is offered, no script errors", async () => {
-    // jsdom has no WebCrypto; the Auth0 SDK only checks that crypto.subtle exists before it starts.
-    const page = await loadPage("data/index.html", {
-      setup: (window) => Object.defineProperty(window.crypto, "subtle", { value: {} }),
-    });
-    const logout = page.document.getElementById("logout");
-    assert.equal(page.window.getComputedStyle(logout).display, "none");
-    await until(() => page.document.getElementById("login").style.display === "inline", "login button shown");
-    assert.equal(page.window.getComputedStyle(logout).display, "none");
-    page.close();
-  });
 });

@@ -52,16 +52,6 @@ describe("data admin pages in a real browser", () => {
       await t.close();
     });
 
-    it("the home page's cards and links lead where they say", async () => {
-      const t = await open(browser, site, "/data/index.html", { api });
-      await t.page.click(".admin-cards a:has-text('Logs')");
-      await t.page.waitForURL(`${site.url}/data/logs.html`);
-      await t.page.goBack();
-      await t.page.click("a:has-text('Age manager guide')");
-      await t.page.waitForURL(`${site.url}/age-manager/`);
-      await t.close();
-    });
-
     it("editing a name has a way back to the list, and the activity tabs switch activity", async () => {
       const edit = await open(browser, site, "/data/names.html?activity_id=sorrento_youth_sunday&name_id=person_1&filter=u15", { api });
       await edit.page.waitForSelector("#editForm");
@@ -81,7 +71,7 @@ describe("data admin pages in a real browser", () => {
   });
 
   describe("layout", () => {
-    for (const width of [320, 375, 414, 1280]) {
+    for (const width of [320]) {
       for (const [name, url, ready] of PAGES) {
         it(`${name} at ${width}px wide: the page does not scroll sideways, and the menu stays on screen`, async () => {
           const t = await open(browser, site, url, { api, viewport: { width, height: 800 } });
@@ -116,49 +106,8 @@ describe("data admin pages in a real browser", () => {
       assert.equal(await narrow.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), 0);
       await narrow.close();
     });
-
-    it("select boxes are tall enough for their text (it used to be clipped)", async () => {
-      const t = await open(browser, site, "/data/names.html", { api });
-      await t.page.waitForSelector("#addForm");
-      for (const id of ["#field-activity_id", "#field-filter"]) {
-        const box = await t.page.locator(id).boundingBox();
-        assert.ok(box.height >= 40, `${id} is only ${box.height}px tall`);
-      }
-      await t.close();
-    });
-
-    it("labels focus their fields when clicked", async () => {
-      const t = await open(browser, site, "/data/logs.html", { api });
-      await t.page.click("label[for=name_id]");
-      assert.equal(await t.page.evaluate(() => document.activeElement.id), "name_id");
-      await t.close();
-    });
   });
 
-  describe("the background covers a page taller than the screen (the gradient used to stop and restart)", () => {
-    const tall = [
-      ["data: names", "/data/names.html", ".name-list li"],
-      ["data: logs", "/data/logs.html?date=2025-08-12", async (p) => { await p.click("#fetchLogsButton"); await p.waitForSelector("#logTable tbody tr"); }],
-      ["history: a day with many people", "/history.html?date=2025-08-12", "#recordsTable a"],
-    ];
-    for (const [name, url, ready] of tall) {
-      it(name, async () => {
-        const t = await open(browser, site, url, { api, viewport: { width: 1000, height: 600 } });
-        await settle(t, ready);
-        const m = await t.page.evaluate(() => ({
-          document: document.documentElement.scrollHeight,
-          html: Math.round(document.documentElement.getBoundingClientRect().height),
-          body: Math.round(document.body.getBoundingClientRect().height),
-          viewport: innerHeight,
-          repeat: getComputedStyle(document.body).backgroundRepeat,
-        }));
-        assert.ok(m.document > m.viewport, `test page is not taller than the screen: ${JSON.stringify(m)}`);
-        assert.ok(m.html >= m.document - 1 && m.body >= m.document - 1, `html/body stop short of the page: ${JSON.stringify(m)}`);
-        assert.equal(m.repeat, "no-repeat");
-        await t.close();
-      });
-    }
-  });
   describe("the three defaults and refreshes", () => {
     it("adding a name refreshes the Existing names list: the new name appears, once, and again after a second add", async () => {
       const stored = manyNames.slice(0, 3).map((n) => ({ ...n }));

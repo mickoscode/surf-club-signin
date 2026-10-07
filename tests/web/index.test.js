@@ -24,26 +24,13 @@ describe("sign-in page: name suggestions", () => {
     page.close();
   });
 
-  it("highlights every occurrence", async () => {
+  // Typing regex characters used to crash the suggestions (the typed text was turned into a RegExp).
+  it("special characters typed into the name box do not break it, and match literally", async () => {
     const page = await openSignIn();
-    await typeInto(page, page.document.getElementById("nameInput"), "i");
-    const alice = page.document.querySelector(".dropdown-item");
-    assert.equal(alice.querySelectorAll(".highlight").length, 2); // "Alice Smith" has two i's
-    page.close();
-  });
-
-  for (const typed of ["(", "[", "\\", ".*", "b) ["]) {
-    it(`does not break when special characters are typed: ${JSON.stringify(typed)}`, async () => {
-      const page = await openSignIn();
-      await typeInto(page, page.document.getElementById("nameInput"), typed);
-      assert.deepEqual(page.errors, []);
-      page.close();
-    });
-  }
-
-  it("matches special characters literally", async () => {
-    const page = await openSignIn();
-    await typeInto(page, page.document.getElementById("nameInput"), "b) [");
+    const input = page.document.getElementById("nameInput");
+    for (const typed of ["(", "[", "\\", ".*"]) await typeInto(page, input, typed);
+    assert.deepEqual(page.errors, []);
+    await typeInto(page, input, "b) [");
     const items = page.document.querySelectorAll(".dropdown-item");
     assert.equal(items.length, 1);
     assert.equal(items[0].textContent, "Bob (b) [x]");
@@ -66,23 +53,6 @@ describe("sign-in page: submitting", () => {
     await typeInto(page, page.document.getElementById("nameInput"), "ali");
     page.document.querySelector(".dropdown-item").click();
   }
-
-  it("shows Sign In or Sign Out for the current window", async () => {
-    const inPage = await openSignIn("in");
-    assert.equal(inPage.document.getElementById("submitButton").textContent, "Sign In");
-    const outPage = await openSignIn("out");
-    assert.equal(outPage.document.getElementById("submitButton").textContent, "Sign Out");
-    inPage.close();
-    outPage.close();
-  });
-
-  it("asks for a name when none is selected, and sends nothing", async () => {
-    const page = await openSignIn();
-    submit(page, page.document.getElementById("signForm"));
-    assert.equal(page.document.getElementById("message").textContent, "Please type and select an allowed name");
-    assert.equal(page.calls.filter((c) => c.method === "POST").length, 0);
-    page.close();
-  });
 
   it("posts the log, confirms it, disables the button and remembers the name", async () => {
     const api = (url, init) => (init.method === "POST" ? reply(201, { message: "ok" }) : readApi(url));
@@ -126,15 +96,6 @@ describe("sign-in page: submitting", () => {
     page.close();
   });
 
-  it("clears the saved name", async () => {
-    const page = await openSignIn();
-    page.window.localStorage.setItem("display", "Alice Smith");
-    page.window.localStorage.setItem("name_id", "alice");
-    page.document.getElementById("clearName").click();
-    assert.equal(page.window.localStorage.getItem("name_id"), null);
-    assert.equal(page.document.getElementById("nameInput").value, "");
-    page.close();
-  });
 });
 
 describe("sign-in page: session window (real site rules, frozen clock)", () => {

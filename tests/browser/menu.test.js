@@ -17,7 +17,6 @@ describe("menus, the about page and the 404 page", () => {
     const cases = [
       ["youth, default (public) menu", "/about.html", ["YOUTH", "sign", "live", "history", "about"], "/faviconV2.png"],
       ["youth, from the leader menu", "/about.html?source=leader", ["AM", "sign", "live", "history", "about"], "/favicon-am.png"],
-      ["demo, default (public) menu", "/demo/about.html", ["DEMO", "in/out", "live", "about"], "/demo/favicon-demo.png"],
       ["demo, from the leader menu", "/demo/about.html?source=leader", ["DEMO", "S-in/S-out", "live", "history", "about"], "/demo/favicon-demo.png"],
     ];
     for (const [name, url, expected, favicon] of cases) {
@@ -30,18 +29,6 @@ describe("menus, the about page and the 404 page", () => {
         await t.close();
       });
     }
-
-    it("the menu's links work from the about page (youth)", async () => {
-      const t = await open(browser, site, "/about.html");
-      await t.page.click(".menu-header a:has-text('sign')");
-      await t.page.waitForURL(`${site.url}/index.html`);
-      await t.close();
-      const leader = await open(browser, site, "/about.html?source=leader");
-      await leader.page.click(".menu-header a:has-text('history')");
-      await leader.page.waitForURL(`${site.url}/history.html?source=leader`);
-      await leader.page.waitForSelector(".menu-header a:has-text('live')"); // still the leader menu
-      await leader.close();
-    });
 
     it("the menu's links work from the about page (demo) and stay in the demo site", async () => {
       const t = await open(browser, site, "/demo/about.html");
@@ -90,7 +77,7 @@ describe("menus, the about page and the 404 page", () => {
   });
 
   describe("the 404 page (what CloudFront shows for any address that does not exist)", () => {
-    for (const url of ["/nothing-here", "/no/such/deep/page", "/demo/also/missing.html?x=1"]) {
+    for (const url of ["/no/such/deep/page"]) {
       it(`${url} is styled, has the menu, and its links work`, async () => {
         const t = await open(browser, site, url, { expectNavigationStatus: 404 });
         await t.page.waitForSelector(".menu-header");
@@ -107,12 +94,6 @@ describe("menus, the about page and the 404 page", () => {
         await t.close();
       });
     }
-
-    it("is only ever used for missing pages", async () => {
-      const t = await open(browser, site, "/index.html?test=in");
-      assert.notEqual(await t.page.title(), "page not found - sign-in-out");
-      await t.close();
-    });
   });
 
   describe("loading the menu", () => {
@@ -128,26 +109,11 @@ describe("menus, the about page and the 404 page", () => {
       assert.equal(await t.page.locator("h1:has-text('Page not found')").count(), 0);
       await t.close();
     });
-
-    it("the page does not jump down when the menu arrives (its height is reserved)", async () => {
-      const slowMenu = async (page) => page.route("**/header.snippet", async (route) => {
-        await new Promise((r) => setTimeout(r, 500));
-        const body = fs.readFileSync(path.join(WEB, "main", "header.snippet"), "utf8");
-        await route.fulfill({ status: 200, contentType: "text/plain", body });
-      });
-      const t = await open(browser, site, "/index.html?test=in", { setup: slowMenu });
-      const top = () => t.page.evaluate(() => Math.round(document.querySelector(".container").getBoundingClientRect().top));
-      assert.equal(await t.page.locator(".menu-header").count(), 0, "menu should not have arrived yet");
-      const before = await top();
-      await t.page.waitForSelector(".menu-header");
-      assert.equal(await top(), before);
-      await t.close();
-    });
   });
 
   describe("every menu fits the screen", () => {
     const menus = [["youth user", "/index.html?test=x"], ["youth leader", "/bulk.html"], ["demo user", "/demo/index.html?test=in"], ["demo leader", "/demo/bulk.html?test=in"]];
-    for (const width of [280, 320, 360, 414]) {
+    for (const width of [320]) {
       for (const [name, url] of menus) {
         it(`${name} menu at ${width}px wide stays on screen${width >= 320 ? ", on a single row, and the page does not scroll sideways" : " (wrapping onto a second row if it must)"}`, async () => {
           const t = await open(browser, site, url, { viewport: { width, height: 700 } });

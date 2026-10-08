@@ -15,7 +15,7 @@ describe("every page loads cleanly under the enforced policy", () => {
     ["demo bulk", "/demo-am/index.html?test=in", "#bulkForm:not(.hidden)"],
     ["demo live", "/demo-am/live.html?test=in", "#recordsTable tr:has(td)"],
     ["history (a day)", "/demo-am/history.html?date=2025-08-12", "#recordsTable a"],
-    ["youth info", "/info.html", ".menu-header a"],
+    ["youth info (guide)", "/info.html", ".guide-steps"],
     ["age manager info (guide)", "/am/info.html", ".guide-steps"],
     ["demo info (youth)", "/demo/info.html", ".guide-links"],
     ["demo info (age manager)", "/demo-am/info.html", ".guide-links"],

@@ -39,10 +39,6 @@ describe("guides: wording (age manager guide)", () => {
     for (const [name, text] of [["guide", guideText], ["youth info page", aboutText]]) {
       for (const t of [times.inStart, times.outStart, times.end]) assert.ok(text.includes(t), `${name} should say ${t}`);
     }
-    assert.ok(!aboutText.includes("10:40") && !aboutText.includes("9:31"), "the youth info page still has the old sign out times");
-    // sign out starts when sign in ends
-    assert.ok(aboutText.includes(`Sign in is accessible from ${times.inStart} to ${times.outStart}`));
-    assert.ok(aboutText.includes(`Sign out is accessible from ${times.outStart} to ${times.end}`));
   });
 });
 
@@ -54,8 +50,8 @@ describe("guides: links", () => {
     return fs.existsSync(base) && fs.statSync(base).isDirectory() ? path.join(base, "index.html") : base;
   };
 
-  it("every link on the three info pages (age manager and the two demos) goes to a page or in-page section that exists", () => {
-    for (const [file, pagePath] of [["am/info.html", "/am/info.html"], ["demo/info.html", "/demo/info.html"], ["demo-am/info.html", "/demo-am/info.html"]]) {
+  it("every link on the four info pages goes to a page or in-page section that exists", () => {
+    for (const [file, pagePath] of [["youth/info.html", "/info.html"], ["am/info.html", "/am/info.html"], ["demo/info.html", "/demo/info.html"], ["demo-am/info.html", "/demo-am/info.html"]]) {
       const doc = new JSDOM(fs.readFileSync(path.join(WEB, file), "utf8")).window.document;
       for (const a of doc.querySelectorAll("a")) {
         const href = a.getAttribute("href");

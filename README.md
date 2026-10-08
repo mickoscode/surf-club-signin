@@ -98,6 +98,7 @@ GitHub Actions workflows are in [./.github/workflows/](./.github/workflows/). Ac
 
 ## Documentation
 
+- [frontend-dev-guide.md](./docs/frontend-dev-guide.md) - how the pages are generated and loaded, and how `config.json` / `PAGES` work (start here before changing the front end)
 - [requirements.md](./docs/requirements.md), [release_plan.md](./docs/release_plan.md) - what the site is for and how it is rolled out
 - [site_admin.md](./docs/site_admin.md) - season reset and other admin procedures
 - [go_live_prep.md](./docs/go_live_prep.md) - pre-launch checklist for the first season

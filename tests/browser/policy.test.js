@@ -52,7 +52,7 @@ describe("the Content-Security-Policy under test", () => {
     });
 
     it("blocks an inline event handler and an inline style attribute", async () => {
-      const t = await open(browser, site, "/demo/about.html");
+      const t = await open(browser, site, "/demo/info.html");
       await t.page.evaluate(() => {
         const wrap = document.createElement("div");
         wrap.innerHTML = '<img src="data:," onerror="window.__ran = true"><p id="p" style="color: red">x</p>';
@@ -69,7 +69,7 @@ describe("the Content-Security-Policy under test", () => {
   });
 
   it("an ordinary page produces no violations (so the controls above are the only ones)", async () => {
-    const t = await open(browser, site, "/demo/about.html");
+    const t = await open(browser, site, "/demo/info.html");
     await t.page.waitForLoadState("networkidle");
     await expectClean(t);
     await t.close();

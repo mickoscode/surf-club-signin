@@ -1,4 +1,4 @@
-// Helpers shared by every page of every view (index, bulk, live, history, about and the guides).
+// Helpers shared by every page of every view (index, bulk, live, history, info and 404).
 // Loaded with a plain <script src="common.js"> before the page's own script, so everything here is a global.
 //
 // Per-site settings come from data-* attributes on <body> (written by inject-config.js from config.json):

@@ -3,8 +3,8 @@
 The primary site, [sign-in-out.com](https://sign-in-out.com/) is only available during the "activity window".
 Some features can be accessed/tested outside the window via:
 - DEMO Activity (uses demo data, not prod data) - [sign-in-out.com/demo/](https://sign-in-out.com/demo/)
-- DEMO Age Manager (practise bulk sign in/out) - [sign-in-out.com/demo-am/](https://sign-in-out.com/demo-am/)
-- Age Manager guide (how bulk sign in works, practising on the demo) - [sign-in-out.com/am/](https://sign-in-out.com/am/)
+- DEMO Age Manager (practise bulk sign in/out) - [sign-in-out.com/demo-am/](https://sign-in-out.com/demo-am/) (instructions: `info.html`)
+- Age Manager guide (how bulk sign in works, practising on the demo) - [sign-in-out.com/am/info.html](https://sign-in-out.com/am/info.html)
 - Age Manager History Page - [sign-in-out.com/am/history.html](https://sign-in-out.com/am/history.html)
 
 ## Utilities for managing data

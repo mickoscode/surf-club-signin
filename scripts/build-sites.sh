@@ -3,15 +3,17 @@
 # web/ holds the source, split by who owns it:
 #   web/shared/   code and assets common to the views: page templates, scripts, stylesheets, icons, vendored libraries
 #   web/youth/    the Youth view (people signing themselves in and out). Served at the site root.
-#   web/am/       the Age Manager view (bulk sign in, plus the guide). Served at /am/.
+#   web/am/       the Age Manager view (bulk sign in, live, history, info). Served at /am/.
 #   web/demo/     practice copy of the Youth view, using the "demo" activity. Served at /demo/.
 #   web/demo-am/  practice copy of the Age Manager view. Served at /demo-am/.
 #   web/data/     the name admin pages (standalone, not a view). Served at /data/.
 #
 # A view is any web/<folder>/ with a config.json. It holds only what is unique to it: the config (page title, API URL,
-# icon, activity, test mode and which pages it has), its one menu (header.snippet) and any pages of its own (a guide).
+# icon, activity, test mode and which pages it has, as output page: template), its one menu (header.snippet) and its
+# own pages (info.html, which the menu's label links to, and 404.html on the root view).
 # For each view the build copies the shared scripts, stylesheets, vendored libraries and the view's icon in, then the
-# view's own files on top, then fills each listed page template from the config. data is copied as it is.
+# view's own files on top, then fills each listed page template from the config. index.html is the working sign-in page
+# of every view: the single sign-in template for youth, the bulk template for age managers. data is copied as it is.
 # Used by CI (PR validation and deploy); safe to run locally. dist/ is not committed.
 #
 # Checks per view: valid config.json with every key, a menu, no unreplaced {{INJECT_*}} placeholders in the output,
@@ -65,7 +67,7 @@ PY
     continue
   fi
   icon=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["INJECT_FAVICON"])' "$cfg")
-  pages=$(python3 -c 'import json,sys; print(" ".join(json.load(open(sys.argv[1]))["PAGES"]))' "$cfg")
+  pages=$(python3 -c 'import json,sys; print(" ".join(f"{page}:{template}" for page, template in json.load(open(sys.argv[1]))["PAGES"].items()))' "$cfg")
   if [ ! -f "$web/shared/icons/$icon" ]; then
     fail "web/$view: INJECT_FAVICON $icon is not in web/shared/icons/"
     continue
@@ -79,10 +81,12 @@ PY
   cp -R "$src/." "$out/"
   rm "$out/config.json"
 
-  for page in $pages; do
+  for entry in $pages; do
+    page=${entry%%:*}
+    template=${entry##*:}
     [ ! -e "$src/$page.html" ] || fail "web/$view: $page.html is both a page of the view's own and one generated from a template"
-    [ "$page" = about ] || cp "$web/shared/scripts/$page.js" "$out/"
-    node "$repo_root/scripts/inject-config.js" "$cfg" "$web/shared/templates/$page.template.html" "$out/$page.html"
+    cp "$web/shared/scripts/$template.js" "$out/"
+    node "$repo_root/scripts/inject-config.js" "$cfg" "$web/shared/templates/$template.template.html" "$out/$page.html"
     left=$(grep -o '{{INJECT_[A-Z_]*}}' "$out/$page.html" | sort -u | tr '\n' ' ' || true)
     [ -z "$left" ] || fail "web/$view: $page.html has unreplaced placeholders: $left"
   done

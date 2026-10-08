@@ -1,8 +1,8 @@
 name: Web PR checks
 
 # Builds every site and runs the frontend tests (jsdom, then real Chromium under the enforced CSP) on pull
-# requests that touch the frontend or the CSP in terraform/cloudfront.tf, so a missing config key, broken
-# symlink, unreplaced placeholder, broken page logic or a CSP violation is caught before merge
+# requests that touch the frontend or the CSP in terraform/cloudfront.tf, so a missing config key, an
+# unreplaced placeholder, broken page logic or a CSP violation is caught before merge
 # (merging to main deploys to prod).
 # Jobs are skipped (not absent) when the frontend is unchanged, so "Validate sites" can be a required check.
 on:
@@ -37,7 +37,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(web/|tests/|package(-lock)?\.json$|terraform/cloudfront\.tf$|scripts/build-sites\.sh$|\.github/workflows/(web-pr|sync-sio)\.yml$)'; then
+          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(web/|tests/|package(-lock)?\.json$|terraform/cloudfront\.tf$|scripts/(build-sites\.sh|inject-config\.js)$|\.github/workflows/(web-pr|sync-sio)\.yml$)'; then
             echo "web=true" >> "$GITHUB_OUTPUT"
           else
             echo "web=false" >> "$GITHUB_OUTPUT"

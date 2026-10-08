@@ -28,25 +28,24 @@ browser ──> CloudFront ──> S3 (static html/js/css)
 
 ## Repo Overview
 
-[./web/main/](./web/main/) - the Youth site (served at the root) and the shared templates for every site:
-- [config.json](./web/main/config.json) - values injected into the html templates (page title, API URL, tab icon, activity id, test mode). Youth, demo and age manager each have their own tab icon (the age manager one is named in its menu file)
-- [header.snippet](./web/main/header.snippet) / [header_leader.snippet](./web/main/header_leader.snippet) - the menu for users and for leaders; each site can have its own copy
-- `index.template.html`, `bulk.template.html`, `live.template.html`, `history.template.html`, `about.template.html` - [inject-config.js](./web/main/inject-config.js) turns these into the `.html` pages (the generated pages are not committed). The templates contain markup only; the page logic is in [common.js](./web/main/common.js) (shared helpers) and one script per page (`index.js`, `bulk.js`, `live.js`, `history.js`; `static-page.js` for the about page)
-- [404.html](./web/main/404.html) - the page CloudFront shows for any address that doesn't exist (a plain page with `<base href="/">`, so its styles and menu load at any depth)
-- [sign-in-out.css](./web/main/sign-in-out.css) - shared as-is
+The website is four folders under [./web/](./web/). Three are "views" of the same site; `shared` is what they have in common:
 
-[./web/demo/](./web/demo/) - the demo site:
-- Everything except `config.json` and the two `.snippet` files (templates, scripts, CSS) is a symbolic link back to [./web/main/](./web/main/)
-- `"INJECT_ENABLE_TEST_MODE": "true"` in config.json (demo only) enables the test/demo functionality, e.g. `index.html?test=in` or `?test=out`. Use the demo site so you don't touch real data.
+| Folder | Served at | What is in it |
+|---|---|---|
+| [web/shared/](./web/shared/) | (copied into the Youth and Demo views) | Everything common: the page templates (`templates/`), the page scripts (`scripts/`: `common.js` shared helpers, one script per page), the stylesheet (`styles/sign-in-out.css`) and the vendored libraries (`vendor/`) |
+| [web/youth/](./web/youth/) | `/` (the site root) | Only what is unique to Youth: `config.json` (page title, API URL, tab icon, activity id, test mode), the two menus (`header.snippet` for users, `header_leader.snippet` for age managers), the tab icons (`faviconV2.png`, and `favicon-am.png` which age manager pages use), and the `404.html` page CloudFront shows for any address that doesn't exist |
+| [web/demo/](./web/demo/) | `/demo/` | Only what is unique to the demo: its own `config.json`, menus and `favicon-demo.png`. `"INJECT_ENABLE_TEST_MODE": "true"` in its config.json enables the test/demo functionality, e.g. `index.html?test=in` or `?test=out`, so you don't touch real data |
+| [web/age-manager/](./web/age-manager/) | `/age-manager/` | A plain-language guide for age managers (how bulk sign in works, how to sign in one youth, how to practise on the demo). It is part of the Youth site: it loads the Youth leader menu, `common.js`, the stylesheet and the icon from the site root |
+| [web/data/](./web/data/) | `/data/` | The name admin pages (manage names, view logs). Standalone; they load the shared stylesheet and libraries from the site root |
 
-Standalone pages (not templated): [./web/data/](./web/data/) (manage names and view logs) and [./web/age-manager/](./web/age-manager/) (a plain-language guide for age managers: how bulk sign in works, how to sign in one youth, and how to practise on the demo).
+[scripts/build-sites.sh](./scripts/build-sites.sh) assembles these into `dist/` (not committed), which is laid out exactly like the S3 bucket: for the Youth and Demo views it copies `web/shared/` in, adds the view's own files, and fills each template from the view's `config.json` ([inject-config.js](./scripts/inject-config.js)) to make `index.html`, `live.html`, `history.html`, `bulk.html` and `about.html`. The templates contain markup only; the page logic is in `common.js` and one script per page (`index.js`, `bulk.js`, `live.js`, `history.js`; `static-page.js` for the about page).
 
 > **Security note:** the API has no authentication, so the admin pages in `web/data/` are only hidden, not protected. This is a known, accepted risk for now.
 
 [./tests/web/](./tests/web/) - frontend tests, see [Local development](#local-development).
 
 [./scripts/](./scripts/):
-- [build-sites.sh](./scripts/build-sites.sh) - builds and validates every site (what CI runs)
+- [build-sites.sh](./scripts/build-sites.sh) - assembles and validates the whole site into `dist/` (what CI runs and what is deployed); [inject-config.js](./scripts/inject-config.js) is the template filler it uses
 - Python scripts to simplify basic web-dev site admin via AWS cli (e.g. importing names)
 - Plan is to build authentication and site driven admin, if more people want to create activities
 
@@ -59,11 +58,11 @@ Standalone pages (not templated): [./web/data/](./web/data/) (manage names and v
 
 ## Local development
 
-Pages call the real API, so use [./web/demo/](./web/demo/) for manual testing.
+Pages call the real API, so use the demo ([./web/demo/](./web/demo/)) for manual testing.
 
 ```bash
-./scripts/build-sites.sh          # generate the pages (needs Node 24)
-# serve the repo (e.g. VS Code Live Server) and browse to http://localhost:5500/web/demo/index.html?test=in
+./scripts/build-sites.sh          # assemble the site into dist/ (needs Node 24)
+# serve the repo (e.g. VS Code Live Server) and browse to http://localhost:5500/dist/demo/index.html?test=in
 
 npm ci --ignore-scripts           # one-off: installs jsdom, used only by the tests
 npm test                          # frontend tests: real pages in jsdom against a fake API
@@ -71,7 +70,7 @@ npx playwright install chromium   # one-off: the browser for the next command (o
 npm run test:browser              # real Chromium, with the site's enforced Content-Security-Policy
 ```
 
-Edit the `*.template.html` files and the `.js` files in `web/main/`, never the generated `index.html`, `live.html`, `history.html` or `bulk.html`.
+Edit the files under `web/` (templates and scripts in `web/shared/`), never the generated `dist/`; run `./scripts/build-sites.sh` again after each change.
 
 Infrastructure:
 

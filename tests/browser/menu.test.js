@@ -1,11 +1,8 @@
 const { describe, it, before, after } = require("node:test");
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
 const { startServer } = require("./server");
 const { launch, open, expectClean } = require("./helpers");
 
-const WEB = path.resolve(__dirname, "..", "..", "web");
 const menuTexts = (t) => t.page.locator(".menu-header > div").allTextContents();
 
 describe("menus, the about page and the 404 page", () => {

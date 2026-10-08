@@ -13,7 +13,7 @@ The files are copied unchanged from the npm tarballs. `web/shared/vendor/SHA256S
 script or stylesheet from another host (the Content-Security-Policy blocks it), and `scripts/build-sites.sh` fails if a page references a local file that is missing.
 
 `scripts/build-sites.sh` copies `vendor/` into the Youth and Demo views, so their pages load `vendor/picnic.min.css`
-relative to themselves. `web/data` and `web/age-manager` load it from the site root (`../vendor/picnic.min.css`).
+relative to themselves. `web/data` loads it from the site root (`../vendor/picnic.min.css`).
 
 ## Updating
 

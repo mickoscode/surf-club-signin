@@ -33,7 +33,7 @@ jobs:
           node-version: '24'
 
       # Assembles web/ into dist/ (the exact layout of the bucket: the Youth view at the root, then /demo,
-      # /age-manager and /data) and fails on missing config keys or unreplaced placeholders.
+      # /am, /demo-am and /data) and fails on missing config keys or unreplaced placeholders.
       # inject-config.js uses only built-in modules, so no npm install is needed.
       - name: Build and validate all sites
         run: ./scripts/build-sites.sh

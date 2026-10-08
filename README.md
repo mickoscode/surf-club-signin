@@ -21,24 +21,25 @@ browser ──> CloudFront ──> S3 (static html/js/css)
    └──────> API Gateway (HTTP API, throttled) ──> Python Lambdas ──> DynamoDB (names, log, activity)
 ```
 
-- Youth Sunday sessions (`sorrento_youth_sunday`) are the only active team and are served from the top level of the domain. A **demo** site (`/demo/`, with its own demo data) is used for testing and for showing age managers how the site works.
-- Each of these is a "site": a folder under [./web/](./web/) with its own `config.json` and menu, sharing one set of page templates. Adding another team later is a folder copy (see [site_admin.md](./docs/site_admin.md)).
-- People sign in/out on `index.html` during the activity window. Everyone can see `live.html` (a live count of who has signed in) and `history.html` from the menu. Age managers also use `bulk.html` (sign in/out a whole group at once).
+- Youth Sunday sessions (`sorrento_youth_sunday`) are the only active team and are served from the top level of the domain. Age managers use their own view at `/am/` (bulk sign in/out and a guide). A practice copy of each, with its own demo data, is at `/demo/` (youth) and `/demo-am/` (age managers), for testing and for learning how the site works.
+- Each of these is a "view": a folder under [./web/](./web/) with its own `config.json` and menu, sharing one set of page templates. Adding another team later is a folder copy (see [site_admin.md](./docs/site_admin.md)).
+- Youth sign in/out on `index.html` during the activity window, and everyone can see `live.html` (a live count of who has signed in) and `history.html` from the menu. Age managers have their own pages at `/am/`: `bulk.html` (sign in/out a whole group at once), the same live count and history, and a guide.
 - The sign-in times are currently hard coded in the pages (08:00 in, 09:30 out, 11:00 end, Sundays only); the demo site ignores them in test mode.
 
 ## Repo Overview
 
-The website is four folders under [./web/](./web/). Three are "views" of the same site; `shared` is what they have in common:
+Under [./web/](./web/), each folder is either common code or one view that serves one audience, with one menu and one tab icon:
 
 | Folder | Served at | What is in it |
 |---|---|---|
-| [web/shared/](./web/shared/) | (copied into the Youth and Demo views) | Everything common: the page templates (`templates/`), the page scripts (`scripts/`: `common.js` shared helpers, one script per page), the stylesheet (`styles/sign-in-out.css`) and the vendored libraries (`vendor/`) |
-| [web/youth/](./web/youth/) | `/` (the site root) | Only what is unique to Youth: `config.json` (page title, API URL, tab icon, activity id, test mode), the two menus (`header.snippet` for users, `header_leader.snippet` for age managers), the tab icons (`faviconV2.png`, and `favicon-am.png` which age manager pages use), and the `404.html` page CloudFront shows for any address that doesn't exist |
-| [web/demo/](./web/demo/) | `/demo/` | Only what is unique to the demo: its own `config.json`, menus and `favicon-demo.png`. `"INJECT_ENABLE_TEST_MODE": "true"` in its config.json enables the test/demo functionality, e.g. `index.html?test=in` or `?test=out`, so you don't touch real data |
-| [web/age-manager/](./web/age-manager/) | `/age-manager/` | A plain-language guide for age managers (how bulk sign in works, how to sign in one youth, how to practise on the demo). It is part of the Youth site: it loads the Youth leader menu, `common.js`, the stylesheet and the icon from the site root |
+| [web/shared/](./web/shared/) | (copied into every view) | Everything common: the page templates (`templates/`), the page scripts (`scripts/`: `common.js` shared helpers, one script per page), the stylesheets (`styles/`), the tab icons (`icons/`) and the vendored libraries (`vendor/`) |
+| [web/youth/](./web/youth/) | `/` (the site root) | Youth signing themselves in and out. Only what is unique: `config.json` (page title, API URL, tab icon, activity id, test mode, which pages), the menu (`header.snippet`) and the `404.html` page CloudFront shows for any address that doesn't exist |
+| [web/am/](./web/am/) | `/am/` | Age managers: bulk sign in/out, live count, history, and `index.html`, a plain-language guide (the red **AM** in the menu links to it) |
+| [web/demo/](./web/demo/) | `/demo/` | A practice copy of the youth view using the `demo` activity; `"INJECT_ENABLE_TEST_MODE": "true"` enables the test/demo functionality, e.g. `index.html?test=in` or `?test=out`, so you don't touch real data. `guide.html` explains it (the **DEMO-Y** in the menu links to it) |
+| [web/demo-am/](./web/demo-am/) | `/demo-am/` | A practice copy of the age manager view (bulk sign in/out); `index.html` explains it (the **DEMO-A** in the menu links to it) |
 | [web/data/](./web/data/) | `/data/` | The name admin pages (manage names, view logs). Standalone; they load the shared stylesheet and libraries from the site root |
 
-[scripts/build-sites.sh](./scripts/build-sites.sh) assembles these into `dist/` (not committed), which is laid out exactly like the S3 bucket: for the Youth and Demo views it copies `web/shared/` in, adds the view's own files, and fills each template from the view's `config.json` ([inject-config.js](./scripts/inject-config.js)) to make `index.html`, `live.html`, `history.html`, `bulk.html` and `about.html`. The templates contain markup only; the page logic is in `common.js` and one script per page (`index.js`, `bulk.js`, `live.js`, `history.js`; `static-page.js` for the about page).
+[scripts/build-sites.sh](./scripts/build-sites.sh) assembles these into `dist/` (not committed), which is laid out exactly like the S3 bucket: for each view it copies in the shared scripts, stylesheets, icon and libraries it needs, adds the view's own files, and fills each template listed in the view's `config.json` (`PAGES`) ([inject-config.js](./scripts/inject-config.js)) to make pages such as `index.html`, `bulk.html`, `live.html`, `history.html` and `about.html`. The templates contain markup only; the page logic is in `common.js` and one script per page (`index.js`, `bulk.js`, `live.js`, `history.js`; `static-page.js` for the about page).
 
 > **Security note:** the API has no authentication, so the admin pages in `web/data/` are only hidden, not protected. This is a known, accepted risk for now.
 

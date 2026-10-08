@@ -19,7 +19,7 @@ Viewing all names via front end - [sign-in-out.com/data/list-names.html](https:/
 ## Adding another club/group/activity - e.g. sorrento_redcaps_sunday
 Youth is currently the only active team (the colour age-group sites were removed), but another can be added:
 - Populate the names table with the list of allowed names for the new activity_id
-- Copy the demo folder (keeps its symbolic links): `cp -a web/demo web/reds`
+- Copy the demo folder: `cp -R web/demo web/reds` (it holds only the config, the two menus and the icon; everything else comes from `web/shared/`)
 - Edit `./web/reds/config.json` (activity id, page title, `"INJECT_ENABLE_TEST_MODE": "false"`) and the two `.snippet` menus
 - Add the activity id to `VALID_ACTIVITY_IDS` in `scripts/import_names_csv.py` and `scripts/delete_all_log_history.py`, to `VALID_ACTIVITY_ID` in `web/data/names.js` and `web/data/list-names.js`, and to the links in `web/data/list-names.html`
 - Add the new activity's links to `web/age-manager/index.html` (the guide currently covers Youth and Demo)
@@ -27,13 +27,8 @@ Youth is currently the only active team (the colour age-group sites were removed
 
 ## Local Dev & Testing via vsCode LiveServer plugin
 
-- Remember to edit **template** files, not index.html, history.html, etc
-- After editing template files, re-generate html. e.g. cd web/main; node ./inject-config.js bulk (see gen-html alias)
+- Edit the source under `web/` (templates and scripts are in `web/shared/`), never the generated `dist/`
+- After editing, rebuild: `./scripts/build-sites.sh` (needs Node; it assembles the whole site into `dist/`)
 - Ensure LiveServer plugin installed via https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer&ssr=false#overview
 - In vsCode, goto any html file and click "Go Live" option in footer menu to activate plugin (and determine ports, etc) and select to launch in browser
-- URL may not be right / navigable, so manually goto necessary page - e.g. http://localhost:5500/web/main/index.html
-
-## name_id format / generation
-
-- name_id should only have lower case ascii a-z, 0-9 and underscores
-- see scripts/import_names_csv.py for implementation
+- URL may not be right / navigable, so manually goto necessary page - e.g. http://localhost:5500/dist/index.html (Youth) or http://localhost:5500/dist/demo/index.html?test=in

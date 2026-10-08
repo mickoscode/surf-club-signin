@@ -5,7 +5,7 @@ const { loadPage } = require("./helpers");
 // common.js is shared by every templated page; load one page and call its globals directly.
 // Frozen clock: Wednesday 13 Aug 2025, 09:00 local time.
 const WEDNESDAY = new Date(2025, 7, 13, 9, 0);
-const open = (file = "main/index.html", options = {}) =>
+const open = (file = "index.html", options = {}) =>
   loadPage(file, { now: WEDNESDAY, ...options });
 
 
@@ -28,7 +28,7 @@ describe("common.js: API helpers", () => {
       { status: 502, body: {} }, // gateway error without a message
     ];
     const api = () => ({ __reply: true, ...replies.shift() });
-    const page = await open("main/index.html", { api });
+    const page = await open("index.html", { api });
     const { postJson } = page.window;
     assert.deepEqual(await postJson("/log", { a: 1 }), { message: "ok" });
     await assert.rejects(() => postJson("/log", {}), /Too many requests right now/);
@@ -46,16 +46,16 @@ describe("common.js: dates and times", () => {
   });
 
   it("getNextSunday: on a Sunday, a week later", async () => {
-    const page = await open("main/index.html", { now: new Date(2025, 7, 10, 7, 0) });
+    const page = await open("index.html", { now: new Date(2025, 7, 10, 7, 0) });
     assert.equal(page.window.getNextSunday(), "17 Aug 2025");
     page.close();
   });
 
   it("isSunday follows the real day, but is always true in test mode", async () => {
-    const real = await open("main/index.html");
+    const real = await open("index.html");
     assert.equal(real.window.isSunday(), false);
     real.close();
-    const sunday = await open("main/index.html", { now: new Date(2025, 7, 10, 9, 0) });
+    const sunday = await open("index.html", { now: new Date(2025, 7, 10, 9, 0) });
     assert.equal(sunday.window.isSunday(), true);
     sunday.close();
     const demo = await open("demo/index.html");
@@ -83,7 +83,7 @@ describe("common.js: dates and times", () => {
     assert.deepEqual([mins(w.inStart, w.now), mins(w.outStart, w.now), mins(w.end, w.now)], [-20, -10, 20]);
     outPage.close();
 
-    const real = await open("main/index.html", { query: "?test=in" });
+    const real = await open("index.html", { query: "?test=in" });
     w = real.window.getSessionWindow();
     assert.equal(w.inStart.getHours(), 8);
     real.close();
@@ -138,7 +138,7 @@ describe("common.js: choosing the menu", () => {
       ["?source=", "leader", "leader"],
       ["?source=USER", "leader", "leader"], // exact match only
     ]) {
-      const page = await open("main/index.html", { query });
+      const page = await open("index.html", { query });
       assert.equal(page.window.getMenuSource(defaultSource), expected, `${query || "(none)"} with default ${defaultSource}`);
       page.close();
     }

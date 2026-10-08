@@ -1,20 +1,21 @@
 // Shared helpers for the frontend tests.
 //
-// The tests load the real generated pages (web/<site>/*.html) into jsdom, a pure-JavaScript
+// The tests load the real generated pages (dist/<site>/*.html) into jsdom, a pure-JavaScript
 // browser DOM, with a fake `fetch` standing in for the API. Nothing touches the network or prod data.
 // Run `./scripts/build-sites.sh` first so the generated pages exist (CI does this).
 const { JSDOM, VirtualConsole, requestInterceptor } = require("jsdom");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const WEB_ROOT = path.resolve(__dirname, "..", "..", "web");
+// dist/ is the assembled site, laid out like the deployed bucket (see scripts/build-sites.sh).
+const WEB_ROOT = path.resolve(__dirname, "..", "..", "dist");
 
 const SITE_ORIGIN = "https://sign-in-out.com/";
 
 const CONTENT_TYPES = { ".js": "application/javascript", ".css": "text/css", ".html": "text/html", ".png": "image/png" };
 
 // Answers every request the page makes itself (never passing one through to the network): the page's own
-// <script src> / <link> files are served from web/, and anything else (e.g. unpkg's picnic CSS) is empty.
+// <script src> / <link> files are served from dist/, and anything else (e.g. unpkg's picnic CSS) is empty.
 const localResources = requestInterceptor((request) => {
   if (!request.url.startsWith(SITE_ORIGIN)) {
     return new Response("", { headers: { "Content-Type": "text/css" } });
@@ -47,7 +48,7 @@ const reply = (status, body = {}) => ({ __reply: true, status, body });
 
 /**
  * Load a generated page.
- *   file:  path under web/, e.g. "demo/index.html"
+ *   file:  path under dist/, e.g. "demo/index.html" (the Youth view is at the root: "index.html")
  *   query: e.g. "?test=in"
  *   api:   (url, { method, body }) => object | reply(status, body)
  *   setup: optional (window) => void, run before the page's scripts (to shim browser APIs jsdom lacks)

@@ -1,1 +1,0 @@
-../main/static-page.js

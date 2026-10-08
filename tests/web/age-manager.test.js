@@ -7,16 +7,17 @@ const { until, reply, loadPage, submit } = require("./helpers");
 const { readApi } = require("./fixtures");
 
 const ROOT = path.resolve(__dirname, "..", "..");
-const WEB = path.join(ROOT, "web");
+const WEB = path.join(ROOT, "web");   // sources
+const DIST = path.join(ROOT, "dist"); // the assembled site, laid out like the deployed bucket
 const guideHtml = fs.readFileSync(path.join(WEB, "age-manager", "index.html"), "utf8");
 const guide = new JSDOM(guideHtml).window.document;
 const guideText = guide.body.textContent.replace(/\s+/g, " ");
-const aboutText = new JSDOM(fs.readFileSync(path.join(WEB, "main", "about.template.html"), "utf8")).window.document.body.textContent.replace(/\s+/g, " ");
-const bulkSource = fs.readFileSync(path.join(WEB, "main", "bulk.js"), "utf8");
+const aboutText = new JSDOM(fs.readFileSync(path.join(WEB, "shared", "templates", "about.template.html"), "utf8")).window.document.body.textContent.replace(/\s+/g, " ");
+const bulkSource = fs.readFileSync(path.join(WEB, "shared", "scripts", "bulk.js"), "utf8");
 
 // The session times the site really uses, written the way people read them ("9:30am").
 const times = (() => {
-  const m = fs.readFileSync(path.join(WEB, "main", "common.js"), "utf8")
+  const m = fs.readFileSync(path.join(WEB, "shared", "scripts", "common.js"), "utf8")
     .match(/SESSION_TIMES = \{ inStart: "(\d\d):(\d\d)", outStart: "(\d\d):(\d\d)", end: "(\d\d):(\d\d)" \}/);
   assert.ok(m, "could not read SESSION_TIMES from common.js");
   const fmt = (h, min) => `${Number(h) % 12 || 12}:${min}${Number(h) < 12 ? "am" : "pm"}`;
@@ -48,11 +49,10 @@ describe("age manager guide: wording", () => {
 describe("age manager guide: links", () => {
   const hrefs = [...guide.querySelectorAll("a")].map((a) => a.getAttribute("href"));
 
-  // Where a link on /age-manager/ lands on disk. The deployed site root is web/main; demo, data and age-manager are folders of their own.
+  // Where a link on /age-manager/ lands on disk (in dist, which is laid out like the deployed site).
   const fileFor = (href) => {
     const { pathname } = new URL(href, "https://sign-in-out.com/age-manager/");
-    const first = pathname.split("/")[1];
-    const base = ["demo", "data", "age-manager"].includes(first) ? path.join(WEB, pathname) : path.join(WEB, "main", pathname);
+    const base = path.join(DIST, pathname);
     return fs.existsSync(base) && fs.statSync(base).isDirectory() ? path.join(base, "index.html") : base;
   };
 
@@ -73,17 +73,17 @@ describe("age manager guide: what it says matches what the pages do", () => {
   const message = (page) => page.document.getElementById("message").textContent;
 
   it("before 8:00am the bulk page says when sign in starts; it is not available on other days or after 11:00am", async () => {
-    const early = await open("main/bulk.html", { now: SUNDAY(7, 0) });
+    const early = await open("bulk.html", { now: SUNDAY(7, 0) });
     await until(() => message(early), "message");
     assert.equal(message(early), "Sign in starts at 8:00am");
     early.close();
 
-    const late = await open("main/bulk.html", { now: SUNDAY(11, 30) });
+    const late = await open("bulk.html", { now: SUNDAY(11, 30) });
     await until(() => message(late), "message");
     assert.match(message(late), /^The next session is/);
     late.close();
 
-    const weekday = await open("main/bulk.html", { now: WEEKDAY });
+    const weekday = await open("bulk.html", { now: WEEKDAY });
     await until(() => message(weekday), "message");
     assert.match(message(weekday), /^The next session is/);
     weekday.close();
@@ -91,7 +91,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
 
   it("until 9:30am the button says Bulk Sign In; from 9:30am it says Bulk Sign Out", async () => {
     for (const [now, expected] of [[SUNDAY(8, 0), "Bulk Sign In"], [SUNDAY(9, 29), "Bulk Sign In"], [SUNDAY(9, 30), "Bulk Sign Out"], [SUNDAY(10, 59), "Bulk Sign Out"]]) {
-      const page = await open("main/bulk.html", { now });
+      const page = await open("bulk.html", { now });
       await until(() => page.document.getElementById("bulkSubmitButton").textContent, "button text");
       assert.equal(page.document.getElementById("bulkSubmitButton").textContent, expected, now.toTimeString().slice(0, 5));
       page.close();
@@ -117,7 +117,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
     await until(() => !single.document.getElementById("signForm").classList.contains("hidden"), "demo sign-in form");
     single.close();
 
-    const youth = await open("main/bulk.html", { now: WEEKDAY });
+    const youth = await open("bulk.html", { now: WEEKDAY });
     await until(() => message(youth), "message");
     assert.match(message(youth), /^The next session is/);
     youth.close();

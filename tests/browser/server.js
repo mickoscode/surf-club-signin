@@ -1,14 +1,14 @@
 // A small static server that serves web/ the way CloudFront + S3 do, with the same security headers.
 //
 // The Content-Security-Policy is read from terraform/cloudfront.tf (not copied here), so these tests always
-// run against the policy that production sends. Layout mirrors the deployed bucket: web/main is the site root,
-// and every other folder under web/ (demo, data, age-manager) is served at /<folder>/.
+// run against the policy that production sends. The site is served from dist/ (assembled by scripts/build-sites.sh),
+// which is laid out like the deployed bucket: the Youth view at the root, then /demo/, /data/ and /age-manager/.
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "..", "..");
-const WEB = path.join(ROOT, "web");
+const DIST = path.join(ROOT, "dist");
 
 const TYPES = {
   ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".png": "image/png",
@@ -22,7 +22,7 @@ function readPolicy() {
   const list = tf.match(/content_security_policy\s*=\s*join\("; ",\s*\[([\s\S]*?)\]\)/)?.[1];
   if (!auth0Domain || !list) throw new Error("Could not find the CSP locals in terraform/cloudfront.tf");
 
-  const apiUrl = JSON.parse(fs.readFileSync(path.join(WEB, "main", "config.json"), "utf8")).INJECT_API_URL;
+  const apiUrl = JSON.parse(fs.readFileSync(path.join(ROOT, "web", "youth", "config.json"), "utf8")).INJECT_API_URL;
   const directives = [...list.matchAll(/^\s*"((?:[^"\\]|\\.)*)"\s*,/gm)].map((m) =>
     m[1]
       .replaceAll("${aws_apigatewayv2_api.api.api_endpoint}", apiUrl)
@@ -47,9 +47,7 @@ const cspHeader = policy.directives.filter((d) => d !== "upgrade-insecure-reques
 function resolveFile(urlPath) {
   const parts = decodeURIComponent(urlPath.split("?")[0]).split("/").filter(Boolean);
   if (parts.includes("..")) return null;
-  const isSiteFolder = parts.length > 0 && parts[0] !== "main" &&
-    fs.existsSync(path.join(WEB, parts[0])) && fs.statSync(path.join(WEB, parts[0])).isDirectory();
-  let file = isSiteFolder ? path.join(WEB, ...parts) : path.join(WEB, "main", ...parts);
+  let file = path.join(DIST, ...parts);
   if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, "index.html");
   return fs.existsSync(file) ? file : null;
 }

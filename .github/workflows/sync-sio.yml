@@ -32,8 +32,8 @@ jobs:
         with:
           node-version: '24'
 
-      # Generates index/live/history/bulk.html for web/main and every web/<site>/ that has a
-      # config.json, and fails on broken symlinks, missing config keys or unreplaced placeholders.
+      # Assembles web/ into dist/ (the exact layout of the bucket: the Youth view at the root, then /demo,
+      # /age-manager and /data) and fails on missing config keys or unreplaced placeholders.
       # inject-config.js uses only built-in modules, so no npm install is needed.
       - name: Build and validate all sites
         run: ./scripts/build-sites.sh
@@ -46,27 +46,9 @@ jobs:
           role-to-assume: arn:aws:iam::722937635825:role/github-deploy-role
           aws-region: ${{ env.AWS_REGION }}
 
-      # web/main goes to the bucket root; every other web/ folder (data, age-manager and each
-      # site with a config.json) goes to its own prefix. The root sync excludes those prefixes
-      # so --delete cannot remove them while they are being re-synced.
-      - name: Sync web content to S3
-        run: |
-          subdirs=(data age-manager)
-          for cfg in web/*/config.json; do
-            site=$(basename "$(dirname "$cfg")")
-            [ "$site" = main ] || subdirs+=("$site")
-          done
-
-          excludes=()
-          for d in "${subdirs[@]}"; do excludes+=(--exclude "$d/*"); done
-
-          echo "Syncing web/main to s3://$BUCKET"
-          aws s3 sync ./web/main/ "s3://$BUCKET" --delete "${excludes[@]}"
-
-          for d in "${subdirs[@]}"; do
-            echo "Syncing web/$d to s3://$BUCKET/$d"
-            aws s3 sync "./web/$d/" "s3://$BUCKET/$d" --delete
-          done
+      # dist/ is the whole bucket, so one sync (with --delete) is enough.
+      - name: Sync dist to S3
+        run: aws s3 sync ./dist/ "s3://$BUCKET" --delete
 
       # "/*" already covers every prefix, so one invalidation is enough.
       - name: Invalidate CloudFront cache

@@ -13,7 +13,7 @@ describe("age manager guide in a real browser", () => {
     await t.page.waitForSelector("h1");
     assert.equal(await t.page.textContent("h1"), "Age Manager guide");
     const sheets = await t.page.evaluate(() => [...document.styleSheets].map((s) => new URL(s.href).pathname));
-    assert.deepEqual(sheets, ["/age-manager/vendor/picnic.min.css", "/age-manager/sign-in-out.css", "/age-manager/age-manager.css"]);
+    assert.deepEqual(sheets, ["/vendor/picnic.min.css", "/sign-in-out.css", "/age-manager/age-manager.css"]);
     assert.equal(await t.page.locator(".am-steps li").count(), 8);
     // the same menu as the other age manager pages, with its links pointed up a folder so they work from /age-manager/
     await t.page.waitForSelector(".menu-header");

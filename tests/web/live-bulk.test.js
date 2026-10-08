@@ -8,7 +8,7 @@ describe("live page", () => {
   it("keeps the menu it was reached from: the youth menu with ?source=user, otherwise the age manager menu", async () => {
     // both menus read "sign, live, history, about"; what differs is where "sign" goes
     const signGoesTo = async (query) => {
-      const page = await loadPage("main/live.html", { query, api: readApi });
+      const page = await loadPage("live.html", { query, api: readApi });
       await until(() => page.document.querySelector(".menu-header"), "menu");
       const labels = [...page.document.querySelectorAll(".menu-header a")].map((a) => a.textContent);
       const href = page.document.querySelector(".menu-header a").getAttribute("href");

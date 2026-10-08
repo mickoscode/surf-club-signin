@@ -4,10 +4,11 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { until, loadPage } = require("./helpers");
 
-const WEB = path.resolve(__dirname, "..", "..", "web");
+const WEB = path.resolve(__dirname, "..", "..", "web");   // sources: the menus
+const DIST = path.resolve(__dirname, "..", "..", "dist"); // the assembled site: where the menu links must land
 
-// The two menu files each site has, and what they must contain.
-const sites = ["main", "demo"];
+// The two menu files each view has, and what they must contain. Where each view is served in dist.
+const sites = { youth: DIST, demo: path.join(DIST, "demo") };
 const snippets = { "header.snippet": "user", "header_leader.snippet": "leader" };
 
 const hrefsOf = (html) => [...html.matchAll(/<a\s+href="([^"]+)"/g)].map((m) => m[1]);
@@ -17,13 +18,13 @@ describe("menu files", () => {
   // menu-switching bug (a link without ?source= makes the next page show the wrong menu).
   it("every link goes to a page that exists in the same site, and the live / history / about links carry that menu's source", () => {
     const problems = [];
-    for (const site of sites) {
+    for (const [site, served] of Object.entries(sites)) {
       for (const [file, source] of Object.entries(snippets)) {
         const links = hrefsOf(fs.readFileSync(path.join(WEB, site, file), "utf8"));
         if (!links.some((h) => h.startsWith("./about.html"))) problems.push(`${site}/${file} has no link to the about page`);
         for (const href of links) {
-          const target = path.join(WEB, site, href.replace(/^\.\//, "").split(/[?#]/)[0]);
-          if (!fs.existsSync(target)) problems.push(`${site}/${file} links to ${href}, but ${path.relative(WEB, target)} does not exist (run ./scripts/build-sites.sh)`);
+          const target = path.join(served, href.replace(/^\.\//, "").split(/[?#]/)[0]);
+          if (!fs.existsSync(target)) problems.push(`${site}/${file} links to ${href}, but ${path.relative(DIST, target)} does not exist in dist (run ./scripts/build-sites.sh)`);
           if (/^\.\/(live|history|about)\.html/.test(href) && !href.includes(`source=${source}`)) problems.push(`${href} in ${site}/${file} should say source=${source}`);
         }
       }
@@ -36,7 +37,7 @@ describe("about page (menu-only page shared by youth and demo)", () => {
   const menu = (page) => [...page.document.querySelectorAll(".menu-header > div")].map((d) => d.textContent);
 
   it("youth: public menu by default", async () => {
-    const page = await loadPage("main/about.html");
+    const page = await loadPage("about.html");
     await until(() => page.document.querySelector(".menu-header"), "menu");
     assert.deepEqual(menu(page), ["YOUTH", "sign", "live", "history", "about"]);
     assert.deepEqual(page.errors, []);
@@ -44,7 +45,7 @@ describe("about page (menu-only page shared by youth and demo)", () => {
   });
 
   it("youth: leader menu with ?source=leader", async () => {
-    const page = await loadPage("main/about.html", { query: "?source=leader" });
+    const page = await loadPage("about.html", { query: "?source=leader" });
     await until(() => page.document.querySelector(".menu-header"), "menu");
     assert.deepEqual(menu(page), ["AM", "sign", "live", "history", "about"]);
     page.close();

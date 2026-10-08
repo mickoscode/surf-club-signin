@@ -9,10 +9,10 @@ const { readApi } = require("./fixtures");
 const ROOT = path.resolve(__dirname, "..", "..");
 const WEB = path.join(ROOT, "web");   // sources
 const DIST = path.join(ROOT, "dist"); // the assembled site, laid out like the deployed bucket
-const guideHtml = fs.readFileSync(path.join(WEB, "am", "index.html"), "utf8");
+const guideHtml = fs.readFileSync(path.join(WEB, "am", "info.html"), "utf8");
 const guide = new JSDOM(guideHtml).window.document;
 const guideText = guide.body.textContent.replace(/\s+/g, " ");
-const aboutText = new JSDOM(fs.readFileSync(path.join(WEB, "shared", "templates", "about.template.html"), "utf8")).window.document.body.textContent.replace(/\s+/g, " ");
+const aboutText = new JSDOM(fs.readFileSync(path.join(WEB, "youth", "info.html"), "utf8")).window.document.body.textContent.replace(/\s+/g, " ");
 const bulkSource = fs.readFileSync(path.join(WEB, "shared", "scripts", "bulk.js"), "utf8");
 
 // The session times the site really uses, written the way people read them ("9:30am").
@@ -35,11 +35,11 @@ describe("guides: wording (age manager guide)", () => {
     assert.ok(guideText.includes("All") && /renderFilterButtons/.test(bulkSource));
   });
 
-  it("quotes the session times the site really uses, and so does the about page", () => {
-    for (const [name, text] of [["guide", guideText], ["about page", aboutText]]) {
+  it("quotes the session times the site really uses, and so does the youth info page", () => {
+    for (const [name, text] of [["guide", guideText], ["youth info page", aboutText]]) {
       for (const t of [times.inStart, times.outStart, times.end]) assert.ok(text.includes(t), `${name} should say ${t}`);
     }
-    assert.ok(!aboutText.includes("10:40") && !aboutText.includes("9:31"), "the about page still has the old sign out times");
+    assert.ok(!aboutText.includes("10:40") && !aboutText.includes("9:31"), "the youth info page still has the old sign out times");
     // sign out starts when sign in ends
     assert.ok(aboutText.includes(`Sign in is accessible from ${times.inStart} to ${times.outStart}`));
     assert.ok(aboutText.includes(`Sign out is accessible from ${times.outStart} to ${times.end}`));
@@ -54,8 +54,8 @@ describe("guides: links", () => {
     return fs.existsSync(base) && fs.statSync(base).isDirectory() ? path.join(base, "index.html") : base;
   };
 
-  it("every link on the age manager guide and the two demo guides goes to a page or in-page section that exists", () => {
-    for (const [file, pagePath] of [["am/index.html", "/am/"], ["demo/guide.html", "/demo/guide.html"], ["demo-am/index.html", "/demo-am/"]]) {
+  it("every link on the three info pages (age manager and the two demos) goes to a page or in-page section that exists", () => {
+    for (const [file, pagePath] of [["am/info.html", "/am/info.html"], ["demo/info.html", "/demo/info.html"], ["demo-am/info.html", "/demo-am/info.html"]]) {
       const doc = new JSDOM(fs.readFileSync(path.join(WEB, file), "utf8")).window.document;
       for (const a of doc.querySelectorAll("a")) {
         const href = a.getAttribute("href");
@@ -74,17 +74,17 @@ describe("age manager guide: what it says matches what the pages do", () => {
   const message = (page) => page.document.getElementById("message").textContent;
 
   it("before 8:00am the bulk page says when sign in starts; it is not available on other days or after 11:00am", async () => {
-    const early = await open("am/bulk.html", { now: SUNDAY(7, 0) });
+    const early = await open("am/index.html", { now: SUNDAY(7, 0) });
     await until(() => message(early), "message");
     assert.equal(message(early), "Sign in starts at 8:00am");
     early.close();
 
-    const late = await open("am/bulk.html", { now: SUNDAY(11, 30) });
+    const late = await open("am/index.html", { now: SUNDAY(11, 30) });
     await until(() => message(late), "message");
     assert.match(message(late), /^The next session is/);
     late.close();
 
-    const weekday = await open("am/bulk.html", { now: WEEKDAY });
+    const weekday = await open("am/index.html", { now: WEEKDAY });
     await until(() => message(weekday), "message");
     assert.match(message(weekday), /^The next session is/);
     weekday.close();
@@ -92,7 +92,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
 
   it("until 9:30am the button says Bulk Sign In; from 9:30am it says Bulk Sign Out", async () => {
     for (const [now, expected] of [[SUNDAY(8, 0), "Bulk Sign In"], [SUNDAY(9, 29), "Bulk Sign In"], [SUNDAY(9, 30), "Bulk Sign Out"], [SUNDAY(10, 59), "Bulk Sign Out"]]) {
-      const page = await open("am/bulk.html", { now });
+      const page = await open("am/index.html", { now });
       await until(() => page.document.getElementById("bulkSubmitButton").textContent, "button text");
       assert.equal(page.document.getElementById("bulkSubmitButton").textContent, expected, now.toTimeString().slice(0, 5));
       page.close();
@@ -102,13 +102,13 @@ describe("age manager guide: what it says matches what the pages do", () => {
   it("the demo works on any day: it pretends it is sign in or sign out time, while the youth page says 'next session'", async () => {
     const ready = (page) => until(() => !page.document.getElementById("bulkForm").classList.contains("hidden"), "bulk form");
 
-    const demoIn = await open("demo-am/bulk.html", { query: "?test=in", now: WEEKDAY });
+    const demoIn = await open("demo-am/index.html", { query: "?test=in", now: WEEKDAY });
     await ready(demoIn);
     assert.equal(message(demoIn), "Select a group for bulk sign-in");
     assert.equal(demoIn.document.getElementById("bulkSubmitButton").textContent, "Bulk Sign In");
     demoIn.close();
 
-    const demoOut = await open("demo-am/bulk.html", { query: "?test=out", now: WEEKDAY });
+    const demoOut = await open("demo-am/index.html", { query: "?test=out", now: WEEKDAY });
     await ready(demoOut);
     assert.equal(message(demoOut), "Select a group for bulk sign-out");
     assert.equal(demoOut.document.getElementById("bulkSubmitButton").textContent, "Bulk Sign Out");
@@ -118,7 +118,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
     await until(() => !single.document.getElementById("signForm").classList.contains("hidden"), "demo sign-in form");
     single.close();
 
-    const youth = await open("am/bulk.html", { now: WEEKDAY });
+    const youth = await open("am/index.html", { now: WEEKDAY });
     await until(() => message(youth), "message");
     assert.match(message(youth), /^The next session is/);
     youth.close();
@@ -134,7 +134,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
       logs: [],
     };
     const api = (url, init) => (init.method === "POST" ? reply(201, { written: 2, skipped: [] }) : url.includes("/name?") ? twoGroups : { logs: [] });
-    const page = await loadPage("demo-am/bulk.html", { query: "?test=in", api });
+    const page = await loadPage("demo-am/index.html", { query: "?test=in", api });
     await until(() => !page.document.getElementById("bulkForm").classList.contains("hidden"), "bulk form");
 
     const groups = [...page.document.querySelectorAll("#filterButtons button")].map((b) => b.textContent);
@@ -169,7 +169,7 @@ describe("age manager guide: what it says matches what the pages do", () => {
     };
     const api = (url) => (url.includes("/name?") ? people : { logs: people.logs });
     const boxes = async (query) => {
-      const page = await loadPage("demo-am/bulk.html", { query, api });
+      const page = await loadPage("demo-am/index.html", { query, api });
       await until(() => !page.document.getElementById("bulkForm").classList.contains("hidden"), "bulk form");
       const ids = [...page.document.querySelectorAll(".name-toggle")].map((t) => t.dataset.nameId);
       page.close();

@@ -12,13 +12,13 @@ describe("every page loads cleanly under the enforced policy", () => {
 
   const pages = [
     ["demo sign-in (test mode)", "/demo/index.html?test=in", "#signForm:not(.hidden)"],
-    ["demo bulk", "/demo-am/bulk.html?test=in", "#bulkForm:not(.hidden)"],
+    ["demo bulk", "/demo-am/index.html?test=in", "#bulkForm:not(.hidden)"],
     ["demo live", "/demo-am/live.html?test=in", "#recordsTable tr:has(td)"],
     ["history (a day)", "/demo-am/history.html?date=2025-08-12", "#recordsTable a"],
-    ["about", "/about.html", ".menu-header a"],
-    ["age manager guide", "/am/", ".guide-steps"],
-    ["demo guide (youth)", "/demo/guide.html", ".guide-links"],
-    ["demo guide (age manager)", "/demo-am/", ".guide-links"],
+    ["youth info", "/info.html", ".menu-header a"],
+    ["age manager info (guide)", "/am/info.html", ".guide-steps"],
+    ["demo info (youth)", "/demo/info.html", ".guide-links"],
+    ["demo info (age manager)", "/demo-am/info.html", ".guide-links"],
     ["data: names", "/data/names.html", "#addForm"],
     ["data: list names", "/data/list-names.html", "#fetchNamesButton"],
     ["data: logs", "/data/logs.html", "#fetchLogsButton"],

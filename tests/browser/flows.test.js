@@ -35,7 +35,7 @@ describe("user flows under the enforced policy", () => {
 
   describe("leaders", () => {
     it("bulk sign-in: choose a group, tick a name, submit", async () => {
-      const t = await open(browser, site, "/demo-am/bulk.html?test=in");
+      const t = await open(browser, site, "/demo-am/index.html?test=in");
       await t.page.waitForSelector("#bulkForm:not(.hidden)");
       assert.deepEqual(await t.page.locator("#filterButtons button").allTextContents(), ["All", "u14", "u15"]);
       await t.page.click("#filterButtons button:has-text('u14')");

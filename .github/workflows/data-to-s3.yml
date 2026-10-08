@@ -36,7 +36,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Sync web/data to S3
-        run: aws s3 sync ./web/data/ "s3://$BUCKET/data" --delete
+        run: aws s3 sync ./web/data/ "s3://$BUCKET/data" --delete --cache-control "no-cache"
 
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id "$CF_DISTRIBUTION_ID" --paths "/data/*"

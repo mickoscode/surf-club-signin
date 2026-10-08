@@ -4,5 +4,9 @@
   "INJECT_FAVICON": "favicon-am.png",
   "INJECT_ACTIVITY_ID": "sorrento_youth_sunday",
   "INJECT_ENABLE_TEST_MODE": "false",
-  "PAGES": ["bulk", "live", "history", "about"]
+  "PAGES": {
+    "index": "bulk",
+    "live": "live",
+    "history": "history"
+  }
 }

@@ -7,7 +7,7 @@ describe("bulk page", () => {
   // alice already signed in (has an "in" log), evil also; bob has not. Only bob can be ticked for bulk sign-in.
   async function openBulk(bulkApi) {
     const api = (url, init) => (init.method === "POST" && url.endsWith("/bulk") ? bulkApi(init.body) : readApi(url));
-    const page = await loadPage("demo-am/bulk.html", { query: "?test=in", api });
+    const page = await loadPage("demo-am/index.html", { query: "?test=in", api });
     await until(() => !page.document.getElementById("bulkForm").classList.contains("hidden"), "bulk form");
     return page;
   }

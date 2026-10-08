@@ -46,9 +46,11 @@ jobs:
           role-to-assume: arn:aws:iam::722937635825:role/github-deploy-role
           aws-region: ${{ env.AWS_REGION }}
 
-      # dist/ is the whole bucket, so one sync (with --delete) is enough.
+      # dist/ is the whole bucket, so one sync (with --delete) is enough. "no-cache" makes browsers re-check a file
+      # (a cheap ETag request) instead of reusing a possibly stale copy: without any Cache-Control, browsers guess a
+      # freshness time from Last-Modified and kept showing old pages and scripts after a deploy.
       - name: Sync dist to S3
-        run: aws s3 sync ./dist/ "s3://$BUCKET" --delete
+        run: aws s3 sync ./dist/ "s3://$BUCKET" --delete --cache-control "no-cache"
 
       # "/*" already covers every prefix, so one invalidation is enough.
       - name: Invalidate CloudFront cache

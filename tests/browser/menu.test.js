@@ -5,17 +5,17 @@ const { launch, open, expectClean } = require("./helpers");
 
 const menuTexts = (t) => t.page.locator(".menu-header > div").allTextContents();
 
-describe("menus, the about page and the 404 page", () => {
+describe("menus, the info pages and the 404 page", () => {
   let site, browser;
   before(async () => { site = await startServer(); browser = await launch(); });
   after(async () => { await browser.close(); await site.close(); });
 
-  describe("each view has its own menu, tab icon and guide link", () => {
+  describe("each view has its own menu, tab icon and info page", () => {
     const cases = [
-      ["youth", "/about.html", ["YOUTH", "sign", "live", "history", "about"], "/faviconV2.png"],
-      ["age manager", "/am/about.html", ["AM", "sign", "live", "history", "about"], "/am/favicon-am.png"],
-      ["demo (youth)", "/demo/about.html", ["DEMO-Y", "in/out", "live", "about"], "/demo/favicon-demo.png"],
-      ["demo (age manager)", "/demo-am/about.html", ["DEMO-A", "S-in/S-out", "live", "history", "about"], "/demo-am/favicon-demo.png"],
+      ["youth", "/info.html", ["YOUTH", "sign", "live", "history"], "/faviconV2.png"],
+      ["age manager", "/am/info.html", ["AM", "sign", "live", "history"], "/am/favicon-am.png"],
+      ["demo (youth)", "/demo/info.html", ["DEMO-Y", "in/out", "live", "history"], "/demo/favicon-demo.png"],
+      ["demo (age manager)", "/demo-am/info.html", ["DEMO-A", "S-in/S-out", "live", "history"], "/demo-am/favicon-demo.png"],
     ];
     for (const [name, url, expected, favicon] of cases) {
       it(name, async () => {
@@ -28,30 +28,31 @@ describe("menus, the about page and the 404 page", () => {
       });
     }
 
-    it("the AM, DEMO-A and DEMO-Y labels link to their guides, and the menu is still there on the guide", async () => {
-      for (const [from, label, guide, menu] of [
-        ["/am/bulk.html", "AM", "/am/index.html", ["AM", "sign", "live", "history", "about"]],
-        ["/demo-am/bulk.html?test=in", "DEMO-A", "/demo-am/index.html", ["DEMO-A", "S-in/S-out", "live", "history", "about"]],
-        ["/demo/index.html?test=in", "DEMO-Y", "/demo/guide.html", ["DEMO-Y", "in/out", "live", "about"]],
+    it("the YOUTH, AM, DEMO-A and DEMO-Y labels link to the view's info page, which still has the menu", async () => {
+      for (const [from, label, info, menu] of [
+        ["/index.html", "YOUTH", "/info.html", ["YOUTH", "sign", "live", "history"]],
+        ["/am/index.html", "AM", "/am/info.html", ["AM", "sign", "live", "history"]],
+        ["/demo-am/index.html?test=in", "DEMO-A", "/demo-am/info.html", ["DEMO-A", "S-in/S-out", "live", "history"]],
+        ["/demo/index.html?test=in", "DEMO-Y", "/demo/info.html", ["DEMO-Y", "in/out", "live", "history"]],
       ]) {
         const t = await open(browser, site, from);
         await t.page.waitForSelector(".menu-header");
         await t.page.click(`.menu-left a:has-text("${label}")`);
-        await t.page.waitForURL(`${site.url}${guide}`);
+        await t.page.waitForURL(`${site.url}${info}`);
         await t.page.waitForSelector(".menu-header");
         assert.deepEqual(await menuTexts(t), menu);
         await t.close();
       }
     });
 
-    it("the menu keeps you in the same view: demo, then history stays in the age manager demo", async () => {
+    it("the menu keeps you in the same view: history dates -> a day -> a person stays in the age manager demo", async () => {
       const t = await open(browser, site, "/demo-am/history.html");
       await t.page.waitForSelector("#dateList a");
       await t.page.click("#dateList a:has-text('2025-08-12')");
       await t.page.waitForSelector("#recordsTable a:has-text('Alice Smith')");
       await t.page.click("#recordsTable a:has-text('Alice Smith')");
       await t.page.waitForSelector("#message:has-text('History for Alice Smith')");
-      assert.deepEqual(await menuTexts(t), ["DEMO-A", "S-in/S-out", "live", "history", "about"]);
+      assert.deepEqual(await menuTexts(t), ["DEMO-A", "S-in/S-out", "live", "history"]);
       await expectClean(t);
       await t.close();
     });
@@ -68,10 +69,10 @@ describe("menus, the about page and the 404 page", () => {
         assert.deepEqual(sheets, ["/vendor/picnic.min.css", "/sign-in-out.css"]);
         assert.equal(new URL(await t.page.locator("link[rel=icon]").evaluate((l) => l.href)).pathname, "/faviconV2.png");
         assert.equal(await t.page.evaluate(() => getComputedStyle(document.body).display), "flex"); // sign-in-out.css applied
-        assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
+        assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history"]);
         await expectClean(t); // no CSP violation, and no 404 for any asset
-        await t.page.click(".menu-header a:has-text('about')");
-        await t.page.waitForURL(`${site.url}/about.html`);
+        await t.page.click(".menu-header a:has-text('history')");
+        await t.page.waitForURL(`${site.url}/history.html`);
         await t.close();
       });
     }
@@ -79,7 +80,7 @@ describe("menus, the about page and the 404 page", () => {
 
   describe("loading the menu", () => {
     it("a menu file that is missing is not pasted into the page (CloudFront answers it with the whole 404 page)", async () => {
-      const t = await open(browser, site, "/about.html");
+      const t = await open(browser, site, "/info.html");
       await t.page.waitForSelector(".menu-header");
       await t.page.evaluate(() => {
         document.getElementById("header-container").innerHTML = "";
@@ -93,7 +94,7 @@ describe("menus, the about page and the 404 page", () => {
   });
 
   describe("every menu fits the screen", () => {
-    const menus = [["youth", "/index.html"], ["age manager", "/am/bulk.html"], ["demo", "/demo/index.html?test=in"], ["demo age manager", "/demo-am/bulk.html?test=in"]];
+    const menus = [["youth", "/index.html"], ["age manager", "/am/index.html"], ["demo", "/demo/index.html?test=in"], ["demo age manager", "/demo-am/index.html?test=in"]];
     for (const width of [320]) {
       for (const [name, url] of menus) {
         it(`${name} menu at ${width}px wide stays on screen${width >= 320 ? ", on a single row, and the page does not scroll sideways" : " (wrapping onto a second row if it must)"}`, async () => {

@@ -4,5 +4,5 @@
   "INJECT_FAVICON": "favicon-demo.png",
   "INJECT_ACTIVITY_ID": "demo",
   "INJECT_ENABLE_TEST_MODE": "true",
-  "PAGES": ["index", "live", "about"]
+  "PAGES": ["bulk", "live", "history", "about"]
 }

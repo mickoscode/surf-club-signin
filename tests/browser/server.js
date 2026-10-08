@@ -2,7 +2,7 @@
 //
 // The Content-Security-Policy is read from terraform/cloudfront.tf (not copied here), so these tests always
 // run against the policy that production sends. The site is served from dist/ (assembled by scripts/build-sites.sh),
-// which is laid out like the deployed bucket: the Youth view at the root, then /demo/, /data/ and /age-manager/.
+// which is laid out like the deployed bucket: the Youth view at the root, then /demo/, /data/, /am/ and /demo-am/.
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");

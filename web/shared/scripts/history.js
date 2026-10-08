@@ -4,13 +4,7 @@ let names = [];  // get valid names to filter out any junk logs!
 let dates = [];
 let logs = [];
 
-// By default this page is reached from the age manager (leader) menu, so it shows the leader menu.
-// Youth reach it from their own menu with ?source=user, which shows the basic menu instead.
-// Every link this page builds keeps the current source, so moving from the list of dates to a day to a person
-// never switches menus part-way through.
-const SOURCE = getMenuSource("leader");
-loadMenu(SOURCE);
-
+loadMenu();
 
 // Fetch names from the backend
 async function fetchNames() {
@@ -88,7 +82,7 @@ async function init() {
 
             const tdDisplay = document.createElement("td");
             const link = document.createElement("a");
-            link.href = `./history.html?source=${SOURCE}&name_id=${encodeURIComponent(row.name_id)}`;
+            link.href = `./history.html?name_id=${encodeURIComponent(row.name_id)}`;
             link.textContent = row.d;
             tdDisplay.appendChild(link);
             tr.appendChild(tdDisplay);
@@ -152,7 +146,7 @@ async function init() {
             .sort((a, b) => b.localeCompare(a)) // descending order
             .forEach(date => {
                 const link = document.createElement("a");
-                link.href = `./history.html?source=${SOURCE}&date=${encodeURIComponent(date)}`;
+                link.href = `./history.html?date=${encodeURIComponent(date)}`;
                 link.textContent = date;
                 dateList.appendChild(link);
                 dateList.appendChild(document.createElement("br"));

@@ -3,29 +3,11 @@ const assert = require("node:assert/strict");
 const { XSS, until, reply, loadPage, submit } = require("./helpers");
 const { readApi } = require("./fixtures");
 
-describe("live page", () => {
-
-  it("keeps the menu it was reached from: the youth menu with ?source=user, otherwise the age manager menu", async () => {
-    // both menus read "sign, live, history, about"; what differs is where "sign" goes
-    const signGoesTo = async (query) => {
-      const page = await loadPage("live.html", { query, api: readApi });
-      await until(() => page.document.querySelector(".menu-header"), "menu");
-      const labels = [...page.document.querySelectorAll(".menu-header a")].map((a) => a.textContent);
-      const href = page.document.querySelector(".menu-header a").getAttribute("href");
-      page.close();
-      assert.deepEqual(labels, ["sign", "live", "history", "about"]);
-      return href;
-    };
-    assert.equal(await signGoesTo("?source=user"), "./index.html");
-    assert.equal(await signGoesTo(""), "./bulk.html");
-  });
-});
-
 describe("bulk page", () => {
   // alice already signed in (has an "in" log), evil also; bob has not. Only bob can be ticked for bulk sign-in.
   async function openBulk(bulkApi) {
     const api = (url, init) => (init.method === "POST" && url.endsWith("/bulk") ? bulkApi(init.body) : readApi(url));
-    const page = await loadPage("demo/bulk.html", { query: "?test=in", api });
+    const page = await loadPage("demo-am/bulk.html", { query: "?test=in", api });
     await until(() => !page.document.getElementById("bulkForm").classList.contains("hidden"), "bulk form");
     return page;
   }

@@ -10,11 +10,12 @@ describe("menus, the about page and the 404 page", () => {
   before(async () => { site = await startServer(); browser = await launch(); });
   after(async () => { await browser.close(); await site.close(); });
 
-  describe("about page has the same menu as the other pages, for youth and demo", () => {
+  describe("each view has its own menu, tab icon and guide link", () => {
     const cases = [
-      ["youth, default (public) menu", "/about.html", ["YOUTH", "sign", "live", "history", "about"], "/faviconV2.png"],
-      ["youth, from the leader menu", "/about.html?source=leader", ["AM", "sign", "live", "history", "about"], "/favicon-am.png"],
-      ["demo, from the leader menu", "/demo/about.html?source=leader", ["DEMO", "S-in/S-out", "live", "history", "about"], "/demo/favicon-demo.png"],
+      ["youth", "/about.html", ["YOUTH", "sign", "live", "history", "about"], "/faviconV2.png"],
+      ["age manager", "/am/about.html", ["AM", "sign", "live", "history", "about"], "/am/favicon-am.png"],
+      ["demo (youth)", "/demo/about.html", ["DEMO-Y", "in/out", "live", "about"], "/demo/favicon-demo.png"],
+      ["demo (age manager)", "/demo-am/about.html", ["DEMO-A", "S-in/S-out", "live", "history", "about"], "/demo-am/favicon-demo.png"],
     ];
     for (const [name, url, expected, favicon] of cases) {
       it(name, async () => {
@@ -27,47 +28,30 @@ describe("menus, the about page and the 404 page", () => {
       });
     }
 
-    it("the menu's links work from the about page (demo) and stay in the demo site", async () => {
-      const t = await open(browser, site, "/demo/about.html");
-      await t.page.click(".menu-header a:has-text('in')");
-      await t.page.waitForURL(`${site.url}/demo/index.html?test=in`);
-      await t.close();
-      const about = await open(browser, site, "/demo/index.html?test=in");
-      await about.page.waitForSelector(".menu-header");
-      await about.page.click(".menu-header a:has-text('about')");
-      await about.page.waitForURL(`${site.url}/demo/about.html?source=user`);
-      await about.page.waitForSelector(".menu-header"); // and the about page it lands on has the menu
-      assert.deepEqual(await menuTexts(about), ["DEMO", "in/out", "live", "about"]);
-      await about.close();
-    });
-  });
-
-  describe("the menu does not change part-way through the history pages", () => {
-    it("youth (user menu): dates -> a day -> a person all keep the user menu", async () => {
-      const t = await open(browser, site, "/history.html?source=user");
-      await t.page.waitForSelector("#dateList a");
-      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
-      await t.page.click("#dateList a:has-text('2025-08-12')");
-      await t.page.waitForSelector("#recordsTable a:has-text('Alice Smith')");
-      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
-      await t.page.click("#recordsTable a:has-text('Alice Smith')");
-      await t.page.waitForSelector("#message:has-text('History for Alice Smith')");
-      assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
-      await expectClean(t);
-      await t.close();
+    it("the AM, DEMO-A and DEMO-Y labels link to their guides, and the menu is still there on the guide", async () => {
+      for (const [from, label, guide, menu] of [
+        ["/am/bulk.html", "AM", "/am/index.html", ["AM", "sign", "live", "history", "about"]],
+        ["/demo-am/bulk.html?test=in", "DEMO-A", "/demo-am/index.html", ["DEMO-A", "S-in/S-out", "live", "history", "about"]],
+        ["/demo/index.html?test=in", "DEMO-Y", "/demo/guide.html", ["DEMO-Y", "in/out", "live", "about"]],
+      ]) {
+        const t = await open(browser, site, from);
+        await t.page.waitForSelector(".menu-header");
+        await t.page.click(`.menu-left a:has-text("${label}")`);
+        await t.page.waitForURL(`${site.url}${guide}`);
+        await t.page.waitForSelector(".menu-header");
+        assert.deepEqual(await menuTexts(t), menu);
+        await t.close();
+      }
     });
 
-    it("youth (leader menu, the default): dates -> a day -> a person all keep the leader menu", async () => {
-      const t = await open(browser, site, "/history.html");
+    it("the menu keeps you in the same view: demo, then history stays in the age manager demo", async () => {
+      const t = await open(browser, site, "/demo-am/history.html");
       await t.page.waitForSelector("#dateList a");
-      const leader = ["AM", "sign", "live", "history", "about"];
-      assert.deepEqual(await menuTexts(t), leader);
       await t.page.click("#dateList a:has-text('2025-08-12')");
       await t.page.waitForSelector("#recordsTable a:has-text('Alice Smith')");
-      assert.deepEqual(await menuTexts(t), leader);
       await t.page.click("#recordsTable a:has-text('Alice Smith')");
       await t.page.waitForSelector("#message:has-text('History for Alice Smith')");
-      assert.deepEqual(await menuTexts(t), leader);
+      assert.deepEqual(await menuTexts(t), ["DEMO-A", "S-in/S-out", "live", "history", "about"]);
       await expectClean(t);
       await t.close();
     });
@@ -87,7 +71,7 @@ describe("menus, the about page and the 404 page", () => {
         assert.deepEqual(await menuTexts(t), ["YOUTH", "sign", "live", "history", "about"]);
         await expectClean(t); // no CSP violation, and no 404 for any asset
         await t.page.click(".menu-header a:has-text('about')");
-        await t.page.waitForURL(`${site.url}/about.html?source=user`);
+        await t.page.waitForURL(`${site.url}/about.html`);
         await t.close();
       });
     }
@@ -109,7 +93,7 @@ describe("menus, the about page and the 404 page", () => {
   });
 
   describe("every menu fits the screen", () => {
-    const menus = [["youth user", "/index.html?test=x"], ["youth leader", "/bulk.html"], ["demo user", "/demo/index.html?test=in"], ["demo leader", "/demo/bulk.html?test=in"]];
+    const menus = [["youth", "/index.html"], ["age manager", "/am/bulk.html"], ["demo", "/demo/index.html?test=in"], ["demo age manager", "/demo-am/bulk.html?test=in"]];
     for (const width of [320]) {
       for (const [name, url] of menus) {
         it(`${name} menu at ${width}px wide stays on screen${width >= 320 ? ", on a single row, and the page does not scroll sideways" : " (wrapping onto a second row if it must)"}`, async () => {

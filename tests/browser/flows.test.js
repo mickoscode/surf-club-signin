@@ -35,7 +35,7 @@ describe("user flows under the enforced policy", () => {
 
   describe("leaders", () => {
     it("bulk sign-in: choose a group, tick a name, submit", async () => {
-      const t = await open(browser, site, "/demo/bulk.html?test=in");
+      const t = await open(browser, site, "/demo-am/bulk.html?test=in");
       await t.page.waitForSelector("#bulkForm:not(.hidden)");
       assert.deepEqual(await t.page.locator("#filterButtons button").allTextContents(), ["All", "u14", "u15"]);
       await t.page.click("#filterButtons button:has-text('u14')");
@@ -50,7 +50,7 @@ describe("user flows under the enforced policy", () => {
     });
 
     it("history: dates -> a day -> a person", async () => {
-      const t = await open(browser, site, "/demo/history.html");
+      const t = await open(browser, site, "/demo-am/history.html");
       await t.page.click("#dateList a:has-text('2025-08-12')");
       await t.page.waitForSelector("#recordsTable a:has-text('Alice Smith')");
       await t.page.click("#recordsTable a:has-text('Alice Smith')");

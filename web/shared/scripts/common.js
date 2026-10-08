@@ -1,4 +1,4 @@
-// Helpers shared by every templated page (index, bulk, live, history).
+// Helpers shared by every page of every view (index, bulk, live, history, about and the guides).
 // Loaded with a plain <script src="common.js"> before the page's own script, so everything here is a global.
 //
 // Per-site settings come from data-* attributes on <body> (written by inject-config.js from config.json):
@@ -8,7 +8,7 @@ const API_BASE = document.body.dataset.apiUrl;
 const ACTIVITY_ID = document.body.dataset.activityId;
 const ENABLE_TEST_MODE = document.body.dataset.testMode === "true";
 
-// The sign-in window. Kept in one place; the demo site overrides it with ?test=in / ?test=out.
+// The sign-in window. Kept in one place; the demo views override it with ?test=in / ?test=out.
 const SESSION_TIMES = { inStart: "08:00", outStart: "09:30", end: "11:00" };
 
 // ---------------------------------------------------------------------------
@@ -17,45 +17,21 @@ const SESSION_TIMES = { inStart: "08:00", outStart: "09:30", end: "11:00" };
 
 // Load a menu snippet into #header-container. A snippet that fails to load is not inserted: CloudFront answers a
 // missing file with the 404 page (a whole HTML document, status 404), which would otherwise end up inside the menu bar.
-//
-// linkPrefix is for a page that is not in the site root (the age manager guide is in /age-manager/): the menu's links are
-// written as ./page.html, so linkPrefix "../" turns them into ../page.html.
-function loadHeader(snippetPath, linkPrefix) {
+function loadHeader(snippetPath) {
     fetch(snippetPath)
         .then(response => {
             if (!response.ok) throw new Error(`${snippetPath} returned HTTP ${response.status}`);
             return response.text();
         })
         .then(data => {
-            const container = document.getElementById("header-container");
-            container.innerHTML = data;
-            if (linkPrefix) {
-                container.querySelectorAll('a[href^="./"]').forEach(link => link.setAttribute("href", linkPrefix + link.getAttribute("href").slice(2)));
-            }
-            useMenuFavicon();
+            document.getElementById("header-container").innerHTML = data;
         })
         .catch(error => console.error("Header load error:", error));
 }
 
-// Which menu a page shows: "user" (people signing in/out: header.snippet) or "leader" (age managers:
-// header_leader.snippet). The links in the menus carry ?source=user / ?source=leader so the choice survives
-// moving between pages; anything else falls back to the page's own default.
-function getMenuSource(defaultSource) {
-    const source = getUrlParameter("source");
-    return source === "user" || source === "leader" ? source : defaultSource;
-}
-
-function loadMenu(source) {
-    loadHeader(source === "user" ? "./header.snippet" : "./header_leader.snippet");
-}
-
-// A menu file can name its own tab icon with data-favicon on its top element. The youth site's age manager menu does
-// (favicon-am.png), so age manager tabs look different from youth tabs, whichever page they are on. A menu without it
-// leaves the page's own icon (the site's INJECT_FAVICON) alone.
-function useMenuFavicon() {
-    const menu = document.querySelector("#header-container [data-favicon]");
-    const link = document.querySelector('link[rel="icon"]');
-    if (menu && link) link.setAttribute("href", menu.dataset.favicon);
+// Every view has exactly one menu, header.snippet, next to its pages.
+function loadMenu() {
+    loadHeader("./header.snippet");
 }
 
 // Utility to parse URL parameters

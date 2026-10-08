@@ -1,6 +1,6 @@
 // Leader bulk sign-in / sign-out page. Shared helpers and per-site settings are in common.js.
 
-loadMenu("leader");
+loadMenu();
 
 let LOG_DATE_STRING = new Date().toISOString().split('T')[0]; // Default to today
 

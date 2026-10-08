@@ -89,4 +89,4 @@ AWS auth for the frontend workflows is GitHub OIDC: they assume `github-deploy-r
 
 ## Docs
 
-`docs/requirements.md`, `docs/release_plan.md` and `docs/site_admin.md` describe product requirements, release plan, and season data reset/admin procedures. Past AI prompts used to build the pages are in `.github/co-pilot/`.
+`docs/frontend-dev-guide.md` explains how the pages are built and loaded and how `PAGES` in `config.json` works (written for the human maintainer; keep it in step with the build script). `docs/requirements.md`, `docs/release_plan.md` and `docs/site_admin.md` describe product requirements, release plan, and season data reset/admin procedures. Past AI prompts used to build the pages are in `.github/co-pilot/`.

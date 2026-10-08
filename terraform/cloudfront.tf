@@ -100,6 +100,17 @@ resource "aws_cloudfront_response_headers_policy" "security" {
 }
 
 # -----------------------------------------------------------
+# Redirects for a few addresses (see redirects.js): /age-manager/ -> /am/info.html and /demo-am/ -> the demo in test mode.
+# -----------------------------------------------------------
+resource "aws_cloudfront_function" "redirects" {
+  name    = "${replace(var.bucket_name, ".", "-")}-redirects"
+  runtime = "cloudfront-js-2.0"
+  comment = "Redirects for moved or bare addresses"
+  publish = true
+  code    = file("${path.module}/redirects.js")
+}
+
+# -----------------------------------------------------------
 # CloudFront Distribution to serve content and enforce HTTPS using the ACM certificate.
 # -----------------------------------------------------------
 resource "aws_cloudfront_distribution" "sio" {
@@ -132,6 +143,11 @@ resource "aws_cloudfront_distribution" "sio" {
     target_origin_id = "S3-Origin"
 
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.redirects.arn
+    }
 
     # This is the key setting that redirects all HTTP traffic to HTTPS.
     viewer_protocol_policy = "redirect-to-https"

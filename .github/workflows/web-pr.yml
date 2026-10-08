@@ -37,7 +37,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(web/|tests/|package(-lock)?\.json$|terraform/cloudfront\.tf$|scripts/(build-sites\.sh|inject-config\.js)$|\.github/workflows/(web-pr|sync-sio)\.yml$)'; then
+          if git diff --name-only "$BASE_SHA...$HEAD_SHA" | grep -qE '^(web/|tests/|package(-lock)?\.json$|terraform/cloudfront\.tf$|scripts/(build-sites\.sh|inject-config\.js)$|terraform/redirects\.js$|\.github/workflows/(web-pr|sync-sio)\.yml$)'; then
             echo "web=true" >> "$GITHUB_OUTPUT"
           else
             echo "web=false" >> "$GITHUB_OUTPUT"

@@ -7,8 +7,8 @@
     "test:browser": "node --test --test-concurrency=1 \"tests/browser/*.test.js\""
   },
   "devDependencies": {
-    "jsdom": "30.1.1",
-    "playwright": "1.63.0"
+    "jsdom": "30.1.2",
+    "playwright": "1.64.0"
   },
   "engines": {
     "node": ">=24"
